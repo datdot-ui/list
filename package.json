@@ -1,0 +1,37 @@
+{
+  "name": "datdot-ui-list",
+  "version": "0.0.0",
+  "description": "datdot ui widget",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "budo demo/demo.js:bundle.js --open --live",
+    "build": "browserify demo/demo.js -o bundle.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/playproject-io/datdot-ui-list.git"
+  },
+  "keywords": [
+    "datdot",
+    "ui",
+    "widget",
+    "list"
+  ],
+  "author": "fionataeyang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/playproject-io/datdot-ui-list/issues"
+  },
+  "homepage": "https://github.com/playproject-io/datdot-ui-list#readme",
+  "devDependencies": {
+    "budo": "^11.6.4"
+  },
+  "dependencies": {
+    "bel": "^6.0.0",
+    "csjs-inject": "^1.0.1",
+    "datdot-terminal": "git+https://github.com/fionataeyang/datdot-terminal.git",
+    "datdot-ui-button": "git+https://github.com/fionataeyang/datdot-ui-button.git",
+    "datdot-ui-icon": "git+https://github.com/fionataeyang/datdot-ui-icon.git"
+  }
+}
