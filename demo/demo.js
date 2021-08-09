@@ -9,9 +9,9 @@ const icon = require('datdot-ui-icon')
 const message_maker = require('../src/node_modules/message-maker')
 
 function demo () {
-    let recipients = []
+    const recipients = []
     const logs = terminal({mode: 'comfortable', expanded: false}, protocol('logs'))
-    let options = [
+    const options = [
         {
             text: 'Option1',
             icon: icon({name: 'check', path: 'assets'}),

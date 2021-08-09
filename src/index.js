@@ -4,7 +4,7 @@ const button = require('datdot-ui-button')
 const message_maker = require('message-maker')
 module.exports = i_list
 
-function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'multiple-select', expanded = false, hidden = true, theme }, protocol) {
+function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme }, protocol) {
     const recipients = []
     const make = message_maker(`${name} / ${flow} / i_list`)
     const message = make({type: 'ready'})
@@ -25,15 +25,24 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
             body.map( (option, i) => {
                 const {text, icon, current = false, selected = false} = option
                 const is_current = mode === 'single-select' ? current : false
-                let item = button({page, name: text, body: text, icon, role: 'option', mode, current: is_current, selected,
-                                    theme: { 
-                                        props: {
-                                            color_hover: 'var(--color)', 
-                                            bg_color: 'transparent', 
-                                            bg_color_hover: 'transparent'}
-                                        }
-                                    }, button_protocol(text))
-                const li = bel`<li role="option" data-option=${text}" aria-selected=${selected}>${item}</li>`
+                let item = button({
+                    page, 
+                    name: text, 
+                    body: text,
+                    icon, 
+                    role: 'option',
+                    mode, 
+                    current: is_current, 
+                    selected,
+                    theme: { 
+                        props: {
+                            color_hover: 'var(--color)', 
+                            bg_color: 'transparent', 
+                            bg_color_hover: 'transparent'}
+                    }}, button_protocol(text))
+                const li = (text === 'no items') 
+                ? bel`<li role="listitem" data-option=${text}">${text}</li>`
+                : bel`<li role="option" data-option=${text}" aria-selected=${selected}>${item}</li>`
                 const option_list = text.toLowerCase().split(' ').join('-')
                 shadow.append(li)
                 const make = message_maker(`${option_list} / option / ${flow} / widget`)
@@ -68,7 +77,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
                     const type = state ? 'selected' : 'unselected'
                     recipients[current]( make({type, data: state}) )
                     send(make({to: name, type, data: {option: current, selected: state, current: state} }))
-                    list.setAttribute('aria-aria-activedescendant', from)
+                    list.setAttribute('aria-activedescendant', from)
                 })
             }
         }
@@ -132,6 +141,19 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
     }
     li:hover {
         --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--color-greyEB)'};
+    }
+    [role="listitem"] {
+        --color: var(--color-grey88);
+        display: grid;
+        grid-template-rows: 24px;
+        font-size: var(--size14);
+        padding: 11px;
+        align-items: center;
+        broder: 1px solid hsl(var(--color-black));
+    }
+    [role="listitem"]:hover {
+        --bg-color: var(--color-white);
+        cursor: default;
     }
     @keyframes close {
         0% {
