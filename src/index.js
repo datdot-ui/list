@@ -13,7 +13,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
         const send = protocol( get )
         send(message)
         const list = document.createElement('i-list')
-        const shadow = list.attachShadow({mode: 'closed'})
+        const shadow = list.attachShadow({mode: 'open'})
         list.setAttribute('role', 'listbox')
         list.ariaHidden = hidden
         list.ariaLabel = name
