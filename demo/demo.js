@@ -32,18 +32,26 @@ function demo () {
         name: 'dropdown-list', 
         body: options, 
         mode: 'single-select', 
-        hidden: true
+        hidden: false
     }, 
     protocol('dropdonw-list'))
+    const current_selected = options.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
+    const select = bel`<span class=${css.select}>${current_selected}</span>`
+    const result = bel`<div class="${css.result}">Current selected ${select}</div>`
     const content = bel`
     <div class="${css.content}">
         <h1>List</h1>
+        ${result}
         ${dropdown_list}
     </div>`
     const container = bel`<div class="${css.container}">${content}</div>`
     const app = bel`<div class="${css.wrap}" data-state="debug">${container}${logs}</div>`
 
     return app
+
+    function change_event (body) {
+        select.textContent = body
+    }
 
     function protocol (name) {
         return send => {
@@ -55,6 +63,7 @@ function demo () {
     function get (msg) {
         const {type, data} = msg
         recipients['logs'](msg)
+        if (type === 'selected') return change_event(data.option)
     }
 }
 
@@ -71,6 +80,7 @@ const css = csjs`
     --color-amaranth-pink: 331, 86%, 78%;
     --color-persian-rose: 323, 100%, 56%;
     --color-orange: 35, 100%, 58%;
+    --color-safety-orange: 27, 100%, 50%;
     --color-deep-saffron: 31, 100%, 56%;
     --color-ultra-red: 348, 96%, 71%;
     --color-flame: 15, 80%, 50%;
@@ -183,6 +193,13 @@ body {
     background-color: var(--color-white);
     height: 100%;
     overflow: hidden auto;
+}
+.result {
+    font-size: var(--size16);
+}
+.select {
+    font-weight: bold;
+    color: hsl(var(--color-blue));
 }
 @media (max-width: 768px) {
     [data-state="debug"] {

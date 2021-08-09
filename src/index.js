@@ -17,7 +17,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
         list.setAttribute('role', 'listbox')
         list.ariaHidden = hidden
         list.ariaLabel = name
-        list.tabIndex = 0
+        list.tabIndex = -1
         list.ariaExpanded = expanded
         list.dataset.mode = mode
         style_sheet(shadow, style)
@@ -68,6 +68,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
                     const type = state ? 'selected' : 'unselected'
                     recipients[current]( make({type, data: state}) )
                     send(make({to: name, type, data: {option: current, selected: state, current: state} }))
+                    list.setAttribute('aria-aria-activedescendant', from)
                 })
             }
         }

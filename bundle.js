@@ -33,18 +33,26 @@ function demo () {
         name: 'dropdown-list', 
         body: options, 
         mode: 'single-select', 
-        hidden: true
+        hidden: false
     }, 
     protocol('dropdonw-list'))
+    const current_selected = options.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
+    const select = bel`<span class=${css.select}>${current_selected}</span>`
+    const result = bel`<div class="${css.result}">Current selected ${select}</div>`
     const content = bel`
     <div class="${css.content}">
         <h1>List</h1>
+        ${result}
         ${dropdown_list}
     </div>`
     const container = bel`<div class="${css.container}">${content}</div>`
     const app = bel`<div class="${css.wrap}" data-state="debug">${container}${logs}</div>`
 
     return app
+
+    function change_event (body) {
+        select.textContent = body
+    }
 
     function protocol (name) {
         return send => {
@@ -56,6 +64,7 @@ function demo () {
     function get (msg) {
         const {type, data} = msg
         recipients['logs'](msg)
+        if (type === 'selected') return change_event(data.option)
     }
 }
 
@@ -72,6 +81,7 @@ const css = csjs`
     --color-amaranth-pink: 331, 86%, 78%;
     --color-persian-rose: 323, 100%, 56%;
     --color-orange: 35, 100%, 58%;
+    --color-safety-orange: 27, 100%, 50%;
     --color-deep-saffron: 31, 100%, 56%;
     --color-ultra-red: 348, 96%, 71%;
     --color-flame: 15, 80%, 50%;
@@ -184,6 +194,13 @@ body {
     background-color: var(--color-white);
     height: 100%;
     overflow: hidden auto;
+}
+.result {
+    font-size: var(--size16);
+}
+.select {
+    font-weight: bold;
+    color: hsl(var(--color-blue));
 }
 @media (max-width: 768px) {
     [data-state="debug"] {
@@ -966,7 +983,7 @@ function terminal ({to = 'terminal', mode = 'compact', expanded = false}, protoc
     function get (msg) {
         const {head, refs, type, data, meta} = msg
         // make an object for type, count, color
-        const init = t => ({type: t, count: 0, color: type.match(/ready|click|triggered|opened|closed|checked|unchecked|selected|unselected|error|warning|toggled/) ? null : int2hsla(str2hashint(t)) })
+        const init = t => ({type: t, count: 0, color: type.match(/ready|click|triggered|opened|closed|checked|unchecked|selected|unselected|error|warning|toggled|changed/) ? null : int2hsla(str2hashint(t)) })
         // to check type is existing then do count++, else return new type
         const add = t => ((types[t] || (types[t] = init(t))).count++, types[t])
         add(type)
@@ -1184,6 +1201,11 @@ log-list .list:last-child {
 [aria-type="unselected"] {
     --bg-color: var(--color-lime-green);
     --opacity: .25;
+}
+[aria-type="changed"] {
+    --color: var(--color-dark);
+    --bg-color: var(--color-safety-orange);
+    --opacity: 1;
 }
 log-list .list:last-child .type {}
 log-list .list:last-child .arrow {
@@ -2009,7 +2031,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
         list.setAttribute('role', 'listbox')
         list.ariaHidden = hidden
         list.ariaLabel = name
-        list.tabIndex = 0
+        list.tabIndex = -1
         list.ariaExpanded = expanded
         list.dataset.mode = mode
         style_sheet(shadow, style)
@@ -2060,6 +2082,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
                     const type = state ? 'selected' : 'unselected'
                     recipients[current]( make({type, data: state}) )
                     send(make({to: name, type, data: {option: current, selected: state, current: state} }))
+                    list.setAttribute('aria-aria-activedescendant', from)
                 })
             }
         }
