@@ -112,7 +112,6 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
         margin-top: 5px;
     }
     :host(i-list[aria-hidden="true"]) {
-        display: none;
         opacity: 0;
         animation: close 0.3s;
         pointer-events: none;
