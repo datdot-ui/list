@@ -12,7 +12,8 @@ const message_maker = require('../src/node_modules/message-maker')
 function demo () {
     let recipients = []
     const logs = terminal({mode: 'comfortable', expanded: false}, protocol('logs'))
-    let options = [{
+    let options = [
+        {
             text: 'Option1',
             icon: icon({name: 'check', path: 'assets'}),
             current: true,
@@ -27,7 +28,14 @@ function demo () {
             icon: icon({name: 'check', path: 'assets'}),
         }
     ]
-    const dropdown_list = list({name: 'dropdown-list', body: options, mode: 'single-select', expanded: true, hidden: false}, protocol('dropdonw-list'))
+    const dropdown_list = list(
+    {
+        name: 'dropdown-list', 
+        body: options, 
+        mode: 'single-select', 
+        hidden: true
+    }, 
+    protocol('dropdonw-list'))
     const content = bel`
     <div class="${css.content}">
         <h1>List</h1>
@@ -2096,11 +2104,13 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
         margin-top: 5px;
     }
     :host(i-list[aria-hidden="true"]) {
+        display: none;
         opacity: 0;
         animation: close 0.3s;
         pointer-events: none;
     }
-    :host(i-list[aria-hidden="false"]) {
+    :host([aria-hidden="false"]) {
+        display: grid;
         animation: open 0.3s;
     }
     li {

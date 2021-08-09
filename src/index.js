@@ -112,11 +112,13 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
         margin-top: 5px;
     }
     :host(i-list[aria-hidden="true"]) {
+        display: none;
         opacity: 0;
         animation: close 0.3s;
         pointer-events: none;
     }
-    :host(i-list[aria-hidden="false"]) {
+    :host([aria-hidden="false"]) {
+        display: grid;
         animation: open 0.3s;
     }
     li {

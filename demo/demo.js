@@ -11,7 +11,8 @@ const message_maker = require('../src/node_modules/message-maker')
 function demo () {
     let recipients = []
     const logs = terminal({mode: 'comfortable', expanded: false}, protocol('logs'))
-    let options = [{
+    let options = [
+        {
             text: 'Option1',
             icon: icon({name: 'check', path: 'assets'}),
             current: true,
@@ -26,7 +27,14 @@ function demo () {
             icon: icon({name: 'check', path: 'assets'}),
         }
     ]
-    const dropdown_list = list({name: 'dropdown-list', body: options, mode: 'single-select', expanded: true, hidden: false}, protocol('dropdonw-list'))
+    const dropdown_list = list(
+    {
+        name: 'dropdown-list', 
+        body: options, 
+        mode: 'single-select', 
+        hidden: true
+    }, 
+    protocol('dropdonw-list'))
     const content = bel`
     <div class="${css.content}">
         <h1>List</h1>
