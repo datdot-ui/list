@@ -12,20 +12,20 @@ function demo () {
     let recipients = []
     const logs = terminal({mode: 'comfortable', expanded: false}, protocol('logs'))
     let options = [{
-        text: 'Option1',
-        icon: icon({name: 'check', path: 'assets'}),
-        current: true,
-        selected: true
-    },
-    {
-        text: 'Option2',
-        icon: icon({name: 'check', path: 'assets'}),
-    },
-    {
-        text: 'Option3',
-        icon: icon({name: 'check', path: 'assets'}),
-    }
-]
+            text: 'Option1',
+            icon: icon({name: 'check', path: 'assets'}),
+            current: true,
+            selected: true
+        },
+        {
+            text: 'Option2',
+            icon: icon({name: 'check', path: 'assets'}),
+        },
+        {
+            text: 'Option3',
+            icon: icon({name: 'check', path: 'assets'}),
+        }
+    ]
     const dropdown_list = list({name: 'dropdown-list', body: options, mode: 'single-select', expanded: true, hidden: false}, protocol('dropdonw-list'))
     const content = bel`
     <div class="${css.content}">

@@ -48,6 +48,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [], mode = 'mult
 
         function handle_expanded_event (data) {
             list.ariaHidden = data
+            list.ariaExpanded = !data
         }
         function handle_select_event (from, data) {
             const selected = !data
