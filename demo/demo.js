@@ -31,6 +31,7 @@ function demo () {
         {
             text: 'Option1',
             icon: icon({name: 'check', path: 'assets'}),
+            selected: true
         },
         {
             text: 'Option2',
@@ -39,7 +40,6 @@ function demo () {
         {
             text: 'Option3',
             icon: icon({name: 'check', path: 'assets'}),
-            current: true,
             selected: true
         }
     ]
@@ -59,20 +59,30 @@ function demo () {
         }, 
         protocol('multiple-select-list'))
     const current_single_selected = options1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
-    const current_multiple_selected = options2.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
-    const select = bel`<span class=${css.select}>${current_single_selected}</span>`
-    const result = bel`<div class="${css.result}">Current selected ${select}</div>`
-    const selects = bel`<span class=${css.select}></span>`
+    const current_multiple_selected = options2.filter( option => option.selected)
+    const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
+    let selected = bel`<span>${selected_length} ${current_multiple_selected.length > 1 ? `items` : `item`}</span>`
+    const total_selected = bel`<span class="${css.total}">Total selected:</span>`
+    total_selected.append(selected)
+    const select = bel`<span class="${css.select}">${current_single_selected}</span>`
+    const select_result = bel`<div class="${css.result}">Current selected ${select}</div>`
+    let selects = current_multiple_selected.map( option => bel`<span class=${css.badge}>${option.text}</span>`)
+    let selects_result = bel`<div class="${css['selects-result']}"></div>`
+    selects.map( selected => selects_result.append(selected))
     const content = bel`
     <div class="${css.content}">
         <h1>List</h1>
         <section>
             <h2>Multple select</h2>
+            <div>
+                ${total_selected}
+                ${selects_result}
+            </div>
             ${multiple_select_list}
         </section>
         <section>
             <h2>Single select</h2>
-            ${result}
+            ${select_result}
             ${single_select_list}
         </section>
     </div>`
@@ -81,8 +91,17 @@ function demo () {
 
     return app
 
-    function change_event (body) {
-        select.textContent = body
+    function change_event (data) {
+        if (data.option) return select.textContent = body
+        if (data.current_selected) {
+            const selected_length = bel`<span class="${css.count}">${data.length}</span>`
+            selected = bel`<span>${selected_length} ${data.length > 1 ? `items` : `item`}</span>`
+            selects = data.current_selected.map( option => bel`<span class=${css.badge}>${option}</span>`)
+            selects_result.innerHTML = ''
+            selects.map( selected => selects_result.append(selected))
+            total_selected.lastChild.remove()
+            total_selected.append(selected)
+        }
     }
 
     function protocol (name) {
@@ -95,7 +114,7 @@ function demo () {
     function get (msg) {
         const {head, type, data} = msg
         recipients['logs'](msg)
-        if (type === 'selected') return change_event(data.option)
+        if (type.match(/selected|unselected/) ) return change_event(data)
     }
 }
 
@@ -185,6 +204,12 @@ body {
     height: 100%;
     overflow: hidden;
 }
+h1 {
+    font-size: var(--size28);
+}
+h2 {
+    font-size: var(--size20);
+}
 .wrap {
     display: grid;
 }
@@ -233,11 +258,26 @@ body {
     font-weight: bold;
     color: hsl(var(--color-blue));
 }
-h1 {
-    font-size: var(--size28);
+
+.selects-result {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, auto));
+    gap: 10px;
 }
-h2 {
-    font-size: var(--size20);
+.badge {
+    font-size: var(--size12);
+    padding: 8px;
+    background-color: hsl(var(--color-greyF2));
+    text-align: center;
+}
+.total {
+    display: block;
+    font-size: var(--size16);
+    padding-bottom: 8px;
+}
+.count {
+    font-weight: 600;
+    color: hsl(var(--color-blue));
 }
 @media (max-width: 768px) {
     [data-state="debug"] {

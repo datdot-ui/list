@@ -12,7 +12,7 @@ const message_maker = require('../src/node_modules/message-maker')
 function demo () {
     const recipients = []
     const logs = terminal({mode: 'comfortable', expanded: false}, protocol('logs'))
-    const options = [
+    const options1 = [
         {
             text: 'Option1',
             icon: icon({name: 'check', path: 'assets'}),
@@ -28,30 +28,81 @@ function demo () {
             selected: true
         }
     ]
-    const dropdown_list = list(
+    const options2 = [
+        {
+            text: 'Option1',
+            icon: icon({name: 'check', path: 'assets'}),
+            selected: true
+        },
+        {
+            text: 'Option2',
+            icon: icon({name: 'check', path: 'assets'}),
+        },
+        {
+            text: 'Option3',
+            icon: icon({name: 'check', path: 'assets'}),
+            selected: true
+        }
+    ]
+    const single_select_list = list(
     {
-        name: 'dropdown-list', 
-        body: options, 
-        mode: 'multiple-select', 
+        name: 'single-select-list', 
+        body: options1, 
+        mode: 'single-select', 
         hidden: false
     }, 
-    protocol('dropdonw-list'))
-    const current_selected = options.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
-    const select = bel`<span class=${css.select}>${current_selected}</span>`
-    const result = bel`<div class="${css.result}">Current selected ${select}</div>`
+    protocol('single-select-list'))
+    const multiple_select_list = list(
+        {
+            name: 'multiple-select-list', 
+            body: options2, 
+            hidden: false
+        }, 
+        protocol('multiple-select-list'))
+    const current_single_selected = options1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
+    const current_multiple_selected = options2.filter( option => option.selected)
+    const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
+    let selected = bel`<span>${selected_length} ${current_multiple_selected.length > 1 ? `items` : `item`}</span>`
+    const total_selected = bel`<span class="${css.total}">Total selected:</span>`
+    total_selected.append(selected)
+    const select = bel`<span class="${css.select}">${current_single_selected}</span>`
+    const select_result = bel`<div class="${css.result}">Current selected ${select}</div>`
+    let selects = current_multiple_selected.map( option => bel`<span class=${css.badge}>${option.text}</span>`)
+    let selects_result = bel`<div class="${css['selects-result']}"></div>`
+    selects.map( selected => selects_result.append(selected))
     const content = bel`
     <div class="${css.content}">
         <h1>List</h1>
-        ${result}
-        ${dropdown_list}
+        <section>
+            <h2>Multple select</h2>
+            <div>
+                ${total_selected}
+                ${selects_result}
+            </div>
+            ${multiple_select_list}
+        </section>
+        <section>
+            <h2>Single select</h2>
+            ${select_result}
+            ${single_select_list}
+        </section>
     </div>`
     const container = bel`<div class="${css.container}">${content}</div>`
     const app = bel`<div class="${css.wrap}" data-state="debug">${container}${logs}</div>`
 
     return app
 
-    function change_event (body) {
-        select.textContent = body
+    function change_event (data) {
+        if (data.option) return select.textContent = body
+        if (data.current_selected) {
+            const selected_length = bel`<span class="${css.count}">${data.length}</span>`
+            selected = bel`<span>${selected_length} ${data.length > 1 ? `items` : `item`}</span>`
+            selects = data.current_selected.map( option => bel`<span class=${css.badge}>${option}</span>`)
+            selects_result.innerHTML = ''
+            selects.map( selected => selects_result.append(selected))
+            total_selected.lastChild.remove()
+            total_selected.append(selected)
+        }
     }
 
     function protocol (name) {
@@ -62,9 +113,9 @@ function demo () {
     }
 
     function get (msg) {
-        const {type, data} = msg
+        const {head, type, data} = msg
         recipients['logs'](msg)
-        if (type === 'selected') return change_event(data.option)
+        if (type.match(/selected|unselected/) ) return change_event(data)
     }
 }
 
@@ -154,6 +205,12 @@ body {
     height: 100%;
     overflow: hidden;
 }
+h1 {
+    font-size: var(--size28);
+}
+h2 {
+    font-size: var(--size20);
+}
 .wrap {
     display: grid;
 }
@@ -200,6 +257,27 @@ body {
 }
 .select {
     font-weight: bold;
+    color: hsl(var(--color-blue));
+}
+
+.selects-result {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, auto));
+    gap: 10px;
+}
+.badge {
+    font-size: var(--size12);
+    padding: 8px;
+    background-color: hsl(var(--color-greyF2));
+    text-align: center;
+}
+.total {
+    display: block;
+    font-size: var(--size16);
+    padding-bottom: 8px;
+}
+.count {
+    font-weight: 600;
     color: hsl(var(--color-blue));
 }
 @media (max-width: 768px) {
@@ -2075,8 +2153,9 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         style_sheet(shadow, style)
         try {
             body.map( (option, i) => {
-                const {text, icon, current = false, selected = false} = option
+                let {text, icon, current = false, selected = false} = option
                 const is_current = mode === 'single-select' ? current : false
+                
                 let item = button({
                     page, 
                     name: text, 
@@ -2118,9 +2197,13 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             const lists = childNodes.length < 4 ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
             if (mode === 'multiple-select') {
                 const make = message_maker(`${from} / option / ${flow}`)
-                lists.forEach( child => child.dataset.option === from ? child.setAttribute('aria-selected', selected) : false)
+                const arr = []
+                lists.forEach( child => {
+                    child.dataset.option === from ? child.setAttribute('aria-selected', selected) : false
+                    if (child.getAttribute('aria-selected') === 'true') arr[arr.length] = child.dataset.option
+                })
                 recipients[from]( make({type, data: selected}) )
-                send( make({to: name, type, data: {option: from, selected} }))
+                send( make({to: name, type, data: {current_selected: arr, length: arr.length}}))
             }
             if (mode === 'single-select') {
                 lists.forEach( child => {
