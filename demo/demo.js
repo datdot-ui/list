@@ -92,7 +92,7 @@ function demo () {
     return app
 
     function change_event (data) {
-        if (data.option) return select.textContent = body
+        if (data.current) return select.textContent = data.option
         if (data.current_selected) {
             const selected_length = bel`<span class="${css.count}">${data.length}</span>`
             selected = bel`<span>${selected_length} ${data.length > 1 ? `items` : `item`}</span>`

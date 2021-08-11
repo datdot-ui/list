@@ -23,9 +23,8 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         style_sheet(shadow, style)
         try {
             body.map( (option, i) => {
-                let {text, icon, current = false, selected = false} = option
+                const {text, icon, current = false, selected = false} = option
                 const is_current = mode === 'single-select' ? current : false
-                
                 let item = button({
                     page, 
                     name: text, 
