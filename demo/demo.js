@@ -11,7 +11,7 @@ const message_maker = require('../src/node_modules/message-maker')
 function demo () {
     const recipients = []
     const logs = terminal({mode: 'comfortable', expanded: false}, protocol('logs'))
-    const options = [
+    const options1 = [
         {
             text: 'Option1',
             icon: icon({name: 'check', path: 'assets'}),
@@ -27,22 +27,54 @@ function demo () {
             selected: true
         }
     ]
-    const dropdown_list = list(
+    const options2 = [
+        {
+            text: 'Option1',
+            icon: icon({name: 'check', path: 'assets'}),
+        },
+        {
+            text: 'Option2',
+            icon: icon({name: 'check', path: 'assets'}),
+        },
+        {
+            text: 'Option3',
+            icon: icon({name: 'check', path: 'assets'}),
+            current: true,
+            selected: true
+        }
+    ]
+    const single_select_list = list(
     {
-        name: 'dropdown-list', 
-        body: options, 
-        mode: 'multiple-select', 
+        name: 'single-select-list', 
+        body: options1, 
+        mode: 'single-select', 
         hidden: false
     }, 
-    protocol('dropdonw-list'))
-    const current_selected = options.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
-    const select = bel`<span class=${css.select}>${current_selected}</span>`
+    protocol('single-select-list'))
+    const multiple_select_list = list(
+        {
+            name: 'multiple-select-list', 
+            body: options2, 
+            hidden: false
+        }, 
+        protocol('multiple-select-list'))
+    const current_single_selected = options1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
+    const current_multiple_selected = options2.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
+    const select = bel`<span class=${css.select}>${current_single_selected}</span>`
     const result = bel`<div class="${css.result}">Current selected ${select}</div>`
+    const selects = bel`<span class=${css.select}></span>`
     const content = bel`
     <div class="${css.content}">
         <h1>List</h1>
-        ${result}
-        ${dropdown_list}
+        <section>
+            <h2>Multple select</h2>
+            ${multiple_select_list}
+        </section>
+        <section>
+            <h2>Single select</h2>
+            ${result}
+            ${single_select_list}
+        </section>
     </div>`
     const container = bel`<div class="${css.container}">${content}</div>`
     const app = bel`<div class="${css.wrap}" data-state="debug">${container}${logs}</div>`
@@ -61,7 +93,7 @@ function demo () {
     }
 
     function get (msg) {
-        const {type, data} = msg
+        const {head, type, data} = msg
         recipients['logs'](msg)
         if (type === 'selected') return change_event(data.option)
     }
@@ -200,6 +232,12 @@ body {
 .select {
     font-weight: bold;
     color: hsl(var(--color-blue));
+}
+h1 {
+    font-size: var(--size28);
+}
+h2 {
+    font-size: var(--size20);
 }
 @media (max-width: 768px) {
     [data-state="debug"] {
