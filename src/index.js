@@ -63,7 +63,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             const selected = !data
             const type = selected ? 'selected' : 'unselected'
             const { childNodes } = shadow
-            const lists = childNodes.length < 4 ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
+            const lists = shadow.firstChild.tagName === 'LI' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
             if (mode === 'multiple-select') {
                 const make = message_maker(`${from} / option / ${flow}`)
                 const arr = []
