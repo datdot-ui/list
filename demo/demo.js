@@ -15,8 +15,6 @@ function demo () {
         {
             text: 'Option1',
             icon: icon({name: 'check', path: 'assets'}),
-            current: true,
-            selected: true
         },
         {
             text: 'Option2',
@@ -25,13 +23,15 @@ function demo () {
         {
             text: 'Option3',
             icon: icon({name: 'check', path: 'assets'}),
+            current: true,
+            selected: true
         }
     ]
     const dropdown_list = list(
     {
         name: 'dropdown-list', 
         body: options, 
-        mode: 'single-select', 
+        mode: 'multiple-select', 
         hidden: false
     }, 
     protocol('dropdonw-list'))

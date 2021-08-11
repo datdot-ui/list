@@ -63,14 +63,15 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             const selected = !data
             const type = selected ? 'selected' : 'unselected'
             const { childNodes } = shadow
+            const lists = childNodes.length < 4 ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
             if (mode === 'multiple-select') {
                 const make = message_maker(`${from} / option / ${flow}`)
-                childNodes.forEach( child => child.dataset.option === from ? child.setAttribute('aria-selected', selected) : false)
+                lists.forEach( child => child.dataset.option === from ? child.setAttribute('aria-selected', selected) : false)
                 recipients[from]( make({type, data: selected}) )
                 send( make({to: name, type, data: {option: from, selected} }))
             }
             if (mode === 'single-select') {
-                childNodes.forEach( child => {
+                lists.forEach( child => {
                     const state = from === child.dataset.option ? !data : data
                     const current = state ? from : child.dataset.option
                     const make = message_maker(`${current} / option / ${flow}`)

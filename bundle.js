@@ -16,8 +16,6 @@ function demo () {
         {
             text: 'Option1',
             icon: icon({name: 'check', path: 'assets'}),
-            current: true,
-            selected: true
         },
         {
             text: 'Option2',
@@ -26,13 +24,15 @@ function demo () {
         {
             text: 'Option3',
             icon: icon({name: 'check', path: 'assets'}),
+            current: true,
+            selected: true
         }
     ]
     const dropdown_list = list(
     {
         name: 'dropdown-list', 
         body: options, 
-        mode: 'single-select', 
+        mode: 'multiple-select', 
         hidden: false
     }, 
     protocol('dropdonw-list'))
@@ -1298,23 +1298,28 @@ function i_button (option, protocol) {
     function widget () {
         const send = protocol(get)
         const make = message_maker(`${name} / ${role} / ${flow}`)
-        let data = role === 'tab' ?  {selected: is_current ? 'true' : is_selected, current: is_current} : role === 'switch' ? {checked: is_checked} : role === 'listbox' ? {selected: is_selected} : disabled ? {disabled} : null
+        let data = role === 'tab' ?  {selected: is_current ? 'true' : is_selected, current: is_current} : role === 'switch' ? {checked: is_checked} : role === 'listbox' ? {expanded: is_expanded} : disabled ? {disabled} : role === 'option' ? {selected: is_selected, current: is_current} : null
         const message = make({to: 'demo.js', type: 'ready', data})
         send(message)
         const el = document.createElement('i-button')
         const text = document.createElement('span')
+        if (body != void 0) {
+            text.classList.add('text')
+            text.append(body)
+        }
         el.dataset.name = name
         el.dataset.ui = role
         el.setAttribute('role', role)
         el.setAttribute('aria-label', name)
         el.setAttribute('tabindex', 0)
         el.onclick = handle_click
-        text.classList.add('text')
-        text.append(body)
         const shadow = el.attachShadow({mode: 'open'})
         style_sheet(shadow, style)
-        if (icon || role === 'option') shadow.append(icon, text)
-        else shadow.append(body)
+        if (icon || role.match(/option|listbox/) ) {
+            if (icon === '') shadow.append(body)
+            if (body === undefined) shadow.append(icon)
+            if (icon !== '' && body) shadow.append(icon, text)
+        }else shadow.append(body)
 
         // define conditions
         if (state) {
@@ -1345,7 +1350,7 @@ function i_button (option, protocol) {
             is_selected = current
             el.setAttribute('aria-current', is_current)
         }
-        if (is_selected || !is_selected && role !== 'button') {
+        if (is_selected || !is_selected && role.match(/option/)) {
             el.setAttribute('aria-selected', is_selected)
         } 
         if (is_expanded) {
@@ -1380,6 +1385,15 @@ function i_button (option, protocol) {
                 el.setAttribute('aria-current', is_current)
             }
         }
+        function changed_event (body) {
+            const [icon, text] = shadow.childNodes
+            if (text) {
+                text.textContent = body
+            } else {
+                shadow.childNodes[0].textContent = body
+                el.ariaLabel = body
+            }
+        }
         // button click
         function handle_click () {
             if (is_current) return
@@ -1396,11 +1410,12 @@ function i_button (option, protocol) {
             // toggle
             if (type === 'switched') return switched_event(data)
             // dropdown
-            if (type === 'expanded') return expanded_event(data)
+            if (type.match(/expanded|unexpanded/)) return expanded_event(data)
             // tab, checkbox
             if (type.match(/checked|unchecked/)) return checked_event(data)
             // option
             if (type.match(/selected|unselected/)) return selected_event(data)
+            if (type === 'changed') return changed_event(data)
         }
     }
    
@@ -1409,12 +1424,13 @@ function i_button (option, protocol) {
     // set CSS variables
     if (theme && theme.props) {
         var {size, size_hover, current_size,
-            weight, weight_hover, current_weight,
+            weight, weight_hover, current_weight, current_hover_weight,
             color, color_hover, current_color, current_bg_color, 
+            current_hover_color, current_hover_bg_color,
             bg_color, bg_color_hover, border_color_hover,
             border_width, border_style, border_opacity, border_color, border_radius, 
             padding, width, height, opacity,
-            fill, fill_hover, icon_size, current_fill,
+            fill, fill_hover, icon_size, current_fill, current_hover_fill,
             shadow_color, offset_x, offset_y, blur, shadow_opacity,
             shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
         } = theme.props
@@ -1424,7 +1440,7 @@ function i_button (option, protocol) {
     :host(i-button) {
         --size: ${size ? size : 'var(--size14)'};
         --size-hover: ${size_hover ? size_hover : 'var(--size)'};
-        --curren-size: ${current_size ? current_size : 'var(--size14)'};
+        --current-size: ${current_size ? current_size : 'var(--size14)'};
         --bold: ${weight ? weight : 'normal'};
         --color: ${color ? color : 'var(--primary-color)'};
         --bg-color: ${bg_color ? bg_color : 'var(--color-white)'};
@@ -1496,7 +1512,9 @@ function i_button (option, protocol) {
         column-gap: 8px;
     }
     :host(i-button) .icon {
-        display: block;
+        display: grid;
+        justify-content: center;
+        align-item: center;
         width: var(---icon-size);
         height: var(---icon-size);
     }
@@ -1539,22 +1557,42 @@ function i_button (option, protocol) {
         --border-width: ${border_width ? border_width : '0'};
         --border-style: ${border_style ? border_style : 'solid'};
         --border-color: ${border_color ? border_color : 'var(--primary-color)'};
+        display: grid;
+        grid-template-columns: ${body && icon !== '' ? '1fr auto' : 'auto'};
         width: var(--width);
+    }
+    :host(i-button[role="listbox"]) .text {
+        grid-column-start: 1;
+        text-align: left;
+    }
+    :host(i-button[role="listbox"]) .icon {
+        ${body && icon !== '' ? 'grid-column-start: 2;' : ''}
     }
     :host(i-button[aria-current="true"]), :host(i-button[aria-current="true"]:hover) {
         --bold: ${current_weight ? current_weight : 'initial'};
         --color: ${current_color ? current_color : 'var(--color-white)'};
         --bg-color: ${current_bg_color ? current_bg_color : 'var(--primary-color)'};
-        font-size: var(--current_size);
+        font-size: var(--current-size);
     }
     :host(i-button[aria-current="true"]) g {
         --fill: ${fill ? fill : 'var(--color-white)'};
     }
     :host(i-button[aria-checked="true"]), :host(i-button[aria-expanded="true"]),
-    :host(i-button[aria-checked="true"]:hover), :host(i-button[aria-expanded="true"]:hover) {
+    :host(i-button[aria-checked="true"]:hover) {
         --bold: ${current_weight ? current_weight : 'initial'};
         --color: ${current_color ? current_color : 'var(--color-white)'};
         --bg-color: ${current_bg_color ? current_bg_color : 'var(--primary-color)'};
+    }
+    :host(i-button[aria-expanded="true"]:hover) {
+        --bold: ${current_hover_weight ? current_hover_weight : 'initial'};
+        --color: ${current_hover_color ? current_hover_color : 'var(--color-white)'};
+        --bg-color: ${current_hover_bg_color ? current_hover_bg_color : 'var(--primary-color)'};
+    }
+    :host(i-button[aria-expanded="true"]) g {
+        --fill: ${current_fill ? current_fill : 'var(--color-white)'};
+    }
+    :host(i-button[aria-expanded="true"]:hover) g {
+        --fill: ${current_hover_fill ? current_hover_fill : 'var(--color-white)'};
     }
     :host(i-button[aria-checked="true"]) g {
         --fill: ${current_fill ? current_fill : 'var(--color-white)' };
@@ -2077,14 +2115,15 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             const selected = !data
             const type = selected ? 'selected' : 'unselected'
             const { childNodes } = shadow
+            const lists = childNodes.length < 4 ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
             if (mode === 'multiple-select') {
                 const make = message_maker(`${from} / option / ${flow}`)
-                childNodes.forEach( child => child.dataset.option === from ? child.setAttribute('aria-selected', selected) : false)
+                lists.forEach( child => child.dataset.option === from ? child.setAttribute('aria-selected', selected) : false)
                 recipients[from]( make({type, data: selected}) )
                 send( make({to: name, type, data: {option: from, selected} }))
             }
             if (mode === 'single-select') {
-                childNodes.forEach( child => {
+                lists.forEach( child => {
                     const state = from === child.dataset.option ? !data : data
                     const current = state ? from : child.dataset.option
                     const make = message_maker(`${current} / option / ${flow}`)
