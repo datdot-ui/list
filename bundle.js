@@ -2108,7 +2108,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             const role = head[0].split(' / ')[1]
             const from = head[0].split(' / ')[0]
             if (type === 'click') return handle_select_event(from, data)
-            if (type === 'expanded') return handle_expanded_event(data)
+            if (type.match(/expanded|unexpanded/)) return handle_expanded_event(data)
         }
     }
 
