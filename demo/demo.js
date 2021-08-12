@@ -61,14 +61,14 @@ function demo () {
     const current_single_selected = options1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
     const current_multiple_selected = options2.filter( option => option.selected)
     const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
-    let selected = bel`<span>${selected_length} ${current_multiple_selected.length > 1 ? `items` : `item`}</span>`
+    let select_items = bel`<span>${selected_length} ${current_multiple_selected.length > 1 ? `items` : `item`}</span>`
     const total_selected = bel`<span class="${css.total}">Total selected:</span>`
-    total_selected.append(selected)
+    total_selected.append(select_items)
     const select = bel`<span class="${css.select}">${current_single_selected}</span>`
     const select_result = bel`<div class="${css.result}">Current selected ${select}</div>`
     let selects = current_multiple_selected.map( option => bel`<span class=${css.badge}>${option.text}</span>`)
     let selects_result = bel`<div class="${css['selects-result']}"></div>`
-    selects.map( selected => selects_result.append(selected))
+    selects.map( select => selects_result.append(select))
     const content = bel`
     <div class="${css.content}">
         <h1>List</h1>
@@ -92,15 +92,16 @@ function demo () {
     return app
 
     function change_event (data) {
-        if (data.current) return select.textContent = data.option
-        if (data.current_selected) {
-            const selected_length = bel`<span class="${css.count}">${data.length}</span>`
-            selected = bel`<span>${selected_length} ${data.length > 1 ? `items` : `item`}</span>`
-            selects = data.current_selected.map( option => bel`<span class=${css.badge}>${option}</span>`)
+        const {mode, selected} = data
+        if (mode === 'single-select') return select.textContent = selected
+        if (mode === 'multiple-select') {
+            const selected_length = bel`<span class="${css.count}">${selected.length}</span>`
+            select_items = bel`<span>${selected_length} ${selected.length > 1 ? `items` : `item`}</span>`
+            selects = data.selected.map( option => bel`<span class=${css.badge}>${option}</span>`)
             selects_result.innerHTML = ''
-            selects.map( selected => selects_result.append(selected))
+            selects.map( item => selects_result.append(item))
             total_selected.lastChild.remove()
-            total_selected.append(selected)
+            total_selected.append(select_items)
         }
     }
 

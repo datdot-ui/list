@@ -63,7 +63,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             const selected = !data
             const type = selected ? 'selected' : 'unselected'
             const { childNodes } = shadow
-            const lists = shadow.firstChild.tagName === 'LI' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
+            const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
             if (mode === 'multiple-select') {
                 const make = message_maker(`${from} / option / ${flow}`)
                 const arr = []
@@ -72,7 +72,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                     if (child.getAttribute('aria-selected') === 'true') arr[arr.length] = child.dataset.option
                 })
                 recipients[from]( make({type, data: selected}) )
-                send( make({to: name, type, data: {current_selected: arr, length: arr.length}}))
+                send( make({to: name, type, data: {mode, selected: arr, length: arr.length}}))
             }
             if (mode === 'single-select') {
                 lists.forEach( child => {
@@ -81,7 +81,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                     const make = message_maker(`${current} / option / ${flow}`)
                     const type = state ? 'selected' : 'unselected'
                     recipients[current]( make({type, data: state}) )
-                    send(make({to: name, type, data: {option: current, selected: state, current: state} }))
+                    send(make({to: name, type, data: {mode, selected: from} }))
                     list.setAttribute('aria-activedescendant', from)
                 })
             }
