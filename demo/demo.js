@@ -216,7 +216,7 @@ const css = csjs`
     --primary-color: var(--color-black);
     --primary-bgColor: var(--color-greyF2);
     --primary-font: Arial, sens-serif;
-    --primary-font-size: var(--size16);
+    --primary-size: var(--size14);
     --primary-input-radius: 8px;
     --primary-button-radius: 8px;
 }
@@ -230,7 +230,7 @@ html {
 body {
     margin: 0;
     padding: 0;
-    font-size: var(--primary-size);
+    font-size: 1.6rem;
     -webkit-text-size-adjust:100%;
     font-family: var(--primary-font);
     background-color: hsl( var(--primary-bg-color) );
