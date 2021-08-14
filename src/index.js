@@ -1,6 +1,7 @@
 const bel = require('bel')
 const style_sheet = require('support-style-sheet')
-const button = require('datdot-ui-button')
+const {i_button} = require('datdot-ui-button')
+const button = i_button
 const message_maker = require('message-maker')
 module.exports = i_list
 
@@ -14,7 +15,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         send(message)
         const list = document.createElement('i-list')
         const shadow = list.attachShadow({mode: 'open'})
-        list.setAttribute('role', 'listbox')
+        
         list.ariaHidden = hidden
         list.ariaLabel = name
         list.tabIndex = -1
@@ -22,10 +23,45 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         list.dataset.mode = mode
         style_sheet(shadow, style)
         try {
-            body.map( (option, i) => {
+            if (mode.match(/single|multiple/)) {
+                list.setAttribute('role', 'listbox')
+                generate_select_list()
+            }   
+            if (mode.match(/dropdown/)) {
+                list.setAttribute('role', 'menubar')
+                generate_list()
+            }
+            if (body.length === 0) send({type: 'error', data: 'body no items'})
+        } catch(e) {
+            send({type: 'error', data: 'something went wrong'})
+        }
+        
+        return list
+
+        function generate_list () {
+            return body.map( (list, i) => {
+                const {text = undefined, url = '', icon, img, disabled = false} = list
+                const item = button({
+                    page,
+                    name: text,
+                    body: text,
+                    role: 'menuitem',
+                    icon,
+                    img,
+                    disabled,
+                    theme: {}
+                }, button_protocol(text))
+                const li = bel`<li role="none">${item}</li>`
+                if (disabled) li.setAttribute('disabled', disabled)
+                shadow.append(li)
+            })
+            
+        }
+        function generate_select_list () {
+            return body.map( (option, i) => {
                 const {text, icon, current = false, selected = false} = option
                 const is_current = mode === 'single-select' ? current : false
-                let item = button({
+                const item = button({
                     page, 
                     name: text, 
                     body: text,
@@ -44,17 +80,11 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                 ? bel`<li role="listitem" data-option=${text}">${text}</li>`
                 : bel`<li role="option" data-option=${text}" aria-selected=${selected}>${item}</li>`
                 const option_list = text.toLowerCase().split(' ').join('-')
-                shadow.append(li)
                 const make = message_maker(`${option_list} / option / ${flow} / widget`)
                 send( make({type: 'ready'}) )
+                shadow.append(li)
             })
-            if (body.length === 0) send({type: 'error', data: 'body no items'})
-        } catch(e) {
-            send({type: 'error', data: 'something went wrong'})
         }
-        
-        return list
-
         function handle_expanded_event (data) {
             list.ariaHidden = data
             list.ariaExpanded = !data
@@ -159,6 +189,9 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
     [role="listitem"]:hover {
         --bg-color: var(--color-white);
         cursor: default;
+    }
+    li[disabled="true"] {
+        cursor: not-allowed;
     }
     @keyframes close {
         0% {

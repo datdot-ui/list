@@ -43,21 +43,43 @@ function demo () {
             selected: true
         }
     ]
+    const options3 = [
+        {
+            text: 'DatDot',
+            url: 'https://datdot.org/',
+            icon: icon({name: 'check', path: 'assets'}),
+            img: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png'
+        },
+        {
+            text: 'Twitter',
+            url: 'https://twitter.com/',
+            disabled: true,
+        },
+        {
+            text: 'GitHub',
+            url: 'https://github.com/'
+        }
+    ]
     const single_select_list = list(
     {
         name: 'single-select-list', 
         body: options1, 
         mode: 'single-select', 
         hidden: false
-    }, 
-    protocol('single-select-list'))
+    }, protocol('single-select-list'))
     const multiple_select_list = list(
-        {
-            name: 'multiple-select-list', 
-            body: options2, 
-            hidden: false
-        }, 
-        protocol('multiple-select-list'))
+    {
+        name: 'multiple-select-list', 
+        body: options2, 
+        hidden: false
+    }, protocol('multiple-select-list'))
+    const dropdown_list = list(
+    {
+        name: 'dropdown-list',
+        body: options3,
+        mode: 'dropdown',
+        hidden: false
+    }, protocol('dropdown-list'))
     const current_single_selected = options1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
     const current_multiple_selected = options2.filter( option => option.selected)
     const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
@@ -84,6 +106,9 @@ function demo () {
             <h2>Single select</h2>
             ${select_result}
             ${single_select_list}
+        </section>
+            <h2>Dropdown</h2>
+            ${dropdown_list}
         </section>
     </div>`
     const container = bel`<div class="${css.container}">${content}</div>`
@@ -127,7 +152,6 @@ const css = csjs`
     --color-black: var(--b), 0%;
     --color-dark: 223, 13%, 20%;
     --color-deep-black: 222, 18%, 11%;
-    --color-blue: 214, var(--r);
     --color-red: 358, 99%, 53%;
     --color-amaranth-pink: 331, 86%, 78%;
     --color-persian-rose: 323, 100%, 56%;
@@ -137,6 +161,8 @@ const css = csjs`
     --color-ultra-red: 348, 96%, 71%;
     --color-flame: 15, 80%, 50%;
     --color-verdigris: 180, 54%, 43%;
+    --color-blue: 214, var(--r);
+    --color-heavy-blue: 233, var(--r);
     --color-maya-blue: 205, 96%, 72%;
     --color-slate-blue: 248, 56%, 59%;
     --color-blue-jeans: 204, 96%, 61%;
@@ -191,6 +217,8 @@ const css = csjs`
     --primary-bgColor: var(--color-greyF2);
     --primary-font: Arial, sens-serif;
     --primary-font-size: var(--size16);
+    --primary-input-radius: 8px;
+    --primary-button-radius: 8px;
 }
 html {
     font-size: 62.5%;
