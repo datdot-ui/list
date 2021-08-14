@@ -200,6 +200,7 @@ const css = csjs`
     --color-greyF2: var(--b), 95%;
     --transparent: transparent;
     --define-font: *---------------------------------------------*;
+    --snippet-font: Segoe UI Mono, Monospace, Cascadia Mono, Courier New, ui-monospace, Liberation Mono, Menlo, Monaco, Consolas;
     --size12: 1.2rem;
     --size14: 1.4rem;
     --size16: 1.6rem;
@@ -213,9 +214,14 @@ const css = csjs`
     --size32: 3.2rem;
     --size36: 3.6rem;
     --size40: 4rem;
+    --weight100: 100;
+    --weight300: 300;
+    --weight400: 400;
+    --weight600: 600;
+    --weight800: 800;
     --define-primary: *---------------------------------------------*;
     --primary-color: var(--color-black);
-    --primary-bgColor: var(--color-greyF2);
+    --primary-bg-color: var(--color-greyF2);
     --primary-font: Arial, sens-serif;
     --primary-size: var(--size14);
     --primary-input-radius: 8px;
@@ -1400,7 +1406,6 @@ module.exports = {i_button, i_link}
 
 function i_link (option, protocol) {
     const {page, flow = 'ui-link', name, body, link = {}, icon = undefined, role='link', disabled = false, theme} = option
-
     let {url = '#', target = '_self'} = link
     
     function widget () {
@@ -1410,6 +1415,8 @@ function i_link (option, protocol) {
         const el = document.createElement('i-link')
         const shadow = el.attachShadow({mode: 'open'})
         const text = document.createElement('span')
+        text.classList.add('text')
+        text.append(body)
         el.dataset.ui = role
         el.setAttribute('role', role)
         el.setAttribute('aria-label', name)
@@ -1417,8 +1424,8 @@ function i_link (option, protocol) {
         el.setAttribute('href', url)
         if (!target.match(/self/)) el.setAttribute('target', target)
         style_sheet(shadow, style)
-        if (icon === undefined) shadow.append(body)
-        else shadow.append(icon, text)
+        if (icon !== undefined) shadow.append(icon, text)
+        else shadow.append(body)
         send(message)
         el.onclick = handle_open_link
         return el
@@ -1444,7 +1451,7 @@ function i_link (option, protocol) {
             deco, deco_hover,
             bg_color, bg_color_hover,
             border_width, border_style, border_opacity, border_color, border_color_hover,  border_radius, 
-            padding, width, height, opacity,
+            padding, margin, width, height, opacity,
             fill, fill_hover, fill_opacity, icon_size,
             shadow_color, offset_x, offset_y, blur, shadow_opacity,
             shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
@@ -1459,21 +1466,36 @@ function i_link (option, protocol) {
         --bg-color: ${bg_color ? bg_color : 'var(--color-white)'};
         --opacity: ${opacity ? opacity : '0'};
         --deco: ${deco ? deco : 'none'};
+        --padding: ${padding ? padding : '0'};
+        --margin: ${margin ? margin : '0'};
+        display: inline-grid;
+        grid-auto-flow: column;
+        column-gap: 4px;
         font-size: var(--size);
         font-weight: var(--weight);
         color: hsl(var(--color));
         background-color: hsla(var(--bg-color), var(--opacity));
         text-decoration: var(--deco);
+        padding: var(--padding);
+        margin: var(--margin);
         transition: color 0.5s, font-size 0.5s ease-in-out;
         cursor: pointer;
     }
     :host(i-link:hover) {
-        --color: ${color_hover ? color_hover : 'var(--color-blue)'};
-        --size: ${size_hover ? size_hover : 'var(--size)'};
+        --color: ${color_hover ? color_hover : 'var(--color-dodger-blue)'};
+        --size: ${size_hover ? size_hover : 'var(--primary-size)'};
         --deco: ${deco_hover ? deco_hover : 'underline'};
-        color: hsl(var(--color));
-        font-size: var(--size);
+        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--color-white)'};
+        --opacity: ${opacity ? opacity : '0'};
         text-decoration: var(--deco);
+    }
+    :host(i-link) svg g {
+        --fill: ${fill ? fill : 'var(--color-heavy-blue)'};
+        fill: hsl(var(--fill));
+        transition: fill 0.5s ease-in-out;
+    }
+    :host(i-link:hover) svg g {
+        --fill: ${fill_hover ? fill_hover : 'var(--color-dodger-blue)'};
     }
     ${custom_style}
     `
@@ -1627,7 +1649,7 @@ function i_button (option, protocol) {
             current_hover_color, current_hover_bg_color,
             bg_color, bg_color_hover, border_color_hover,
             border_width, border_style, border_opacity, border_color, border_radius, 
-            padding, width, height, opacity,
+            padding, margin, width, height, opacity,
             fill, fill_hover, fill_opacity, icon_size, current_fill, current_hover_fill,
             shadow_color, offset_x, offset_y, blur, shadow_opacity,
             shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
@@ -1644,6 +1666,7 @@ function i_button (option, protocol) {
         --height: ${height ? height : 'unset'};
         --opacity: ${opacity ? opacity : '1'};
         --padding: ${padding ? padding : '12px'};
+        --margin: ${margin ? margin : '0'};
         --border-width: ${border_width ? border_width : '0px'};
         --border-style: ${border_style ? border_style : 'solid'};
         --border-color: ${border_color ? border_color : 'var(--primary-color)'};
@@ -1663,8 +1686,8 @@ function i_button (option, protocol) {
         grid-column-gap: 5px;
         justify-content: center;
         align-items: center;
-        ${width && 'width: var(--width)'};
-        ${height && 'height: var(--height)'};
+        ${width && 'width: var(--width);'};
+        ${height && 'height: var(--height);'};
         font-size: var(--size);
         font-weight: var(--bold);
         color: hsl( var(--color) );
@@ -1706,11 +1729,9 @@ function i_button (option, protocol) {
         column-gap: 8px;
     }
     :host(i-button) .icon {
-        display: grid;
-        justify-content: center;
-        align-items: center;
+        display: block;
         width: var(--icon-size);
-        height: var(---con-size);
+        height: var(--icon-size);
     }
     :host(i-button) .right .icon {
         grid-column-start: 2;
@@ -1719,7 +1740,6 @@ function i_button (option, protocol) {
         grid-column-start: 1;
     }
     :host(i-button) svg {
-        max-width: 100%;
         width: 100%;
         height: auto;
     }
@@ -2273,7 +2293,7 @@ module.exports = function (css, options) {
 },{}],37:[function(require,module,exports){
 const bel = require('bel')
 const style_sheet = require('support-style-sheet')
-const {i_button} = require('datdot-ui-button')
+const {i_button, i_link} = require('datdot-ui-button')
 const button = i_button
 const message_maker = require('message-maker')
 module.exports = i_list
@@ -2314,7 +2334,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         function generate_list () {
             return body.map( (list, i) => {
                 const {text = undefined, url = '', icon, img, disabled = false} = list
-                const item = button({
+                const item = i_link({
                     page,
                     name: text,
                     body: text,

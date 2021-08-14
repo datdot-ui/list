@@ -1,6 +1,6 @@
 const bel = require('bel')
 const style_sheet = require('support-style-sheet')
-const {i_button} = require('datdot-ui-button')
+const {i_button, i_link} = require('datdot-ui-button')
 const button = i_button
 const message_maker = require('message-maker')
 module.exports = i_list
@@ -41,7 +41,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         function generate_list () {
             return body.map( (list, i) => {
                 const {text = undefined, url = '', icon, img, disabled = false} = list
-                const item = button({
+                const item = i_link({
                     page,
                     name: text,
                     body: text,

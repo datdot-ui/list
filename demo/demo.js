@@ -199,6 +199,7 @@ const css = csjs`
     --color-greyF2: var(--b), 95%;
     --transparent: transparent;
     --define-font: *---------------------------------------------*;
+    --snippet-font: Segoe UI Mono, Monospace, Cascadia Mono, Courier New, ui-monospace, Liberation Mono, Menlo, Monaco, Consolas;
     --size12: 1.2rem;
     --size14: 1.4rem;
     --size16: 1.6rem;
@@ -212,9 +213,14 @@ const css = csjs`
     --size32: 3.2rem;
     --size36: 3.6rem;
     --size40: 4rem;
+    --weight100: 100;
+    --weight300: 300;
+    --weight400: 400;
+    --weight600: 600;
+    --weight800: 800;
     --define-primary: *---------------------------------------------*;
     --primary-color: var(--color-black);
-    --primary-bgColor: var(--color-greyF2);
+    --primary-bg-color: var(--color-greyF2);
     --primary-font: Arial, sens-serif;
     --primary-size: var(--size14);
     --primary-input-radius: 8px;
