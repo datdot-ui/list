@@ -1787,6 +1787,7 @@ function i_button (option, protocol) {
         --color: ${current_color ? current_color : 'var(--color-white)'};
         --bg-color: ${current_bg_color ? current_bg_color : 'var(--primary-color)'};
         --size: ${current_size ? current_size : 'var(--size14)'};
+        font-size: var(--size);
     }
     :host(i-button[aria-current="true"]) g {
         --fill: ${fill ? fill : 'var(--color-white)'};
