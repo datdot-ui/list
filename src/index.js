@@ -9,17 +9,18 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
     const recipients = []
     const make = message_maker(`${name} / ${flow} / i_list`)
     const message = make({type: 'ready'})
+    let is_hidden = hidden
+    let is_expanded = !is_hidden ? !is_hidden : expanded
 
     function widget () {
         const send = protocol( get )
         send(message)
         const list = document.createElement('i-list')
         const shadow = list.attachShadow({mode: 'open'})
-        
-        list.ariaHidden = hidden
+        list.ariaHidden = is_hidden
         list.ariaLabel = name
         list.tabIndex = -1
-        list.ariaExpanded = expanded
+        list.ariaExpanded = is_expanded
         list.dataset.mode = mode
         style_sheet(shadow, style)
         try {
@@ -40,17 +41,85 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
 
         function generate_list () {
             return body.map( (list, i) => {
-                const {text = undefined, url = '', icon, img, disabled = false} = list
-                const item = i_link({
-                    page,
-                    name: text,
-                    body: text,
-                    role: 'menuitem',
-                    icon,
-                    img,
-                    disabled,
-                    theme: {}
-                }, button_protocol(text))
+                const {text = undefined, role = 'link', url = '#', target, icon, cover, disabled = false, theme = {}} = list
+                const {style = ``, props = {}} = theme
+                const {
+                    size = 'var(--size14)', 
+                    size_hover = 'var(--size14)', 
+                    color = 'var(--primary-color)', 
+                    color_hover = 'var(--primary-color-hover)', 
+                    bg_color = 'var(--primary-bg-color)', 
+                    bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    fill = 'var(--primary-color)', 
+                    fill_hover = 'var(--primary-color-hover)', 
+                    icon_size = '20px', 
+                    img_width = '24px', 
+                    img_height = 'auto', 
+                    disabled_color = 'var(--primary-disabled-color)',
+                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
+                    disabled_fill = 'var(--primary-disabled-fill)'
+                } = props
+                var item = text
+                if (role === 'link' ) {
+                    var item = i_link({
+                        page,
+                        name: text,
+                        body: text,
+                        role: 'menuitem',
+                        link: {
+                            url,
+                            target
+                        },
+                        icon,
+                        cover,
+                        disabled,
+                        theme: {
+                            style,
+                            props: {
+                                size,
+                                size_hover,
+                                color,
+                                color_hover,
+                                bg_color,
+                                bg_color_hover,
+                                fill,
+                                fill_hover,
+                                icon_size,
+                                img_width,
+                                img_height,
+                                disabled_color,
+                                disabled_bg_color,
+                                disabled_fill
+                            }
+                        }
+                    }, button_protocol(text))
+                }
+                if (role === 'menuitem') {
+                    var item = i_button({
+                        name: text,
+                        body: text,
+                        role,
+                        icon,
+                        cover,
+                        disabled,
+                        theme: {
+                            style,
+                            props: {
+                                size,
+                                size_hover,
+                                color,
+                                color_hover,
+                                fill,
+                                fill_hover,
+                                icon_size,
+                                img_width,
+                                img_height,
+                                disabled_fill
+                            }
+                        }
+                    }, button_protocol(text))
+                }
+                
                 const li = bel`<li role="none">${item}</li>`
                 if (disabled) li.setAttribute('disabled', disabled)
                 shadow.append(li)
@@ -59,26 +128,28 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         }
         function generate_select_list () {
             return body.map( (option, i) => {
-                const {text, icon, current = false, selected = false} = option
+                const {text, icon = {}, cover, current = false, selected = false, disabled = false, theme} = option
+                const {name = 'check', path = 'assets', align} = icon
                 const is_current = mode === 'single-select' ? current : false
-                const item = button({
+                const item = button(
+                {
                     page, 
                     name: text, 
                     body: text,
-                    icon, 
+                    icon: {name, path, align}, 
+                    cover,
                     role: 'option',
                     mode, 
                     current: is_current, 
                     selected,
-                    theme: { 
-                        props: {
-                            color_hover: 'var(--color)', 
-                            bg_color: 'transparent', 
-                            bg_color_hover: 'transparent'}
-                    }}, button_protocol(text))
+                    disabled,
+                    theme
+                }, button_protocol(text))
                 const li = (text === 'no items') 
                 ? bel`<li role="listitem" data-option=${text}">${text}</li>`
-                : bel`<li role="option" data-option=${text}" aria-selected=${selected}>${item}</li>`
+                : bel`<li role="option" data-option=${text}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
+                if (is_current) li.setAttribute('aria-current', is_current)
+                if (disabled) li.setAttribute('disabled', disabled)
                 const option_list = text.toLowerCase().split(' ').join('-')
                 const make = message_maker(`${option_list} / option / ${flow} / widget`)
                 send( make({type: 'ready'}) )
@@ -90,7 +161,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             list.ariaExpanded = !data
         }
         function handle_select_event (from, data) {
-            const selected = !data
+            const selected = data.selected
             const type = selected ? 'selected' : 'unselected'
             const { childNodes } = shadow
             const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
@@ -98,7 +169,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                 const make = message_maker(`${from} / option / ${flow}`)
                 const arr = []
                 lists.forEach( child => {
-                    child.dataset.option === from ? child.setAttribute('aria-selected', selected) : false
+                    if (child.dataset.option === from ) child.setAttribute('aria-selected', selected )
                     if (child.getAttribute('aria-selected') === 'true') arr[arr.length] = child.dataset.option
                 })
                 recipients[from]( make({type, data: selected}) )
@@ -106,13 +177,16 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             }
             if (mode === 'single-select') {
                 lists.forEach( child => {
-                    const state = from === child.dataset.option ? !data : data
+                    const state = from === child.dataset.option ? data.selected : !data.selected
                     const current = state ? from : child.dataset.option
                     const make = message_maker(`${current} / option / ${flow}`)
                     const type = state ? 'selected' : 'unselected'
                     recipients[current]( make({type, data: state}) )
                     send(make({to: name, type, data: {mode, selected: from} }))
                     list.setAttribute('aria-activedescendant', from)
+                    child.setAttribute('aria-selected', state )
+                    if (state) child.setAttribute('aria-current', state)
+                    else child.removeAttribute('aria-current')
                 })
             }
         }
@@ -128,6 +202,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             const id = head[2]
             const role = head[0].split(' / ')[1]
             const from = head[0].split(' / ')[0]
+            if (type === 'click' && role === 'menuitem') return console.log(from)
             if (type === 'click') return handle_select_event(from, data)
             if (type.match(/expanded|unexpanded/)) return handle_expanded_event(data)
         }
@@ -137,13 +212,11 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
     const custom_style = theme ? theme.style : ''
     // set CSS variables
     if (theme && theme.props) {
-    var {size, size_hover, current_size,
-        weight, weight_hover, current_weight,
-        color, color_hover, current_color, current_bg_color, 
-        bg_color, bg_color_hover, border_color_hover,
-        border_width, border_style, border_opacity, border_color, border_radius, 
-        padding, width, height, opacity,
-        fill, fill_hover, icon_size, current_fill,
+    var {
+        bg_color, bg_color_hover,
+        current_bg_color, current_bg_color_hover, disabled_bg_color,
+        width, height, border_width, border_style, border_opacity, border_color,
+        border_color_hover, border_radius, padding,  opacity,
         shadow_color, offset_x, offset_y, blur, shadow_opacity,
         shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
     } = theme.props
@@ -151,10 +224,11 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
 
     const style = `
     :host(i-list) {
-        --color: ${color ? color : 'var(--primary-color)'};
-        --bg-color: ${bg_color ? bg_color : 'var(--color-white)'};
+        ${width && 'width: var(--width);'};
+        ${height && 'height: var(--height);'};
         display: grid;
         margin-top: 5px;
+        max-width: 100%;
     }
     :host(i-list[aria-hidden="true"]) {
         opacity: 0;
@@ -166,32 +240,66 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         animation: open 0.3s;
     }
     li {
+        --bg-color: ${bg_color ? bg_color : 'var(--primary-bg-color)'};
+        --border-radius: ${border_radius ? border_radius : 'var(--primary-radius)'};
+        --border-width: ${border_width ? border_width : 'var(--primary-border-width)'};
+        --border-style: ${border_style ? border_style : 'var(--primary-border-style)'};
+        --border-color: ${border_color ? border_color : 'var(--primary-border-color)'};
+        --border-opacity: ${border_opacity ? border_opacity : 'var(--primary-border-opacity)'};
+        --border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity)));
         display: grid;
-        border: 1px solid hsl(var(--primary-color));
-        margin-top: -1px;
-        color: hsl(var(--color));
+        grid-template-columns: 1fr;
+        border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity));
         background-color: hsl(var(--bg-color));
-        transition: color 0.3s, background-color 0.3s ease-in-out;
+        margin-top: -1px;
         cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
     }
     li:hover {
-        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--color-greyEB)'};
+        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--primary-bg-color-hover)'};
+    }
+    li i-button {
+        justify-content: left;
+    }
+    :host(i-list) li:first-child {
+        border-top-left-radius: var(--border-radius);
+        border-top-right-radius: var(--border-radius);
+    }
+    li:last-child {
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
     }
     [role="listitem"] {
-        --color: var(--color-grey88);
         display: grid;
         grid-template-rows: 24px;
-        font-size: var(--size14);
         padding: 11px;
         align-items: center;
-        broder: 1px solid hsl(var(--color-black));
     }
     [role="listitem"]:hover {
-        --bg-color: var(--color-white);
         cursor: default;
     }
-    li[disabled="true"] {
+    li[disabled="true"], li[disabled="true"]:hover {
+        background-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
         cursor: not-allowed;
+    }
+    [role="none"] {
+        --bg-color: var(--primary-list-bg-color);
+        --opacity: 1;
+        background-color: hsla(var(--bg-color), var(--opacity));
+    }
+    [role="none"]:hover {
+        --bg-color: var(--primary-list-bg-color-hover);
+        --opacity: 1;
+        background-color: hsla(var(--bg-color), var(--opacity));
+    }
+    [role="none"] i-link {
+        padding: 12px;
+    }
+    [role="option"] i-button.icon-right, [role="option"] i-button.text-left {
+        grid-template-columns: auto 1fr auto;
+    }
+    [aria-current="true"] {
+        --bg-color: ${current_bg_color ? current_bg_color : 'var(--primary-current-bg-color)'};
     }
     @keyframes close {
         0% {
