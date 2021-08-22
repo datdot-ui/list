@@ -2592,11 +2592,11 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         try {
             if (mode.match(/single|multiple/)) {
                 list.setAttribute('role', 'listbox')
-                generate_select_list()
+                make_select_list()
             }   
             if (mode.match(/dropdown/)) {
                 list.setAttribute('role', 'menubar')
-                generate_list()
+                make_list()
             }
             if (body.length === 0) send({type: 'error', data: 'body no items'})
         } catch(e) {
@@ -2605,7 +2605,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         
         return list
 
-        function generate_list () {
+        function make_list () {
             return body.map( (list, i) => {
                 const {text = undefined, role = 'link', url = '#', target, icon, cover, disabled = false, theme = {}} = list
                 const {style = ``, props = {}} = theme
@@ -2693,7 +2693,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             })
             
         }
-        function generate_select_list () {
+        function make_select_list () {
             return body.map( (option, i) => {
                 const {text, icon = {}, cover, current = false, selected = false, disabled = false, theme = {}} = option
                 const {name = 'check', path, align} = icon
