@@ -2696,7 +2696,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         function generate_select_list () {
             return body.map( (option, i) => {
                 const {text, icon = {}, cover, current = false, selected = false, disabled = false, theme = {}} = option
-                const {name = 'check', path = 'assets', align} = icon
+                const {name = 'check', path, align} = icon
                 const is_current = mode === 'single-select' ? current : false
                 const {style = ``, props = {}} = theme
                 const {
