@@ -1553,7 +1553,7 @@ module.exports = {i_button, i_link}
 
 function i_link (option, protocol) {
     const {page, flow = 'ui-link', name, body, link = {}, icon, cover, role='link', disabled = false, theme} = option
-    if (icon) var make_icon = i_icon({name: icon.name, path: icon.path ? icon.path : 'assets'})
+    if (icon) var make_icon = i_icon({name: icon.name, path: icon.path})
     let {url = '#', target = '_self'} = link
     let is_disabled = disabled
     
@@ -1665,7 +1665,7 @@ function i_link (option, protocol) {
         text-decoration: var(--deco);
         padding: var(--padding);
         margin: var(--margin);
-        transition: color 0.5s, font-size 0.5s ease-in-out;
+        transition: color .5s, background-color .5s, font-size .5s ease-in-out;
         cursor: pointer;
     }
     :host(i-link:hover) {
@@ -1735,7 +1735,7 @@ function i_link (option, protocol) {
 
 function i_button (option, protocol) {
     const {page, flow = 'ui-button', name, body, icon, cover, role = 'button', mode = '', state, expanded = false, current = false, selected = false, checked = false, disabled = false, theme} = option
-    if (icon)  var make_icon = i_icon({name: icon.name, path: icon.path ? icon.path : 'assets'})
+    if (icon)  var make_icon = i_icon({name: icon.name, path: icon.path})
     let is_current = current
     let is_checked = checked
     let is_disabled = disabled
@@ -1939,7 +1939,7 @@ function i_button (option, protocol) {
         border-radius: var(--border-radius);
         box-shadow: var(--box-shadow);
         padding: var(--padding);
-        transition: font-size .3s, color .3s, background-color .3s ease-in-out;
+        transition: font-size .3s, color .3s, background-color .3s, border .3s, box-shadow .3s ease-in-out;
         cursor: pointer;
     }
     :host(i-button:hover), :host(i-button[role]:hover) {
