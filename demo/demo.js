@@ -11,7 +11,7 @@ const button = i_button
 
 function demo () {
     const recipients = []
-    const logs = terminal({mode: 'compact'}, protocol('logs'))
+    const logs = terminal({mode: 'comfortable'}, protocol('logs'))
     const make = message_maker('demo / demo.js')
     const options1 = [
         {
@@ -56,6 +56,7 @@ function demo () {
             text: 'DatDot',
             role: 'link',
             url: 'https://datdot.org/',
+            target: '_blank',
             // icon: {name: 'check'},
             cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
             theme: {
@@ -69,7 +70,7 @@ function demo () {
             role: 'link',
             url: 'https://twitter.com/',
             icon: {name: 'icon-svg.168b89d5', path: 'https://abs.twimg.com/responsive-web/client-web'},
-            disabled: false,
+            // disabled: true,
             target: '_new',
             theme: {
                 props: {
@@ -83,17 +84,25 @@ function demo () {
             text: 'GitHub',
             role: 'link',
             url: 'https://github.com/',
-            cover: 'https://github.githubassets.com/images/modules/open_graph/github-mark.png',
+            cover: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
             target: '_new',
             theme: {
                 props: {
-                    img_width: '36px'
+                    img_width: '26px'
                 }
             }
         },
         {
             text: 'DatDot app',
-            role: 'menuitem'
+            role: 'menuitem',
+            icon: {name: 'datdot-black'},
+            // disabled: true,
+            theme: {
+                props: {
+                    color: 'var(--color-purple)',
+                    fill: 'var(--color-purple)'
+                }
+            }
         }
     ]
     const terminal_list = list(
@@ -101,11 +110,11 @@ function demo () {
         name: 'terminal-select-list',
         body: [
             {
-                text: 'Compact messages',
-                current: true
+                text: 'Compact messages'
             },
             {
-                text: 'Comfortable messages'
+                text: 'Comfortable messages',
+                current: true
             }
         ],
         mode: 'single-select',
@@ -215,13 +224,17 @@ function demo () {
             return get
         }
     }
+    function click_event (from, role, data) {
+        if (role === 'switch') return switch_event(from, data)
+        if (role === 'menuitem') return recipients['logs'](make({to: '*', type: 'triggered', data: {app: 'datdot', install: true}}))
+    }
     function get (msg) {
         const {head, type, data} = msg
         const from = head[0].split('/')[0].trim()
         const role = head[0].split(' / ')[1]
         recipients['logs'](msg)
+        if (type === 'click') return click_event (from, role, data)
         if (type.match(/selected/)) return change_event(data)
-        if (role === 'switch' && type === 'click') return switch_event(from, data)
     }
 }
 

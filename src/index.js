@@ -57,7 +57,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                     img_height = 'auto', 
                     disabled_color = 'var(--primary-disabled-color)',
                     disabled_bg_color = 'var(--primary-disabled-bg-color)',
-                    disabled_fill = 'var(--primary-disabled-fill)'
+                    disabled_fill = 'var(--primary-disabled-fill)',
                 } = props
                 var item = text
                 if (role === 'link' ) {
@@ -89,7 +89,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                                 img_height,
                                 disabled_color,
                                 disabled_bg_color,
-                                disabled_fill
+                                disabled_fill,
                             }
                         }
                     }, button_protocol(text))
@@ -114,7 +114,8 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                                 icon_size,
                                 img_width,
                                 img_height,
-                                disabled_fill
+                                disabled_color,
+                                disabled_fill,
                             }
                         }
                     }, button_protocol(text))
@@ -128,9 +129,29 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         }
         function generate_select_list () {
             return body.map( (option, i) => {
-                const {text, icon = {}, cover, current = false, selected = false, disabled = false, theme} = option
+                const {text, icon = {}, cover, current = false, selected = false, disabled = false, theme = {}} = option
                 const {name = 'check', path = 'assets', align} = icon
                 const is_current = mode === 'single-select' ? current : false
+                const {style = ``, props = {}} = theme
+                const {
+                    size = 'var(--size14)', 
+                    size_hover = 'var(--size14)',
+                    weight = '300', 
+                    color = 'var(--primary-color)', 
+                    color_hover = 'var(--primary-color-hover)', 
+                    bg_color = 'var(--primary-bg-color)', 
+                    bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    fill = 'var(--primary-color)', 
+                    fill_hover = 'var(--primary-color-hover)',
+                    current_fill = 'var(--primary-current-icon-fill)',
+                    icon_size = '20px', 
+                    img_width = '24px', 
+                    img_height = 'auto', 
+                    disabled_color = 'var(--primary-disabled-color)',
+                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
+                    disabled_fill = 'var(--primary-disabled-fill)',
+                    opacity = '0'
+                } = props
                 const item = button(
                 {
                     page, 
@@ -143,7 +164,28 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                     current: is_current, 
                     selected,
                     disabled,
-                    theme
+                    theme: {
+                        style,
+                        props: {
+                            size,
+                            size_hover,
+                            weight,
+                            color,
+                            color_hover,
+                            bg_color,
+                            bg_color_hover,
+                            fill,
+                            fill_hover,
+                            current_fill,
+                            icon_size,
+                            img_width,
+                            img_height,
+                            disabled_color,
+                            disabled_bg_color,
+                            disabled_fill,
+                            opacity
+                        }
+                    }
                 }, button_protocol(text))
                 const li = (text === 'no items') 
                 ? bel`<li role="listitem" data-option=${text}">${text}</li>`
@@ -196,14 +238,23 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                 return get
             }
         }
+        function handle_click_event(msg) {
+            const {head, type, data} = msg
+            const role = head[0].split(' / ')[1]
+            const from = head[0].split(' / ')[0]
+            const make = message_maker(`${from} / ${role} / ${flow}`)
+            const message = make({to: '*', type, data})
+            send(message)
+
+        }
         function get (msg) {
             const {head, refs, type, data} = msg
             const to = head[1]
             const id = head[2]
             const role = head[0].split(' / ')[1]
             const from = head[0].split(' / ')[0]
-            if (type === 'click' && role === 'menuitem') return console.log(from)
-            if (type === 'click') return handle_select_event(from, data)
+            if (role === 'menuitem') return handle_click_event(msg)
+            if (type === 'click' && role === 'option') return handle_select_event(from, data)
             if (type.match(/expanded|unexpanded/)) return handle_expanded_event(data)
         }
     }
@@ -246,11 +297,11 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         --border-style: ${border_style ? border_style : 'var(--primary-border-style)'};
         --border-color: ${border_color ? border_color : 'var(--primary-border-color)'};
         --border-opacity: ${border_opacity ? border_opacity : 'var(--primary-border-opacity)'};
-        --border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity)));
+        --border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity));
         display: grid;
         grid-template-columns: 1fr;
-        border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity));
         background-color: hsl(var(--bg-color));
+        border: var(--border);
         margin-top: -1px;
         cursor: pointer;
         transition: background-color 0.3s ease-in-out;
@@ -261,7 +312,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
     li i-button {
         justify-content: left;
     }
-    :host(i-list) li:first-child {
+    :host(i-list) li:nth-of-type(1) {
         border-top-left-radius: var(--border-radius);
         border-top-right-radius: var(--border-radius);
     }

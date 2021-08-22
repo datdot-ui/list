@@ -7,10 +7,12 @@ const message_maker = require('../src/node_modules/message-maker')
 // datdot-ui dependences
 const list = require('..')
 const terminal = require('datdot-terminal')
+const {i_button} = require('datdot-ui-button')
+const button = i_button
 
 function demo () {
     const recipients = []
-    const logs = terminal({mode: 'compact', expanded: false}, protocol('logs'))
+    const logs = terminal({mode: 'comfortable'}, protocol('logs'))
     const make = message_maker('demo / demo.js')
     const options1 = [
         {
@@ -53,7 +55,9 @@ function demo () {
     const options3 = [
         {
             text: 'DatDot',
+            role: 'link',
             url: 'https://datdot.org/',
+            target: '_blank',
             // icon: {name: 'check'},
             cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
             theme: {
@@ -64,9 +68,10 @@ function demo () {
         },
         {
             text: 'Twitter',
+            role: 'link',
             url: 'https://twitter.com/',
             icon: {name: 'icon-svg.168b89d5', path: 'https://abs.twimg.com/responsive-web/client-web'},
-            disabled: false,
+            // disabled: true,
             target: '_new',
             theme: {
                 props: {
@@ -78,12 +83,25 @@ function demo () {
         },
         {
             text: 'GitHub',
+            role: 'link',
             url: 'https://github.com/',
-            cover: 'https://github.githubassets.com/images/modules/open_graph/github-mark.png',
+            cover: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
             target: '_new',
             theme: {
                 props: {
-                    img_width: '36px'
+                    img_width: '26px'
+                }
+            }
+        },
+        {
+            text: 'DatDot app',
+            role: 'menuitem',
+            icon: {name: 'datdot-black'},
+            // disabled: true,
+            theme: {
+                props: {
+                    color: 'var(--color-purple)',
+                    fill: 'var(--color-purple)'
                 }
             }
         }
@@ -93,11 +111,11 @@ function demo () {
         name: 'terminal-select-list',
         body: [
             {
-                text: 'Compact messages',
-                current: true
+                text: 'Compact messages'
             },
             {
-                text: 'Comfortable messages'
+                text: 'Comfortable messages',
+                current: true
             }
         ],
         mode: 'single-select',
@@ -124,6 +142,17 @@ function demo () {
         mode: 'dropdown',
         hidden: false,
     }, protocol('dropdown-list'))
+    const expanded = button(
+    {
+        name: 'expanded', 
+        body: 'Expanded', 
+        role: 'switch',
+        theme: {
+            props: {
+                width: '120px',
+            }
+        }
+    }, protocol('expanded'))
     const current_single_selected = options1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
     const current_multiple_selected = options2.filter( option => option.selected)
     const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
@@ -140,6 +169,7 @@ function demo () {
         <h1>List</h1>
         <section>
             <h2>Terminal messages selector</h2>
+            ${expanded}
             ${terminal_list}
         </section>
         <section>
@@ -165,13 +195,13 @@ function demo () {
     return app
 
     function terminal_change_event (selected) {
-        const mode = selected.split(' ')[0].toLowerCase()
-        recipients['logs'](make({type: 'layout-mode', data: {mode, expanded: true}}))
+        const mode = selected.split(' ')[0]
+        recipients['logs'](make({type: 'layout-mode', data: {mode}}))
     }
 
     function change_event (data) {
         const {mode, selected} = data
-        if (selected.match(/Compact|Comfortable/)) return terminal_change_event(selected)
+        if (typeof selected === 'string' && selected.match(/Compact|Comfortable/)) return terminal_change_event(selected.toLowerCase())
         if (mode === 'single-select') return select.textContent = selected
         if (mode === 'multiple-select') {
             const selected_length = bel`<span class="${css.count}">${selected.length}</span>`
@@ -183,19 +213,29 @@ function demo () {
             total_selected.append(select_items)
         }
     }
-
+    function switch_event (from, data) {
+        const state = !data
+        recipients[from](make({type: 'switched', data: state}))
+        recipients['logs']( make({to: from, type: 'triggered', data: {checked: state}}) )
+        recipients['logs'](make({to: 'logs', type: 'layout-mode', data: {expanded: state}}))
+    }
     function protocol (name) {
         return send => {
             recipients[name] = send
             return get
         }
     }
-
+    function click_event (from, role, data) {
+        if (role === 'switch') return switch_event(from, data)
+        if (role === 'menuitem') return recipients['logs'](make({to: '*', type: 'triggered', data: {app: 'datdot', install: true}}))
+    }
     function get (msg) {
         const {head, type, data} = msg
         const from = head[0].split('/')[0].trim()
+        const role = head[0].split(' / ')[1]
         recipients['logs'](msg)
-        if (type === 'selected') return change_event(data)
+        if (type === 'click') return click_event (from, role, data)
+        if (type.match(/selected/)) return change_event(data)
     }
 }
 
@@ -277,26 +317,29 @@ const css = csjs`
     --primary-body-bg-color: var(--color-greyF2);
     --primary-color: var(--color-black);
     --primary-color-hover: var(--color-white);
+    --primary-current-color: var(--color-white);
     --primary-bg-color: var(--color-white);
     --primary-bg-color-hover: var(--color-black);
+    --primary-current-bg-color: var(--color-black);
     --primary-font: Arial, sens-serif;
     --primary-size: var(--size14);
     --primary-size-hover: var(--primary-size);
+    --primary-current-size: var(--primary-size);
     --primary-border-width: 1px;
     --primary-border-style: solid;
     --primary-border-color: var(--color-black);
+    --primary-border-opacity: 1;
     --primary-radius: 8px;
     --primary-link-color: var(--color-heavy-blue);
     --primary-link-color-hover: var(--color-dodger-blue);
     --primary-disabled-color: var(--color-greyA2);
     --primary-disabled-bg-color: var(--color-greyEB);
     --primary-disabled-fill: var(--color-greyA2);
-    --primary-current-size: var(--primary-size);
-    --primary-current-color: var(--primary-bg-color);
-    --primary-current-bg-color: var(--primary-color);
     --primary-selected-icon-fill: var(--primary-color);
     --primary-selected-icon-fill-hover: var(--primary-color-hover);
-    --primary-current-icon-fill: var(--color-white);
+    --primary-current-icon-fill: var(--primary-current-color);
+    --primary-list-bg-color: var(--primary-bg-color);
+    --primary-list-bg-color-hover: var(--primary-bg-color-hover);
 }
 html {
     font-size: 62.5%;
@@ -306,10 +349,10 @@ html {
     box-sizing: border-box;
 }
 body {
+    -webkit-text-size-adjust: 100%;
     margin: 0;
     padding: 0;
-    font-size: 1.6rem;
-    -webkit-text-size-adjust:100%;
+    font-size: calc(var(--primary-size) + 2px);
     font-family: var(--primary-font);
     color: var(--primary-color);
     background-color: hsl( var(--primary-body-bg-color) );
@@ -408,7 +451,7 @@ h2 {
 `
 
 document.body.append(demo())
-},{"..":38,"../src/node_modules/message-maker":39,"bel":4,"csjs-inject":7,"datdot-terminal":24,"head":2}],2:[function(require,module,exports){
+},{"..":38,"../src/node_modules/message-maker":39,"bel":4,"csjs-inject":7,"datdot-terminal":24,"datdot-ui-button":28,"head":2}],2:[function(require,module,exports){
 module.exports = head
 
 function head (lang = 'utf8', title = 'List - DatDot UI') {
@@ -1180,9 +1223,8 @@ function terminal ({to = 'terminal', mode = 'compact', expanded = false}, protoc
     function handle_change_layout (data) {
         const {mode, expanded} = data
         const { childNodes } = log_list
-        log_list.setAttribute('aria-label', mode)
-        
-        if (expanded) {
+        if (mode) log_list.setAttribute('aria-label', mode)
+        if (expanded !== void 0) {
             is_expanded = expanded
             childNodes.forEach( list => {
                 list.setAttribute('aria-expanded', expanded)
@@ -1214,9 +1256,7 @@ function terminal ({to = 'terminal', mode = 'compact', expanded = false}, protoc
                 <span class="arrow">=＞</span>
                 ${to}
             </div>`
-            const log = bel`<div class="log">${header}</div>`
-            if (mode === 'compact') log.append(data_info, refs_info)
-            if (mode === 'comfortable') log.append(info)
+            const log = bel`<div class="log">${header}${data_info}${refs_info}</div>`
             const file = bel`
             <div class="file">
                 <span>${meta.stack[0]}</span>
@@ -1250,8 +1290,10 @@ const style = `
 :host(i-terminal) {
     --bg-color: var(--color-dark);
     --opacity: 1;
-    font-size: var(--size12);
-    color: #fff;
+    --size: var(--size12);
+    --color: var(--color-white);
+    font-size: var(--size);
+    color: hsl(var(--color));
     background-color: hsla( var(--bg-color), var(--opacity));
     height: 100%;
     overflow: hidden auto;
@@ -1292,23 +1334,29 @@ log-list .list:last-child {
     --bg-color: var(--color-viridian-green);
     --opacity: .3;
 }
-[aria-label="compact"] [aria-expanded="false"] .log {
+[aria-label="compact"] .list[aria-expanded="false"] .log {
     white-space: nowrap;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-[aria-label="compact"] [aria-expanded="false"] .data {
-    display: line-block;
+[aria-label="compact"] .list[aria-expanded="true"] .log {
+    padding-left: 8px;
+    oveflow: auto;
+}
+[aria-label="compact"] .list[aria-expanded="true"] .log .head {
+    margin-left: -8px;
+}
+[aria-label="compact"] .list[aria-expanded="true"] .data {
+    display: inlne-block;
+}
+[aria-label="compact"] .refs {
+    padding-left: 8px;
 }
 .log {
     line-height: 1.8;
     word-break: break-all;
     white-space: pre-wrap;
-}
-.log span {
-    --size: var(--size12);
-    font-size: var(--size);
 }
 .head {
     display: inline-block;
@@ -1358,14 +1406,10 @@ log-list .list:last-child {
     --color: 0, 0%, 70%;
     color: var(--color);
 }
-.data {
-    padding-left: 8px;
-}
 .refs {
     --color: var(--color-white);
     display: inline-block;
     color: var(--color);
-    padding-left: 8px;
 }
 [aria-type="click"] {
     --color: var(--color-dark);
@@ -1443,26 +1487,25 @@ log-list .list:last-child [aria-type="ready"] {
 log-list .list:last-child .function {
     --color: var(--color-white);
 }
-[aria-label="comfortable"] .info {
-    padding: 8px;
+[aria-label="comfortable"] .list[aria-expanded="false"] .log {
+    
 }
-[aria-label="comfortable"] [aria-expanded="false"] .info {
+[aria-label="comfortable"] .data {
+    display: block;
+    padding: 8px 8px 0px 8px;
+}
+[aria-label="comfortable"] .list[aria-expanded="false"] .data {
     white-space: nowrap;
     max-width: 100%;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: ellipsis; 
 }
-[aria-label="comfortable"] .data {
-    padding: 0 8px 0 0;
+[aria-label="comfortable"] .list[aria-expanded="false"] .refs {
+    display: none;
 }
-[aria-label="comfortable"] .refs {
-    padding-left: 0;
-}
-[aria-label="comfortable"] [aria-expanded="true"] .refs {
-    padding-top: 6px;
-}
-[aria-label="comfortable"] [aria-expanded="true"] .refs span:nth-child(1) {
-    padding-right: 5px;
+[aria-label="comfortable"] .list[aria-expanded="true"] .refs {
+    display: block;
+    padding-left: 8px;
 }
 `
 },{"bel":4,"generator-color":25,"message-maker":26,"support-style-sheet":27}],25:[function(require,module,exports){
@@ -1544,30 +1587,55 @@ function i_link (option, protocol) {
         send(message)
         if (!is_disabled) el.onclick = handle_open_link
         return el
-    }
+    
+        // function handle_click () {
+        //     if (is_current) return
+        //     const type = 'click'
+        //     if (role === 'tab') return send( make({type, data: is_checked}) )
+        //     if (role === 'switch') return send( make({type, data: is_checked}) )
+        //     if (role === 'listbox') {
+        //         is_expanded = !is_expanded
+        //         return send( make({type, data: {expanded: is_expanded}}) )
+        //     }
+        //     if (role === 'option') {
+        //         is_selected = !is_selected
+        //         return send( make({type, data: {selected: is_selected}}) )
+        //     }
+        //     send( make({type}) )
+        // }
 
-    function handle_open_link () {
-        if (target.match(/_/)) window.open(url, target)
-        if (target.match(/#/) && target.length > 1) {
-            document.querySelector(target).src = url
+        function handle_open_link () {
+            const type = 'click'
+            if (target.match(/_/)) {
+                window.open(url, target)
+            }
+            if (target.match(/#/) && target.length > 1) {
+                const el = document.querySelector(target)
+                el.src = url
+            }
+            send(make({type: 'go to', data: {url, window: target}}))
+
         }
-    }
 
-    // protocol get msg
-    function get (msg) {
-        const { head, refs, type, data } = msg
+        // protocol get msg
+        function get (msg) {
+            const { head, refs, type, data } = msg
+        }
+
     }
 
     // insert CSS style
     const custom_style = theme ? theme.style : ''
     // set CSS variables
     if (theme && theme.props) {
-        var {size, size_hover, weight, color, color_hover, disabled_color,
+        var {size, size_hover, disabled_size, weight, 
+            color, color_hover, disabled_color,
             deco, deco_hover,
             bg_color, bg_color_hover,
-            border_width, border_style, border_opacity, border_color, border_color_hover,  border_radius, 
+            border_width, border_style, border_opacity, border_color, border_color_hover, border_radius, 
             padding, margin, width, height, opacity,
-            fill, fill_hover, fill_opacity, icon_size, img_width, img_height,
+            fill, fill_hover, fill_opacity, disabled_fill,
+            icon_size, img_width, img_height,
             shadow_color, offset_x, offset_y, blur, shadow_opacity,
             shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
         } = theme.props
@@ -1646,12 +1714,13 @@ function i_link (option, protocol) {
         --fill: ${fill_hover ? fill_hover : 'var(--color-grey66)'};
     }
     :host(i-link[disabled]), :host(i-link[disabled]:hover) {
+        --size: ${disabled_size ? disabled_size : 'var(--primary-disabled-size)'};
         --color: ${disabled_color ? disabled_color : 'var(--primary-disabled-color)'};
         text-decoration: none;
         cursor: not-allowed;
     }
-    :host(i-link[disabled]) g, :host(i-link[disabled]:hover) g {
-        --fill: ${disabled_color ? disabled_color : 'var(--primary-disabled-fill)'};
+    :host(i-link[disabled]) g, :host(i-link[disabled]:hover) g, :host(i-link[role][disabled]) g, :host(i-link[role][disabled]:hover) g {
+        --fill: ${disabled_fill ? disabled_fill : 'var(--primary-disabled-fill)'};
     }
     :host(i-link[disabled]) .avatar {
         opacity: 0.6;
@@ -1822,7 +1891,7 @@ function i_button (option, protocol) {
             bg_color, bg_color_hover, border_color_hover,
             border_width, border_style, border_opacity, border_color, border_radius, 
             padding, margin, width, height, opacity, img_width, img_height,
-            fill, fill_hover, fill_opacity, icon_size, current_fill, current_hover_fill,
+            fill, fill_hover, fill_opacity, icon_size, selected_fill, selected_hover_fill, current_fill, current_hover_fill, disabled_fill,
             shadow_color, offset_x, offset_y, blur, shadow_opacity,
             shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
         } = theme.props
@@ -1928,18 +1997,25 @@ function i_button (option, protocol) {
     }
     :host(i-button[role="option"]) {
         --border-radius: ${border_radius ? border_radius : '0'};
+        --opacity: ${opacity ? opacity : '0'};
     }
-    :host(i-button[role="option"]) .text {
-    }
-    :host(i-button[role="option"]) .avatar ~ .text {
-    }
-    :host(i-button[role="option"]) .avatar {
+    :host(i-button[role="option"][aria-current="true"]), :host(i-button[role="option"][aria-current="true"]:hover) {
+        --size: ${current_size ? current_size : 'var(--primary-current-size)'};
+        --color: ${current_color ? current_color : 'var(--primary-current-color)'};
+        --bg-color: ${current_bg_color ? current_bg_color : 'var(--primary-current-bg-color)'};
+        --opacity: ${opacity ? opacity : '0'}
+    } 
+    :host(i-button[role="option"][disabled]), :host(i-button[role="option"][disabled]:hover) {
+        --size: ${disabled_size ? disabled_size : 'var(--primary-disabled-size)'};
+        --color: ${disabled_color ? disabled_color : 'var(--primary-disabled-color)'};
+        --bg-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
+        --opacity: ${opacity ? opacity : '0'}
     }
     :host(i-button[role="option"][aria-selected="true"]) .icon g {
-        --fill: ${fill ? fill : 'var(--primary-selected-icon-fill)'};
+        --fill: ${selected_fill ? selected_fill : 'var(--primary-selected-icon-fill)'};
     }
     :host(i-button[role="option"][aria-selected="true"]:hover) .icon g {
-        --fill: ${fill_hover ? fill_hover : 'var(--primary-selected-icon-fill-hover)'};
+        --fill: ${selected_hover_fill ? selected_hover_fill : 'var(--primary-selected-icon-fill-hover)'};
     }
 
     :host(i-button[role="option"][aria-selected="false"]) > .icon {
@@ -1954,10 +2030,9 @@ function i_button (option, protocol) {
         --color: ${current_color ? current_color : 'var(--primary-current-color)'};
         --bg-color: ${current_bg_color ? current_bg_color : 'var(--primary-current-bg-color)'};
         --size: ${current_size ? current_size : 'var(--primary-current-size)'};
-        font-size: var(--size);
     }
     :host(i-button[role="option"][aria-current="true"]) .icon g, :host(i-button[role="option"][aria-current="true"]:hover) .icon g {
-        --fill: ${fill ? fill : 'var(--primary-current-icon-fill)'};
+        --fill: ${current_fill ? current_fill : 'var(--primary-current-icon-fill)'};
     }
     :host(i-button[aria-current="true"]:hover) g {
         --fill: ${fill_hover ? fill_hover : 'var(--primary-current-icon-fill)'};
@@ -1983,8 +2058,8 @@ function i_button (option, protocol) {
         --fill: ${current_fill ? current_fill : 'var(--color-white)' };
     }
     :host(i-button[disabled]), :host(i-button[disabled]:hover) {
+        --size: ${disabled_size ? disabled_size : 'var(--primary-disabled-size)'};
         --color: ${disabled_color ? disabled_color : 'var(--primary-disabled-color)'};
-        --size: ${disabled_size ? disabled_size : 'var(--primary-size)'};
         --bg-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
         cursor: not-allowed;
         opacity: 0.6;
@@ -2039,6 +2114,22 @@ function i_button (option, protocol) {
     }
     :host(i-button.text-left) > .icon {
         grid-column-start: 3;
+    }
+    :host(i-button[role="menuitem"]) {
+        --color: ${color ? color : 'var(--primary-color)'};
+        --border-radius: ${border_radius ? border_radius : '0'};
+        background-color: transparent;
+    }
+    :host(i-button[role="menuitem"]:hover) {
+        --color: ${color_hover ? color_hover : 'var(--primary-color-hover)'};
+        background-color: transparent;
+    }
+    :host(i-button[role="menuitem"][disabled]), :host(i-button[role="menuitem"][disabled]):hover {
+        --color: ${disabled_color ? disabled_color : 'var(--primary-disabled-color)'};
+    }
+    :host(i-button[role="menuitem"][disabled]) g ,
+    :host(i-button[role="menuitem"][disabled]:hover) g {
+        --fill: ${disabled_fill ? disabled_fill : 'var(--primary-disabled-fill)'};
     }
     ${custom_style}
     `
@@ -2484,16 +2575,18 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
     const recipients = []
     const make = message_maker(`${name} / ${flow} / i_list`)
     const message = make({type: 'ready'})
+    let is_hidden = hidden
+    let is_expanded = !is_hidden ? !is_hidden : expanded
 
     function widget () {
         const send = protocol( get )
         send(message)
         const list = document.createElement('i-list')
         const shadow = list.attachShadow({mode: 'open'})
-        list.ariaHidden = hidden
+        list.ariaHidden = is_hidden
         list.ariaLabel = name
         list.tabIndex = -1
-        list.ariaExpanded = expanded
+        list.ariaExpanded = is_expanded
         list.dataset.mode = mode
         style_sheet(shadow, style)
         try {
@@ -2514,21 +2607,86 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
 
         function generate_list () {
             return body.map( (list, i) => {
-                const {text = undefined, url = '#', target, icon, cover, disabled = false, theme} = list
-                const item = i_link({
-                    page,
-                    name: text,
-                    body: text,
-                    role: 'menuitem',
-                    link: {
-                        url,
-                        target
-                    },
-                    icon,
-                    cover,
-                    disabled,
-                    theme,
-                }, button_protocol(text))
+                const {text = undefined, role = 'link', url = '#', target, icon, cover, disabled = false, theme = {}} = list
+                const {style = ``, props = {}} = theme
+                const {
+                    size = 'var(--size14)', 
+                    size_hover = 'var(--size14)', 
+                    color = 'var(--primary-color)', 
+                    color_hover = 'var(--primary-color-hover)', 
+                    bg_color = 'var(--primary-bg-color)', 
+                    bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    fill = 'var(--primary-color)', 
+                    fill_hover = 'var(--primary-color-hover)', 
+                    icon_size = '20px', 
+                    img_width = '24px', 
+                    img_height = 'auto', 
+                    disabled_color = 'var(--primary-disabled-color)',
+                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
+                    disabled_fill = 'var(--primary-disabled-fill)',
+                } = props
+                var item = text
+                if (role === 'link' ) {
+                    var item = i_link({
+                        page,
+                        name: text,
+                        body: text,
+                        role: 'menuitem',
+                        link: {
+                            url,
+                            target
+                        },
+                        icon,
+                        cover,
+                        disabled,
+                        theme: {
+                            style,
+                            props: {
+                                size,
+                                size_hover,
+                                color,
+                                color_hover,
+                                bg_color,
+                                bg_color_hover,
+                                fill,
+                                fill_hover,
+                                icon_size,
+                                img_width,
+                                img_height,
+                                disabled_color,
+                                disabled_bg_color,
+                                disabled_fill,
+                            }
+                        }
+                    }, button_protocol(text))
+                }
+                if (role === 'menuitem') {
+                    var item = i_button({
+                        name: text,
+                        body: text,
+                        role,
+                        icon,
+                        cover,
+                        disabled,
+                        theme: {
+                            style,
+                            props: {
+                                size,
+                                size_hover,
+                                color,
+                                color_hover,
+                                fill,
+                                fill_hover,
+                                icon_size,
+                                img_width,
+                                img_height,
+                                disabled_color,
+                                disabled_fill,
+                            }
+                        }
+                    }, button_protocol(text))
+                }
+                
                 const li = bel`<li role="none">${item}</li>`
                 if (disabled) li.setAttribute('disabled', disabled)
                 shadow.append(li)
@@ -2537,10 +2695,31 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         }
         function generate_select_list () {
             return body.map( (option, i) => {
-                const {text, icon = {}, cover, current = false, selected = false, disabled = false} = option
+                const {text, icon = {}, cover, current = false, selected = false, disabled = false, theme = {}} = option
                 const {name = 'check', path = 'assets', align} = icon
                 const is_current = mode === 'single-select' ? current : false
-                const item = button({
+                const {style = ``, props = {}} = theme
+                const {
+                    size = 'var(--size14)', 
+                    size_hover = 'var(--size14)',
+                    weight = '300', 
+                    color = 'var(--primary-color)', 
+                    color_hover = 'var(--primary-color-hover)', 
+                    bg_color = 'var(--primary-bg-color)', 
+                    bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    fill = 'var(--primary-color)', 
+                    fill_hover = 'var(--primary-color-hover)',
+                    current_fill = 'var(--primary-current-icon-fill)',
+                    icon_size = '20px', 
+                    img_width = '24px', 
+                    img_height = 'auto', 
+                    disabled_color = 'var(--primary-disabled-color)',
+                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
+                    disabled_fill = 'var(--primary-disabled-fill)',
+                    opacity = '0'
+                } = props
+                const item = button(
+                {
                     page, 
                     name: text, 
                     body: text,
@@ -2551,16 +2730,34 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                     current: is_current, 
                     selected,
                     disabled,
-                    theme: { 
+                    theme: {
+                        style,
                         props: {
-                            color_hover: 'var(--color)', 
-                            bg_color_hover: 'var(--color-greyEB)',
-                            fill_hover: 'var(--primary-selected-icon-fill)'
+                            size,
+                            size_hover,
+                            weight,
+                            color,
+                            color_hover,
+                            bg_color,
+                            bg_color_hover,
+                            fill,
+                            fill_hover,
+                            current_fill,
+                            icon_size,
+                            img_width,
+                            img_height,
+                            disabled_color,
+                            disabled_bg_color,
+                            disabled_fill,
+                            opacity
                         }
-                    }}, button_protocol(text))
+                    }
+                }, button_protocol(text))
                 const li = (text === 'no items') 
                 ? bel`<li role="listitem" data-option=${text}">${text}</li>`
-                : bel`<li role="option" data-option=${text}" aria-selected=${selected}>${item}</li>`
+                : bel`<li role="option" data-option=${text}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
+                if (is_current) li.setAttribute('aria-current', is_current)
+                if (disabled) li.setAttribute('disabled', disabled)
                 const option_list = text.toLowerCase().split(' ').join('-')
                 const make = message_maker(`${option_list} / option / ${flow} / widget`)
                 send( make({type: 'ready'}) )
@@ -2595,6 +2792,9 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                     recipients[current]( make({type, data: state}) )
                     send(make({to: name, type, data: {mode, selected: from} }))
                     list.setAttribute('aria-activedescendant', from)
+                    child.setAttribute('aria-selected', state )
+                    if (state) child.setAttribute('aria-current', state)
+                    else child.removeAttribute('aria-current')
                 })
             }
         }
@@ -2604,13 +2804,23 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                 return get
             }
         }
+        function handle_click_event(msg) {
+            const {head, type, data} = msg
+            const role = head[0].split(' / ')[1]
+            const from = head[0].split(' / ')[0]
+            const make = message_maker(`${from} / ${role} / ${flow}`)
+            const message = make({to: '*', type, data})
+            send(message)
+
+        }
         function get (msg) {
             const {head, refs, type, data} = msg
             const to = head[1]
             const id = head[2]
             const role = head[0].split(' / ')[1]
             const from = head[0].split(' / ')[0]
-            if (type === 'click') return handle_select_event(from, data)
+            if (role === 'menuitem') return handle_click_event(msg)
+            if (type === 'click' && role === 'option') return handle_select_event(from, data)
             if (type.match(/expanded|unexpanded/)) return handle_expanded_event(data)
         }
     }
@@ -2619,13 +2829,11 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
     const custom_style = theme ? theme.style : ''
     // set CSS variables
     if (theme && theme.props) {
-    var {size, size_hover, current_size,
-        weight, weight_hover, current_weight,
-        color, color_hover, current_color, current_bg_color, 
-        bg_color, bg_color_hover, border_color_hover,
-        border_width, border_style, border_opacity, border_color, border_radius, 
-        padding, width, height, opacity,
-        fill, fill_hover, icon_size, current_fill,
+    var {
+        bg_color, bg_color_hover,
+        current_bg_color, current_bg_color_hover, disabled_bg_color,
+        width, height, border_width, border_style, border_opacity, border_color,
+        border_color_hover, border_radius, padding,  opacity,
         shadow_color, offset_x, offset_y, blur, shadow_opacity,
         shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
     } = theme.props
@@ -2633,10 +2841,11 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
 
     const style = `
     :host(i-list) {
-        --color: ${color ? color : 'var(--primary-color)'};
-        --bg-color: ${bg_color ? bg_color : 'var(--color-white)'};
+        ${width && 'width: var(--width);'};
+        ${height && 'height: var(--height);'};
         display: grid;
         margin-top: 5px;
+        max-width: 100%;
     }
     :host(i-list[aria-hidden="true"]) {
         opacity: 0;
@@ -2648,42 +2857,66 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         animation: open 0.3s;
     }
     li {
+        --bg-color: ${bg_color ? bg_color : 'var(--primary-bg-color)'};
+        --border-radius: ${border_radius ? border_radius : 'var(--primary-radius)'};
+        --border-width: ${border_width ? border_width : 'var(--primary-border-width)'};
+        --border-style: ${border_style ? border_style : 'var(--primary-border-style)'};
+        --border-color: ${border_color ? border_color : 'var(--primary-border-color)'};
+        --border-opacity: ${border_opacity ? border_opacity : 'var(--primary-border-opacity)'};
+        --border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity));
         display: grid;
         grid-template-columns: 1fr;
-        border: 1px solid hsl(var(--primary-color));
-        margin-top: -1px;
-        color: hsl(var(--color));
         background-color: hsl(var(--bg-color));
-        transition: color 0.3s, background-color 0.3s ease-in-out;
+        border: var(--border);
+        margin-top: -1px;
         cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+    }
+    li:hover {
+        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--primary-bg-color-hover)'};
     }
     li i-button {
         justify-content: left;
     }
-    [role="none"]:hover {
-        --bg-color: var(--color-greyEB);
+    :host(i-list) li:nth-of-type(1) {
+        border-top-left-radius: var(--border-radius);
+        border-top-right-radius: var(--border-radius);
+    }
+    li:last-child {
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
     }
     [role="listitem"] {
-        --color: var(--color-grey88);
         display: grid;
         grid-template-rows: 24px;
-        font-size: var(--size14);
         padding: 11px;
         align-items: center;
-        broder: 1px solid hsl(var(--color-black));
     }
     [role="listitem"]:hover {
-        --bg-color: var(--color-white);
         cursor: default;
     }
-    li[disabled="true"] {
+    li[disabled="true"], li[disabled="true"]:hover {
+        background-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
         cursor: not-allowed;
     }
-    li[role="none"] i-link {
+    [role="none"] {
+        --bg-color: var(--primary-list-bg-color);
+        --opacity: 1;
+        background-color: hsla(var(--bg-color), var(--opacity));
+    }
+    [role="none"]:hover {
+        --bg-color: var(--primary-list-bg-color-hover);
+        --opacity: 1;
+        background-color: hsla(var(--bg-color), var(--opacity));
+    }
+    [role="none"] i-link {
         padding: 12px;
     }
-    li[role="option"] i-button.icon-right, li[role="option"] i-button.text-left {
+    [role="option"] i-button.icon-right, [role="option"] i-button.text-left {
         grid-template-columns: auto 1fr auto;
+    }
+    [aria-current="true"] {
+        --bg-color: ${current_bg_color ? current_bg_color : 'var(--primary-current-bg-color)'};
     }
     @keyframes close {
         0% {
