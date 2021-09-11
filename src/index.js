@@ -5,12 +5,13 @@ const button = i_button
 const message_maker = require('message-maker')
 module.exports = i_list
 
-function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme }, protocol) {
+function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme = {} }, protocol) {
     const recipients = []
     const make = message_maker(`${name} / ${flow} / i_list`)
     const message = make({type: 'ready'})
     let is_hidden = hidden
     let is_expanded = !is_hidden ? !is_hidden : expanded
+    const {grid} = theme
 
     function widget () {
         const send = protocol( get )
@@ -44,20 +45,20 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                 const {text = undefined, role = 'link', url = '#', target, icon, cover, disabled = false, theme = {}} = list
                 const {style = ``, props = {}} = theme
                 const {
-                    size = 'var(--size14)', 
-                    size_hover = 'var(--size14)', 
-                    color = 'var(--primary-color)', 
-                    color_hover = 'var(--primary-color-hover)', 
+                    size = `var(--primary-size)`, 
+                    size_hover = `var(--primary-size)`, 
+                    color = `var(--primary-color)`, 
+                    color_hover = `var(--primary-color-hover)`,     
                     bg_color = 'var(--primary-bg-color)', 
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
-                    fill = 'var(--primary-color)', 
-                    fill_hover = 'var(--primary-color-hover)', 
-                    icon_size = '20px', 
-                    img_width = '24px', 
-                    img_height = 'auto', 
+                    icon_fill = 'var(--primary-color)', 
+                    icon_fill_hover = 'var(--primary-color-hover)', 
+                    icon_size = 'var(--primary-icon-size)', 
+                    avatar_width = 'var(--primary-avatar-width)', 
+                    avatar_height = 'var(--primary-avatar-height)', 
                     disabled_color = 'var(--primary-disabled-color)',
                     disabled_bg_color = 'var(--primary-disabled-bg-color)',
-                    disabled_fill = 'var(--primary-disabled-fill)',
+                    disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
                 } = props
                 var item = text
                 if (role === 'link' ) {
@@ -70,7 +71,9 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                             url,
                             target
                         },
-                        icon,
+                        icons: {
+                            icon
+                        },
                         cover,
                         disabled,
                         theme: {
@@ -82,15 +85,16 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                                 color_hover,
                                 bg_color,
                                 bg_color_hover,
-                                fill,
-                                fill_hover,
+                                icon_fill,
+                                icon_fill_hover,
                                 icon_size,
-                                img_width,
-                                img_height,
+                                avatar_width,
+                                avatar_height,
                                 disabled_color,
                                 disabled_bg_color,
-                                disabled_fill,
-                            }
+                                disabled_icon_fill,
+                            },
+                            grid
                         }
                     }, button_protocol(text))
                 }
@@ -99,7 +103,9 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                         name: text,
                         body: text,
                         role,
-                        icon,
+                        icons: {
+                            icon
+                        },
                         cover,
                         disabled,
                         theme: {
@@ -109,14 +115,15 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                                 size_hover,
                                 color,
                                 color_hover,
-                                fill,
-                                fill_hover,
+                                icon_fill,
+                                icon_fill_hover,
                                 icon_size,
-                                img_width,
-                                img_height,
+                                avatar_width,
+                                avatar_height,
                                 disabled_color,
-                                disabled_fill,
-                            }
+                                disabled_icon_fill,
+                            },
+                            grid
                         }
                     }, button_protocol(text))
                 }
@@ -129,38 +136,50 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         }
         function make_select_list () {
             return body.map( (option, i) => {
-                const {text, icon = {}, cover, current = false, selected = false, disabled = false, theme = {}} = option
-                const {name = 'check', path, align} = icon
+                const {text, icon, list, cover, current = false, selected = false, disabled = false, theme = {}} = option
                 const is_current = mode === 'single-select' ? current : false
                 const {style = ``, props = {}} = theme
                 const {
-                    size = 'var(--size14)', 
-                    size_hover = 'var(--size14)',
+                    size = 'var(--primary-size)', 
+                    size_hover = 'var(--primary-size)',
                     weight = '300', 
                     color = 'var(--primary-color)', 
                     color_hover = 'var(--primary-color-hover)', 
                     bg_color = 'var(--primary-bg-color)', 
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
-                    fill = 'var(--primary-color)', 
-                    fill_hover = 'var(--primary-color-hover)',
-                    current_fill = 'var(--primary-current-icon-fill)',
-                    icon_size = '20px', 
-                    img_width = '24px', 
-                    img_height = 'auto', 
+                    icon_size = 'var(--primary-icon-size)',
+                    icon_fill = 'var(--primary-icon-fill)',
+                    icon_fill_hover = 'var(--primary-icon-fill-hover)',
+                    avatar_width = 'var(--avatar-width)', 
+                    avatar_height = 'var(--avatar-height)', 
+                    current_size = 'var(--current-list-size)',
+                    current_color = 'var(--current-list-color)',
+                    current_weight = 'var(--current-list-weight)',
+                    current_icon_size = 'var(--current-icon-size)',
+                    current_icon_fill = 'var(--current-icon-fill)',
+                    current_list_selected_icon_size = 'var(--current-list-selected-icon-size)',
+                    current_list_selected_icon_fill = 'var(--current-list-selected-icon-fill)',
+                    list_selected_icon_size = 'var(--list-selected-icon-size)',
+                    list_selected_icon_fill = 'var(--list-selected-icon-fill)',
+                    list_selected_icon_fill_hover = 'var(--list-selected-icon-fill-hover)',
                     disabled_color = 'var(--primary-disabled-color)',
                     disabled_bg_color = 'var(--primary-disabled-bg-color)',
-                    disabled_fill = 'var(--primary-disabled-fill)',
+                    disabled_icon_fill = 'var(--primary-disabled-fill)',
                     opacity = '0'
                 } = props
+
                 const item = button(
                 {
                     page, 
                     name: text, 
                     body: text,
-                    icon: {name, path, align}, 
                     cover,
                     role: 'option',
-                    mode, 
+                    mode,
+                    icons: {
+                        icon,
+                        list
+                    },
                     current: is_current, 
                     selected,
                     disabled,
@@ -174,17 +193,27 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                             color_hover,
                             bg_color,
                             bg_color_hover,
-                            fill,
-                            fill_hover,
-                            current_fill,
                             icon_size,
-                            img_width,
-                            img_height,
+                            icon_fill,
+                            icon_fill_hover,
+                            avatar_width,
+                            avatar_height,
+                            current_size,
+                            current_color,
+                            current_weight,
+                            current_icon_size,
+                            current_icon_fill,
+                            current_list_selected_icon_size,
+                            current_list_selected_icon_fill,
+                            list_selected_icon_size,
+                            list_selected_icon_fill,
+                            list_selected_icon_fill_hover,
                             disabled_color,
                             disabled_bg_color,
-                            disabled_fill,
+                            disabled_icon_fill,
                             opacity
-                        }
+                        },
+                        grid
                     }
                 }, button_protocol(text))
                 const li = (text === 'no items') 
@@ -309,9 +338,6 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
     li:hover {
         --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--primary-bg-color-hover)'};
     }
-    li i-button {
-        justify-content: left;
-    }
     :host(i-list) li:nth-of-type(1) {
         border-top-left-radius: var(--border-radius);
         border-top-right-radius: var(--border-radius);
@@ -334,12 +360,12 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         cursor: not-allowed;
     }
     [role="none"] {
-        --bg-color: var(--primary-list-bg-color);
+        --bg-color: var(--list-bg-color);
         --opacity: 1;
         background-color: hsla(var(--bg-color), var(--opacity));
     }
     [role="none"]:hover {
-        --bg-color: var(--primary-list-bg-color-hover);
+        --bg-color: var(--list-bg-color-hover);
         --opacity: 1;
         background-color: hsla(var(--bg-color), var(--opacity));
     }
@@ -350,7 +376,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
         grid-template-columns: auto 1fr auto;
     }
     [aria-current="true"] {
-        --bg-color: ${current_bg_color ? current_bg_color : 'var(--primary-current-bg-color)'};
+        --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
     }
     @keyframes close {
         0% {
