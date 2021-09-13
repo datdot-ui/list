@@ -51,7 +51,7 @@ function demo () {
                     // list_selected_icon_size: '50px',
                     current_list_selected_icon_size: '30px',
                     current_list_selected_icon_fill: 'var(--color-blue)',
-                    option_avatar_width: '50%',
+                    avatar_width: '1000px',
                     current_icon_size: '30px',
                     current_icon_fill: 'var(--color-light-green)',
                     current_size: '50px',
@@ -80,7 +80,7 @@ function demo () {
                     selected_icon_fill_hover: 'var(--color-yellow)',
                     size: 'var(--size30)',
                     // size_hover: 'var(--size30)',
-                    avatar_width: '100%'
+                    avatar_width: '1200px'
                 }
             }
         },
@@ -111,7 +111,7 @@ function demo () {
     ]
     const options3 = [
         {
-            text: 'DatDot',
+            text: 'DatDot1',
             role: 'link',
             url: 'https://datdot.org/',
             target: '_blank',
@@ -119,7 +119,8 @@ function demo () {
             cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
             theme: {
                 props: {
-                    avatar_width: '24px'
+                    avatar_width: '24px',
+                    avatar_radius: '50%'
                 }
             }
         },
@@ -146,7 +147,8 @@ function demo () {
             target: '_new',
             theme: {
                 props: {
-                    avatar_width: '26px'
+                    avatar_width: '26px',
+                    avatar_radius: '50%'
                 }
             }
         },
@@ -200,23 +202,25 @@ function demo () {
         theme: {
             grid: {
                 list: {
-
                 },
                 button: {
                     areas: 'option icon',
+                    // first step for responsive
+                    columns: 'minmax(0, 100%) 44px',
                     align: 'items-center'
                 },
                 option: {
                     // rows: 'repeat(auto-fill, minmax(100px, 1fr))',
-                    // columns: 'repeat(auto-fill, minmax(0, auto))',
+                    // responsive for large image
+                    // second step for responsive
+                    columns: 'repeat(auto-fill, minmax(0, auto))',
                     area: 'option',
                     // areas: ['option-text option-icon', 'option-avatar option-avatar'],
                     justify: 'content-left',
                     align: 'items-center',
-                    gap: '5px'
                 },
                 icon: {
-                    // area: 'icon',
+                    area: 'icon',
                     justify: 'self-right'
                 },
                 option_icon: {
@@ -258,8 +262,8 @@ function demo () {
                 },
                 option: {
                     // content auto stretch
-                    // columns: 'repeat(auto-fill, minmax(0, 100%))',
-                    columns: 'repeat(auto-fill, 1fr)',
+                    columns: 'repeat(auto-fill, minmax(0, 100%))',
+                    // columns: 'repeat(auto-fill, 1fr)',
                     auto: {
                         auto_flow: 'column'
                     },
@@ -326,6 +330,11 @@ function demo () {
     <div class="${css.content}">
         <h1>List</h1>
         <section>
+            <h2>Single select</h2>
+            ${select_result}
+            ${single_select_list}
+        </section>
+        <section>
             <h2>Terminal messages selector</h2>
             ${expanded}
             ${terminal_list}
@@ -338,11 +347,8 @@ function demo () {
             </div>
             ${multiple_select_list}
         </section>
+        
         <section>
-            <h2>Single select</h2>
-            ${select_result}
-            ${single_select_list}
-        </section>
             <h2>Dropdown</h2>
             ${dropdown_list}
         </section>
@@ -407,27 +413,28 @@ const css = csjs`
     --color-dark: 223, 13%, 20%;
     --color-deep-black: 222, 18%, 11%;
     --color-red: 358, 99%, 53%;
-    --color-amaranth-pink: 331, 86%, 78%;
-    --color-persian-rose: 323, 100%, 56%;
-    --color-orange: 35, 100%, 58%;
+    --color-amaranth-pink: 329, 100%, 65%;
+    --color-persian-rose: 323, 100%, 50%;
+    --color-orange: 32, var(--r);
+    --color-light-orange: 36, 100%, 55%;
     --color-safety-orange: 27, 100%, 50%;
     --color-deep-saffron: 31, 100%, 56%;
     --color-ultra-red: 348, 96%, 71%;
     --color-flame: 15, 80%, 50%;
     --color-verdigris: 180, 54%, 43%;
     --color-viridian-green: 180, 100%, 63%;
-    --color-blue: 214, var(--r);
+    --color-blue: 214, 100%, 49%;
     --color-heavy-blue: 233, var(--r);
     --color-maya-blue: 205, 96%, 72%;
     --color-slate-blue: 248, 56%, 59%;
     --color-blue-jeans: 204, 96%, 61%;
     --color-dodger-blue: 213, 90%, 59%;
-    --color-light-green: 127, 86%, 77%;
+    --color-light-green: 97, 86%, 77%;
     --color-lime-green: 127, 100%, 40%;
     --color-slimy-green: 108, 100%, 28%;
     --color-maximum-blue-green: 180, 54%, 51%;
-    --color-green: 136, 81%, 34%;
-    --color-light-green: 97, 86%, 77%;
+    --color-deep-green: 136, 79%, 22%;
+    --color-green: 136, 82%, 38%;
     --color-lincoln-green: 97, 100%, 18%;
     --color-yellow: 44, 100%, 55%;
     --color-chrome-yellow: 39, var(--r);
@@ -454,7 +461,9 @@ const css = csjs`
     /* define font ---------------------------------------------*/
     --snippet-font: Segoe UI Mono, Monospace, Cascadia Mono, Courier New, ui-monospace, Liberation Mono, Menlo, Monaco, Consolas;
     --size12: 1.2rem;
+    --size13: 1.3rem;
     --size14: 1.4rem;
+    --size15: 1.5rem;
     --size16: 1.6rem;
     --size18: 1.8rem;
     --size20: 2rem;
@@ -464,8 +473,20 @@ const css = csjs`
     --size28: 2.8rem;
     --size30: 3rem;
     --size32: 3.2rem;
+    --size34: 3.4rem;
     --size36: 3.6rem;
+    --size38: 3.8rem;
     --size40: 4rem;
+    --size42: 4.2rem;
+    --size44: 4.4rem;
+    --size46: 4.6rem;
+    --size48: 4.8rem;
+    --size50: 5rem;
+    --size52: 5.2rem;
+    --size54: 5.4rem;
+    --size56: 5.6rem;
+    --size58: 5.8rem;
+    --size60: 6rem;
     --weight100: 100;
     --weight300: 300;
     --weight400: 400;
@@ -487,7 +508,9 @@ const css = csjs`
     --primary-border-color: var(--color-black);
     --primary-border-opacity: 1;
     --primary-radius: 8px;
-    --primary-avatar-radius: 0px;
+    --primary-avatar-width: 100%;
+    --primary-avatar-height: auto;
+    --primary-avatar-radius: 0;
     --primary-disabled-size: var(--primary-size);
     --primary-disabled-color: var(--color-greyA2);
     --primary-disabled-bg-color: var(--color-greyEB);
@@ -496,10 +519,12 @@ const css = csjs`
     --primary-listbox-option-icon-size: 20px;
     --primary-listbox-option-avatar-width: 40px;
     --primary-listbox-option-avatar-height: auto;
+    --primary-listbox-option-avatar-radius: var(--primary-avatar-radius);
     --primary-option-avatar-width: 30px;
     --primary-option-avatar-height: auto;
     --primary-list-avatar-width: 30px;
     --primary-list-avatar-height: auto;
+    --primary-list-avatar-radius: var(--primary-avatar-radius);
     /* define icon settings ---------------------------------------------*/
     --primary-icon-size: var(--size16);
     --primary-icon-size-hover: var(--size16);
@@ -526,12 +551,12 @@ const css = csjs`
     --listbox-collapse-icon-size-hover: var(--size20);
     --listbox-collapse-icon-fill: var(--primary-icon-fill);
     --listbox-collapse-icon-fill-hover: var(--primary-icon-fill-hover);
-    --listbox-collapse-option-size: var(--size20);
-    --listbox-collapse-option-size-hover: var(--size24);
+    --listbox-collapse-option-size: var(--primary-size);
+    --listbox-collapse-option-size-hover: var(--primary-size-hover);
     --listbox-collapse-option-weight: var(--primary-weight);
     --listbox-collapse-option-weight-hover: var(--primary-weight);
-    --listbox-collapse-option-color: var(--color-blue);
-    --listbox-collapse-option-color-hover: var(--color-orange);
+    --listbox-collapse-option-color: var(--primary-color);
+    --listbox-collapse-option-color-hover: var(--primary-color-hover);
     --listbox-collapse-option-avatar-width: var(--primary-listbox-option-avatar-width);
     --listbox-collapse-option-avatar-height: var(--primary-listbox-option-avatar-height);
     --listbox-collapse-option-icon-size: var(--primary-listbox-option-icon-size);
@@ -571,16 +596,34 @@ const css = csjs`
     --link-icon-size: var(--size30);
     --link-icon-fill: var(--primary-link-color);
     --link-icon-fill-hover: var(--primary-link-color-hover);
+    --link-avatar-width: 24px;
+    --link-avatar-width-hover: var(--link-avatar-width);
+    --link-avatar-height: auto;
+    --link-avatar-height-hover: var(--link-avatar-height);
+    --link-avatar-radius: 0;
     --link-disabled-size: var(--primary-link-size);
     --link-disabled-color: var(--color-greyA2);
     --link-disabled-bg-color: transparent;
     --link-disabled-icon-fill: var(--color-greyA2);
     /* role menuitem settings ---------------------------------------------*/
+    --menu-size: var(--size15);
+    --menu-size-hover: var(--menu-size);
+    --menu-weight: var(--primary-weight);
+    --menu-weigh-hover: var(--primary-weight);
     --menu-color: var(--primary-color);
     --menu-color-hover: var(--color-grey88);
     --menu-icon-size: 20px;
+    --menu-icon-size-hover: var(--menu-icon-size);
     --menu-icon-fill: var(--primary-color);
     --menu-icon-fill-hover: var(--color-grey88);
+    --menu-avatar-width: 50px;
+    --menu-avatar-width-hover: var(--menu-avatar-width);
+    --menu-avatar-height: auto;
+    --menu-avatar-height-hover: var(--menu-avatar-height);
+    --menu-avatar-radius: 0;
+    --menu-disabled-color: var(--primary-disabled-color);
+    --menu-disabled-size: var(--menu-size);
+    --menu-disabled-weight: var(--primary-weight);
 }
 html {
     font-size: 62.5%;

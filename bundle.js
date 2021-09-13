@@ -52,7 +52,7 @@ function demo () {
                     // list_selected_icon_size: '50px',
                     current_list_selected_icon_size: '30px',
                     current_list_selected_icon_fill: 'var(--color-blue)',
-                    option_avatar_width: '50%',
+                    avatar_width: '1000px',
                     current_icon_size: '30px',
                     current_icon_fill: 'var(--color-light-green)',
                     current_size: '50px',
@@ -81,7 +81,7 @@ function demo () {
                     selected_icon_fill_hover: 'var(--color-yellow)',
                     size: 'var(--size30)',
                     // size_hover: 'var(--size30)',
-                    avatar_width: '100%'
+                    avatar_width: '1200px'
                 }
             }
         },
@@ -112,7 +112,7 @@ function demo () {
     ]
     const options3 = [
         {
-            text: 'DatDot',
+            text: 'DatDot1',
             role: 'link',
             url: 'https://datdot.org/',
             target: '_blank',
@@ -120,7 +120,8 @@ function demo () {
             cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
             theme: {
                 props: {
-                    avatar_width: '24px'
+                    avatar_width: '24px',
+                    avatar_radius: '50%'
                 }
             }
         },
@@ -147,7 +148,8 @@ function demo () {
             target: '_new',
             theme: {
                 props: {
-                    avatar_width: '26px'
+                    avatar_width: '26px',
+                    avatar_radius: '50%'
                 }
             }
         },
@@ -201,23 +203,25 @@ function demo () {
         theme: {
             grid: {
                 list: {
-
                 },
                 button: {
                     areas: 'option icon',
+                    // first step for responsive
+                    columns: 'minmax(0, 100%) 44px',
                     align: 'items-center'
                 },
                 option: {
                     // rows: 'repeat(auto-fill, minmax(100px, 1fr))',
-                    // columns: 'repeat(auto-fill, minmax(0, auto))',
+                    // responsive for large image
+                    // second step for responsive
+                    columns: 'repeat(auto-fill, minmax(0, auto))',
                     area: 'option',
                     // areas: ['option-text option-icon', 'option-avatar option-avatar'],
                     justify: 'content-left',
                     align: 'items-center',
-                    gap: '5px'
                 },
                 icon: {
-                    // area: 'icon',
+                    area: 'icon',
                     justify: 'self-right'
                 },
                 option_icon: {
@@ -259,8 +263,8 @@ function demo () {
                 },
                 option: {
                     // content auto stretch
-                    // columns: 'repeat(auto-fill, minmax(0, 100%))',
-                    columns: 'repeat(auto-fill, 1fr)',
+                    columns: 'repeat(auto-fill, minmax(0, 100%))',
+                    // columns: 'repeat(auto-fill, 1fr)',
                     auto: {
                         auto_flow: 'column'
                     },
@@ -327,6 +331,11 @@ function demo () {
     <div class="${css.content}">
         <h1>List</h1>
         <section>
+            <h2>Single select</h2>
+            ${select_result}
+            ${single_select_list}
+        </section>
+        <section>
             <h2>Terminal messages selector</h2>
             ${expanded}
             ${terminal_list}
@@ -339,11 +348,8 @@ function demo () {
             </div>
             ${multiple_select_list}
         </section>
+        
         <section>
-            <h2>Single select</h2>
-            ${select_result}
-            ${single_select_list}
-        </section>
             <h2>Dropdown</h2>
             ${dropdown_list}
         </section>
@@ -408,27 +414,28 @@ const css = csjs`
     --color-dark: 223, 13%, 20%;
     --color-deep-black: 222, 18%, 11%;
     --color-red: 358, 99%, 53%;
-    --color-amaranth-pink: 331, 86%, 78%;
-    --color-persian-rose: 323, 100%, 56%;
-    --color-orange: 35, 100%, 58%;
+    --color-amaranth-pink: 329, 100%, 65%;
+    --color-persian-rose: 323, 100%, 50%;
+    --color-orange: 32, var(--r);
+    --color-light-orange: 36, 100%, 55%;
     --color-safety-orange: 27, 100%, 50%;
     --color-deep-saffron: 31, 100%, 56%;
     --color-ultra-red: 348, 96%, 71%;
     --color-flame: 15, 80%, 50%;
     --color-verdigris: 180, 54%, 43%;
     --color-viridian-green: 180, 100%, 63%;
-    --color-blue: 214, var(--r);
+    --color-blue: 214, 100%, 49%;
     --color-heavy-blue: 233, var(--r);
     --color-maya-blue: 205, 96%, 72%;
     --color-slate-blue: 248, 56%, 59%;
     --color-blue-jeans: 204, 96%, 61%;
     --color-dodger-blue: 213, 90%, 59%;
-    --color-light-green: 127, 86%, 77%;
+    --color-light-green: 97, 86%, 77%;
     --color-lime-green: 127, 100%, 40%;
     --color-slimy-green: 108, 100%, 28%;
     --color-maximum-blue-green: 180, 54%, 51%;
-    --color-green: 136, 81%, 34%;
-    --color-light-green: 97, 86%, 77%;
+    --color-deep-green: 136, 79%, 22%;
+    --color-green: 136, 82%, 38%;
     --color-lincoln-green: 97, 100%, 18%;
     --color-yellow: 44, 100%, 55%;
     --color-chrome-yellow: 39, var(--r);
@@ -455,7 +462,9 @@ const css = csjs`
     /* define font ---------------------------------------------*/
     --snippet-font: Segoe UI Mono, Monospace, Cascadia Mono, Courier New, ui-monospace, Liberation Mono, Menlo, Monaco, Consolas;
     --size12: 1.2rem;
+    --size13: 1.3rem;
     --size14: 1.4rem;
+    --size15: 1.5rem;
     --size16: 1.6rem;
     --size18: 1.8rem;
     --size20: 2rem;
@@ -465,8 +474,20 @@ const css = csjs`
     --size28: 2.8rem;
     --size30: 3rem;
     --size32: 3.2rem;
+    --size34: 3.4rem;
     --size36: 3.6rem;
+    --size38: 3.8rem;
     --size40: 4rem;
+    --size42: 4.2rem;
+    --size44: 4.4rem;
+    --size46: 4.6rem;
+    --size48: 4.8rem;
+    --size50: 5rem;
+    --size52: 5.2rem;
+    --size54: 5.4rem;
+    --size56: 5.6rem;
+    --size58: 5.8rem;
+    --size60: 6rem;
     --weight100: 100;
     --weight300: 300;
     --weight400: 400;
@@ -488,7 +509,9 @@ const css = csjs`
     --primary-border-color: var(--color-black);
     --primary-border-opacity: 1;
     --primary-radius: 8px;
-    --primary-avatar-radius: 0px;
+    --primary-avatar-width: 100%;
+    --primary-avatar-height: auto;
+    --primary-avatar-radius: 0;
     --primary-disabled-size: var(--primary-size);
     --primary-disabled-color: var(--color-greyA2);
     --primary-disabled-bg-color: var(--color-greyEB);
@@ -497,10 +520,12 @@ const css = csjs`
     --primary-listbox-option-icon-size: 20px;
     --primary-listbox-option-avatar-width: 40px;
     --primary-listbox-option-avatar-height: auto;
+    --primary-listbox-option-avatar-radius: var(--primary-avatar-radius);
     --primary-option-avatar-width: 30px;
     --primary-option-avatar-height: auto;
     --primary-list-avatar-width: 30px;
     --primary-list-avatar-height: auto;
+    --primary-list-avatar-radius: var(--primary-avatar-radius);
     /* define icon settings ---------------------------------------------*/
     --primary-icon-size: var(--size16);
     --primary-icon-size-hover: var(--size16);
@@ -527,12 +552,12 @@ const css = csjs`
     --listbox-collapse-icon-size-hover: var(--size20);
     --listbox-collapse-icon-fill: var(--primary-icon-fill);
     --listbox-collapse-icon-fill-hover: var(--primary-icon-fill-hover);
-    --listbox-collapse-option-size: var(--size20);
-    --listbox-collapse-option-size-hover: var(--size24);
+    --listbox-collapse-option-size: var(--primary-size);
+    --listbox-collapse-option-size-hover: var(--primary-size-hover);
     --listbox-collapse-option-weight: var(--primary-weight);
     --listbox-collapse-option-weight-hover: var(--primary-weight);
-    --listbox-collapse-option-color: var(--color-blue);
-    --listbox-collapse-option-color-hover: var(--color-orange);
+    --listbox-collapse-option-color: var(--primary-color);
+    --listbox-collapse-option-color-hover: var(--primary-color-hover);
     --listbox-collapse-option-avatar-width: var(--primary-listbox-option-avatar-width);
     --listbox-collapse-option-avatar-height: var(--primary-listbox-option-avatar-height);
     --listbox-collapse-option-icon-size: var(--primary-listbox-option-icon-size);
@@ -572,16 +597,34 @@ const css = csjs`
     --link-icon-size: var(--size30);
     --link-icon-fill: var(--primary-link-color);
     --link-icon-fill-hover: var(--primary-link-color-hover);
+    --link-avatar-width: 24px;
+    --link-avatar-width-hover: var(--link-avatar-width);
+    --link-avatar-height: auto;
+    --link-avatar-height-hover: var(--link-avatar-height);
+    --link-avatar-radius: 0;
     --link-disabled-size: var(--primary-link-size);
     --link-disabled-color: var(--color-greyA2);
     --link-disabled-bg-color: transparent;
     --link-disabled-icon-fill: var(--color-greyA2);
     /* role menuitem settings ---------------------------------------------*/
+    --menu-size: var(--size15);
+    --menu-size-hover: var(--menu-size);
+    --menu-weight: var(--primary-weight);
+    --menu-weigh-hover: var(--primary-weight);
     --menu-color: var(--primary-color);
     --menu-color-hover: var(--color-grey88);
     --menu-icon-size: 20px;
+    --menu-icon-size-hover: var(--menu-icon-size);
     --menu-icon-fill: var(--primary-color);
     --menu-icon-fill-hover: var(--color-grey88);
+    --menu-avatar-width: 50px;
+    --menu-avatar-width-hover: var(--menu-avatar-width);
+    --menu-avatar-height: auto;
+    --menu-avatar-height-hover: var(--menu-avatar-height);
+    --menu-avatar-radius: 0;
+    --menu-disabled-color: var(--primary-disabled-color);
+    --menu-disabled-size: var(--menu-size);
+    --menu-disabled-weight: var(--primary-weight);
 }
 html {
     font-size: 62.5%;
@@ -700,12 +743,18 @@ document.body.append(demo())
 },{"..":41,"../src/node_modules/message-maker":42,"bel":4,"csjs-inject":7,"datdot-terminal":24,"datdot-ui-button":28,"head":2}],2:[function(require,module,exports){
 module.exports = head
 
-function head (lang = 'utf8', title = 'List - DatDot UI') {
+function head (lang = 'UTF-8', title = 'List - DatDot UI') {
+    document.documentElement.lang = 'en'
     document.title = title
-    const meta = document.createElement('meta')
-    meta.setAttribute('name', 'viewport')
-    meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0')
-    document.head.appendChild(meta)
+    const lan = document.createElement('meta')
+    const viewport = document.createElement('meta')
+    const description = document.createElement('meta')
+    lan.setAttribute('charset', lang)
+    viewport.setAttribute('name', 'viewport')
+    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0')
+    description.setAttribute('name', 'description')
+    description.setAttribute('content', 'Datdot-UI is a web component and the widgets for datdot.org using.')
+    document.head.append(lan, viewport)
 }
 },{}],3:[function(require,module,exports){
 var trailingNewlineRegex = /\n[\s]+$/
@@ -1861,17 +1910,33 @@ function i_link (option, protocol) {
     const custom_style = theme ? theme.style : ''
     // set CSS variables
     const {props = {}, grid = {}} = theme
-    const {size, size_hover, disabled_size, weight, 
-        color, color_hover, disabled_color,
-        deco, deco_hover,
-        bg_color, bg_color_hover,
-        border_width, border_style, border_opacity, border_color, border_color_hover, border_radius, 
+    const {
+        // default        
         padding, margin, width, height, opacity,
+        // size
+        size, size_hover, disabled_size,
+        // weight
+        weight, weight_hover, disabled_weight,
+        // color
+        color, color_hover, disabled_color,
+        // background-color    
+        bg_color, bg_color_hover, disabled_bg_color,
+        // deco
+        deco, deco_hover, disabled_deco,
+        // border
+        border_width, border_style, border_opacity, 
+        border_color, border_color_hover, border_radius,
+        // shadowbox
+        shadow_color, shadow_color_hover,
+        offset_x, offset_y, offset_x_hover, offset_y_hover, 
+        blur, blur_hover, shadow_opacity, shadow_opacity_hover,
+        // icon
+        icon_size, icon_size_hover, disabled_icon_size,
         icon_fill, icon_fill_hover, disabled_icon_fill,
-        icon_size, icon_size_hover,
-        avatar_width, avatar_height, avatar_radius,
-        shadow_color, offset_x, offset_y, blur, shadow_opacity,
-        shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
+        // avatar
+        avatar_width, avatar_height, avatar_radius, 
+        avatar_width_hover, avatar_height_hover,
+        scale, scale_hover
     } = props
 
     const grid_link = grid.link ? grid.link : {auto: {auto_flow: 'column'}, align: 'items-center', gap: '4px'}
@@ -1906,23 +1971,29 @@ function i_link (option, protocol) {
         --opacity: ${opacity ? opacity : '0'};
         text-decoration: var(--deco);
     }
-    :host(i-link) svg, :host(i-link) img {
+    :host(i-link) img {
+        --scale: ${scale ? scale : '1'};
+        width: 100%;
+        height: 100%;
+        transform: scale(var(--scale));
+        transition: transform 0.3s linear;
+        object-fit: cover;
+        border-radius: var(--avatar-radius);
+    }
+    :host(i-link:hover) img {
+        --scale: ${scale_hover ? scale_hover : '1.2'};
+    }
+    :host(i-link) svg {
         width: 100%;
         height: auto;
     }
-    :host(i-link) g, :host(i-link) path {
+    :host(i-link) g {
         --icon-fill: ${icon_fill ? icon_fill : 'var(--link-icon-fill)'};
         fill: hsl(var(--icon-fill));
         transition: fill 0.05s ease-in-out;
     }
     :host(i-link:hover) g, :host(i-link:hover) path{
         --icon-fill: ${icon_fill_hover ? icon_fill_hover : 'var(--link-icon-fill-hover)'};
-    }
-    :host(i-link[role="menuitem"]) g, :host(i-link[role="menuitem"]) path {
-        --icon-fill: ${icon_fill ? icon_fill : 'var(--menu-icon-fill)'};
-    }
-    :host(i-link[role="menuitem"]:hover) g, :host(i-link[role="menuitem"]:hover) path {
-        --icon-fill: ${icon_fill_hover ? icon_fill_hover : 'var(--menu-icon-fill-hover)'};
     }
     :host(i-link) .text {
         ${make_grid(grid.text)}
@@ -1935,28 +2006,45 @@ function i_link (option, protocol) {
     :host(i-link:hover) .icon {
         --icon-size: ${icon_size_hover ? icon_size_hover : 'var(--link-icon-size)'};
     }
-    :host(i-link[role="menuitem"]) .icon {
-        --icon-size: ${icon_size ? icon_size : 'var(--menu-icon-size)'};
-    }
     :host(i-link) .avatar {
-        --avatar-width: ${avatar_width ? avatar_width : '100%'};
-        --avatar-height: ${avatar_height ? avatar_height : 'auto'};
-        --avatar-radius: ${avatar_radius ? avatar_radius : 'var(--primary-avatar-radius)'};
+        --avatar-width: ${avatar_width ? avatar_width : 'var(--link-avatar-width)'};
+        --avatar-height: ${avatar_height ? avatar_height : 'var(--link-avatar-height)'};
+        --avatar-radius: ${avatar_radius ? avatar_radius : 'var(--link-avatar-radius)'};
         display: block;
         width: var(--avatar-width);
         height: var(--avatar-height);
         border-radius: var(--avatar-radius);
+        -webkit-mask-image: -webkit-radial-gradient(center, white, black);
         max-width: 100%;
+        max-height: 100%;
         ${make_grid(grid.avatar)}
+        transition: width 0.2s, height 0.2s linear;
+    }
+    :host(i-link:hover) .avatar {
+        --avatar-width: ${avatar_width_hover ? avatar_width_hover : 'var(--link-avatar-width-hover)'};
+        --avatar-height: ${avatar_height_hover ? avatar_height_hover : 'var(--link-avatar-height-hover)'};
     }
     :host(i-link[role="menuitem"]) {
+        --size: ${size ? size : 'var(--menu-size)'};
         --color: ${color ? color : 'var(--menu-color)'};
+        --weight: ${weight ? weight : 'var(--menu-weight)'};
         background-color: transparent;
     }
     :host(i-link[role="menuitem"]:hover) {
+        --size: ${size ? size : 'var(--menu-size-hover)'};
         --color: ${color_hover ? color_hover : 'var(--menu-color-hover)'};
+        --weight: ${weight ? weight : 'var(--menu-weight-hover)'};
         text-decoration: none;
         background-color: transparent;
+    }
+    :host(i-link[role="menuitem"]) .icon {
+        --icon-size: ${icon_size ? icon_size : 'var(--menu-icon-size)'};
+    }
+    :host(i-link[role="menuitem"]) g {
+        --icon-fill: ${icon_fill ? icon_fill : 'var(--menu-icon-fill)'};
+    }
+    :host(i-link[role="menuitem"]:hover) g {
+        --icon-fill: ${icon_fill_hover ? icon_fill_hover : 'var(--menu-icon-fill-hover)'};
     }
     :host(i-link[aria-disabled="true"]), :host(i-link[aria-disabled="true"]:hover) {
         --size: ${disabled_size ? disabled_size : 'var(--link-disabled-size)'};
@@ -1964,7 +2052,6 @@ function i_link (option, protocol) {
         text-decoration: none;
         cursor: not-allowed;
     }
-    
     :host(i-link[disabled]) g,
     :host(i-link[disabled]) path,
     :host(i-link[disabled]:hover) g,
@@ -1988,7 +2075,7 @@ function i_link (option, protocol) {
 }
 
 function i_button (option, protocol) {
-    const {page = "*", flow = 'ui-button', name, role = 'button', body = '', icons = {}, cover, classlist = null, mode = '', state, expanded = false, current = false, selected = false, checked = false, disabled = false, theme = {}} = option
+    const {page = "*", flow = 'ui-button', name, role = 'button', controls, body = '', icons = {}, cover, classlist = null, mode = '', state, expanded = false, current = false, selected = false, checked = false, disabled = false, theme = {}} = option
     const {icon, select = {}, list = {}} = icons
     const make_icon = icon ? main_icon(icon) : undefined
     if (role === 'listbox') var make_select_icon = select_icon(select)
@@ -2007,7 +2094,7 @@ function i_button (option, protocol) {
         const data = role === 'tab' ?  {selected: is_current ? 'true' : is_selected, current: is_current} : role === 'switch' ? {checked: is_checked} : role === 'listbox' ? {expanded: is_expanded} : disabled ? {disabled} : role === 'option' ? {selected: is_selected, current: is_current} : null
         const message = make({to: 'demo.js', type: 'ready', data})
         send(message)
-        const el = make_element({name: 'i-button', role, classlist })
+        const el = make_element({name: 'i-button', classlist, role })
         const shadow = el.attachShadow({mode: 'open'})
         const text = make_element({name: 'span', classlist: 'text'})
         const avatar = make_element({name: 'span', classlist: 'avatar'})
@@ -2020,11 +2107,11 @@ function i_button (option, protocol) {
         if (typeof cover === 'object') send(make({type: 'error', data: `cover[${typeof cover}] must to be a string`}))
         if (typeof body === 'object' && body.localName !== 'div') send(make({type: 'error', data: {body: `content is an ${typeof body}`, content: body }}))
         if (!is_disabled) el.onclick = handle_click
+        el.setAttribute('aria-label', name)
         text.append(body)
         style_sheet(shadow, style)
         append_items()
         init_attr()
-         
         return el
 
         function init_attr () {
@@ -2032,10 +2119,13 @@ function i_button (option, protocol) {
             if (state) set_attr({aria: 'aria-live', prop: 'assertive'})
             if (role === 'tab') {
                 set_attr({aria: 'selected', prop: is_selected})
-                el.dataset.name = name
+                set_attr({aria: 'controls', prop: controls})
+                el.setAttribute('tabindex', is_current ? 0 : -1)
             }
             if (role === 'switch') set_attr({aria: 'checked', prop: is_checked})
-            if (role === 'listbox') set_attr({aria: 'haspopup', prop: role})
+            if (role === 'listbox') {
+                set_attr({aria: 'haspopup', prop: role})
+            }
 
             if (disabled) {
                 set_attr({aria: 'disabled', prop: is_disabled})
@@ -2089,7 +2179,7 @@ function i_button (option, protocol) {
             is_current = is_checked
             set_attr({aria: 'selected', prop: is_checked})
             set_attr({aria: 'current', prop: is_current})
-            el.dataset.current = is_current
+            el.setAttribute('tabindex', is_current ? 0 : -1)
         }
         function list_selected_event (state) {
             const content = {body: option.cloneNode(true)}
@@ -2149,20 +2239,30 @@ function i_button (option, protocol) {
     const {props = {}, grid = {}} = theme
     const {
         // default -----------------------------------------//
+        padding, margin, width, height, opacity, 
+        // size
         size, size_hover, 
-        color, color_hover,
+        // weight
         weight, weight_hover, 
-        bg_color, bg_color_hover, 
+        // color
+        color, color_hover,
+        // background-color
+        bg_color, bg_color_hover,
+        // border
         border_color, border_color_hover,
         border_width, border_style, border_opacity, border_radius, 
-        padding, margin, width, height, opacity, 
-        avatar_width, avatar_height, avatar_radius,
+        // icon
         icon_fill, icon_fill_hover, icon_size, icon_size_hover,
+        // avatar
+        avatar_width, avatar_height, avatar_radius,
+        avatar_width_hover, avatar_height_hover,
+        // shadow
         shadow_color, shadow_color_hover, 
         offset_x, offset_x_hover,
         offset_y, offset_y_hover, 
         blur, blur_hover,
         shadow_opacity, shadow_opacity_hover,
+        // scale
         scale, scale_hover,
         // current -----------------------------------------//
         current_size, 
@@ -2176,7 +2276,8 @@ function i_button (option, protocol) {
         current_avatar_width, 
         current_avatar_height,
         // disabled -----------------------------------------//
-        disabled_size, disabled_weight, disabled_color, disabled_bg_color, disabled_icon_fill, disabled_icon_size,
+        disabled_size, disabled_weight, disabled_color,
+        disabled_bg_color, disabled_icon_fill, disabled_icon_size,
         // role === option ----------------------------------//
         list_selected_icon_size, list_selected_icon_size_hover,
         list_selected_icon_fill, list_selected_icon_fill_hover,
@@ -2223,6 +2324,9 @@ function i_button (option, protocol) {
         --shadow-color: ${shadow_color ? shadow_color : 'var(--primary-color)'};
         --shadow-opacity: ${shadow_opacity ? shadow_opacity : '0'};
         --box-shadow: var(--offset_x) var(--offset-y) var(--blur) hsla( var(--shadow-color), var(--shadow-opacity) );
+        --avatar-width: ${avatar_width ? avatar_width : 'var(--primary-avatar-width)'};
+        --avatar-height: ${avatar_height ? avatar_height : 'var(--primary-avatar-height)'};
+        --avatar-radius: ${avatar_radius ? avatar_radius : 'var(--primary-avatar-radius)'};
         display: inline-grid;
         ${grid.button ? make_grid(grid.button) : make_grid({auto: {auto_flow: 'column'}, gap: '5px', justify: 'content-center', align: 'items-center'})}
         ${width && 'width: var(--width);'};
@@ -2255,12 +2359,12 @@ function i_button (option, protocol) {
     :host(i-button:hover:foucs:active) {
         --bg-color: ${bg_color ? bg_color : 'var(--primary-bg-color)'};
     }
-    :host(i-button) g, :host(i-button) path {
+    :host(i-button) g {
         --icon-fill: ${icon_fill ? icon_fill : 'var(--primary-icon-fill)'};
         fill: hsl(var(--icon-fill));
         transition: fill 0.05s ease-in-out;
     }
-    :host(i-button:hover) g, :host(i-button:hover) path {
+    :host(i-button:hover) g {
         --icon-fill: ${icon_fill_hover ? icon_fill_hover : 'var(--primary-icon-fill-hover)'};
     }
     :host(i-button) .col2 {
@@ -2271,16 +2375,10 @@ function i_button (option, protocol) {
         align-items: center;
     }
     :host(i-button) .avatar {
-        --avatar-width: ${avatar_width ? avatar_width : '100%'};
-        --avatar-height: ${avatar_height ? avatar_height : 'auto'};
-        --avatar-radius: ${avatar_radius ? avatar_radius : 'var(--primary-avatar-radius)'};
-        position: relative;
         display: block;
         width: var(--avatar-width);
         height: var(--avatar-height);
         max-width: 100%;
-        max-height: 100%;
-        text-align: center;
         border-radius: var(--avatar-radius);
         -webkit-mask-image: -webkit-radial-gradient(white, black);
         overflow: hidden;
@@ -2290,11 +2388,14 @@ function i_button (option, protocol) {
     :host(i-button) img {
         --scale: ${scale ? scale : '1'};
         width: 100%;
+        height: 100%;
         transform: scale(var(--scale));
         transition: transform 0.3s, scale 0.3s linear;
+        object-fit: cover;
+        border-radius: var(--avatar-radius);
     }
-    :host(i-button:hover) .avatar img {
-        --scale: ${scale_hover ? scale_hover : '1.3'};
+    :host(i-button:hover) img {
+        --scale: ${scale_hover ? scale_hover : '1.2'};
         transform: scale(var(--scale));
     }
     :host(i-button) svg {
@@ -2377,10 +2478,8 @@ function i_button (option, protocol) {
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]:hover) .option > .icon {
         --icon-size: ${current_icon_size ? current_icon_size : 'var(--current-icon-size)'};
     }
-    :host(i-button[role="option"][aria-current="true"][aria-selected="true"]) .option > .icon g, 
-    :host(i-button[role="option"][aria-current="true"][aria-selected="true"]) .option > .icon path,
-    :host(i-button[role="option"][aria-current="true"][aria-selected="true"]:hover) .option > .icon g,
-    :host(i-button[role="option"][aria-current="true"][aria-selected="true"]:hover) .option > .icon path {
+    :host(i-button[role="option"][aria-current="true"][aria-selected="true"]) .option > .icon g,
+    :host(i-button[role="option"][aria-current="true"][aria-selected="true"]:hover) .option > .icon g {
         --icon-fill: ${current_icon_fill ? current_icon_fill : 'var(--current-icon-fill)'};
     }
     :host(i-button[aria-checked="true"]), :host(i-button[aria-expanded="true"]),
@@ -2400,22 +2499,18 @@ function i_button (option, protocol) {
     :host(i-button[role="listbox"]:hover) .option > .icon {
         --icon-size: ${listbox_collapse_option_icon_size_hover ? listbox_collapse_option_icon_size_hover : 'var(--listbox-collapse-option-icon-size-hover)'};
     }
-    :host(i-button[role="listbox"]) > .icon g,
-    :host(i-button[role="listbox"]) > .icon path {
+    :host(i-button[role="listbox"]) > .icon g {
         --icon-fill: ${listbox_collapse_icon_fill ? listbox_collapse_icon_fill : 'var(--listbox-collpase-icon-fill)'};
     }
-    :host(i-button[role="listbox"]:hover) > .icon g,
-    :host(i-button[role="listbox"]:hover) > .icon path {
+    :host(i-button[role="listbox"]:hover) > .icon g {
         --icon-fill: ${listbox_collapse_icon_fill_hover ? listbox_collapse_icon_fill_hover : 'var(--listbox-collpase-icon-fill-hover)'};
     }
     :host(i-button[role="listbox"][aria-expanded="true"]) > .icon,
     :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon {
         --icon-size: ${listbox_expanded_icon_size ? listbox_expanded_icon_size : 'var(--listbox-expanded-icon-size)'};
     }
-    :host(i-button[role="listbox"][aria-expanded="true"]) > .icon g,
-    :host(i-button[role="listbox"][aria-expanded="true"]) > .icon path,
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon g,
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon path {
+    :host(i-button[role="listbox"][aria-expanded="true"]) > .icon g
+    :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon g {
         --icon-fill: ${listbox_expanded_icon_fill ? listbox_expanded_icon_fill : 'var(--listbox-expanded-icon-fill)'};
     }
     :host(i-button[role="listbox"][aria-expanded="true"]) .option > .icon {
@@ -2424,19 +2519,16 @@ function i_button (option, protocol) {
     :host(i-button[role="listbox"][aria-expanded="true"]:hover) .option > .icon {
         --icon-fill: ${listbox_expanded_option_icon_size_hover ? listbox_expanded_option_icon_size_hover : 'var(--listbox-expanded-option-icon-size-hover)'};
     }
-    :host(i-button[role="listbox"][aria-expanded="true"]) .option > .icon g,
-    :host(i-button[role="listbox"][aria-expanded="true"]) .option > .icon path {
+    :host(i-button[role="listbox"][aria-expanded="true"]) .option > .icon g {
         --icon-fill: ${listbox_expanded_option_icon_fill ? listbox_expanded_option_icon_fill : 'var(--listbox-expanded-option-icon-fill)'};
     }
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) .option > .icon g,
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) .option > .icon path {
+    :host(i-button[role="listbox"][aria-expanded="true"]:hover) .option > .icon g {
         --icon-fill: ${listbox_expanded_option_icon_fill_hover ? listbox_expanded_option_icon_fill_hover : 'var(--listbox-expanded-option-icon-fill-hover)'};
     }
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon g,
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon path {
+    :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon g {
         --icon-fill: ${listbox_expanded_icon_fill_hover ? listbox_expanded_icon_fill_hover : 'var(--listbox-expanded-icon-fill-hover)'};
     }
-    :host(i-button[aria-checked="true"]) > .icon g, :host(i-button[aria-checked="true"]) > .icon path {
+    :host(i-button[aria-checked="true"]) > .icon g {
         --icon-fill: ${current_icon_fill ? current_icon_fill : 'var(--color-white)' };
     }
     :host(i-button[disabled]), :host(i-button[disabled]:hover) {
@@ -2446,39 +2538,43 @@ function i_button (option, protocol) {
         cursor: not-allowed;
     }
     :host(i-button[disabled]) g, 
-    :host(i-button[disabled]) path,
     :host(i-button[disabled]:hover) g, 
-    :host(i-button[disabled]:hover) path, 
     :host(i-button[role="option"][disabled]) > .icon g, 
-    :host(i-button[role="option"][disabled]) > .icon path, 
     :host(i-button[role="option"][disabled]) .option > .icon g,
-    :host(i-button[role="option"][disabled]) .option > .icon path,
     :host(i-button[role="listbox"][disabled]) .option > .icon g, 
-    :host(i-button[role="listbox"][disabled]) .option > .icon path, 
     :host(i-button[role="option"][disabled]:hover) > .icon g,
-    :host(i-button[role="option"][disabled]:hover) > .icon path,
     :host(i-button[role="listbox"][disabled]:hover) .option > .icon g, 
-    :host(i-button[role="listbox"][disabled]:hover) .option > .icon path, 
-    :host(i-button[role="option"][disabled]:hover) .option > .icon g,
-    :host(i-button[role="option"][disabled]:hover) .option > .icon path {
+    :host(i-button[role="option"][disabled]:hover) .option > .icon g {
         --icon-fill: ${disabled_color ? disabled_color : 'var(--primary-disabled-icon-fill)'};
     }
     :host(i-button[role="menuitem"]) {
-        --color: ${color ? color : 'var(--primary-color)'};
-        --border-radius: ${border_radius ? border_radius : '0'};
+        --size: ${size ? size : 'var(--menu-size)'};
+        --weight: ${weight ? weight : 'var(--menu-weight)'};
+        --color: ${color ? color : 'var(--menu-color)'};
+        --border-radius: 0;
         background-color: transparent;
     }
     :host(i-button[role="menuitem"]:hover) {
-        --color: ${color_hover ? color_hover : 'var(--primary-color-hover)'};
-        background-color: transparent;
+        --size: ${size_hover ? size_hover : 'var(--menu-size-hover)'};
+        --weight: ${weight_hover ? weight_hover : 'var(--menu-weight-hover)'};
+        --color: ${color_hover ? color_hover : 'var(--menu-color-hover)'};
+    }
+    :host(i-button[role="menuitem"]) .avatar {
+        --avatar-width: ${avatar_width ? avatar_width : 'var(--menu-avatar-width)'};
+        --avatar-height: ${avatar_height ? avatar_height : 'var(--menu-avatar-height)'};
+        --avatar-radius: ${avatar_radius ? avatar_radius : 'var(--menu-avatar-radius)'};
+    }
+    :host(i-button[role="menuitem"]:hover) .avatar {
+        --avatar-width: ${avatar_width_hover ? avatar_width_hover : 'var(--menu-avatar-width-hover)'};
+        --avatar-height: ${avatar_height_hover ? avatar_height_hover : 'var(--menu-avatar-height-hover)'};
     }
     :host(i-button[role="menuitem"][disabled]), :host(i-button[role="menuitem"][disabled]):hover {
-        --color: ${disabled_color ? disabled_color : 'var(--primary-disabled-color)'};
+        --size: ${disabled_size ? disabled_size : 'var(--menu-disabled-size)'};
+        --color: ${disabled_color ? disabled_color : 'var(--menu-disabled-color)'};
+        --weight: ${disabled_weight ? disabled_weight : 'var(--menu-disabled-weight)'};
     }
     :host(i-button[role="menuitem"][disabled]) g ,
-    :host(i-button[role="menuitem"][disabled]) path,
-    :host(i-button[role="menuitem"][disabled]:hover) g,
-    :host(i-button[role="menuitem"][disabled]:hover) path {
+    :host(i-button[role="menuitem"][disabled]:hover) g {
         --icon-fill: ${disabled_icon_fill ? disabled_icon_fill : 'var(--primary-disabled-icon-fill)'};
     }
     :host(i-button[role="option"]) > .icon {
@@ -2487,12 +2583,10 @@ function i_button (option, protocol) {
     :host(i-button[role="option"]:hover) > .icon {
         --icon-size: ${list_selected_icon_size_hover ? list_selected_icon_size_hover : 'var(--list-selected-icon-size-hover)'};
     }
-    :host(i-button[role="option"]) > .icon g, 
-    :host(i-button[role="option"]) > .icon path {
+    :host(i-button[role="option"]) > .icon g {
         --icon-fill: ${list_selected_icon_fill ? list_selected_icon_fill : 'var(--list-selected-icon-fill)'};
     }
-    :host(i-button[role="option"]:hover) > .icon g, 
-    :host(i-button[role="option"]:hover) > .icon path {
+    :host(i-button[role="option"]:hover) > .icon g {
         --icon-fill: ${list_selected_icon_fill_hover ? list_selected_icon_fill_hover : 'var(--list-selected-icon-fill-hover)'};
     }
     :host(i-button[role="option"][aria-current="true"]) > .icon, 
@@ -2500,9 +2594,7 @@ function i_button (option, protocol) {
         --icon-size: ${current_list_selected_icon_size ? current_list_selected_icon_size : 'var(--current-list-selected-icon-size)'};
     }
     :host(i-button[role="option"][aria-current="true"]) > .icon g, 
-    :host(i-button[role="option"][aria-current="true"]) > .icon path,
-    :host(i-button[role="option"][aria-current="true"]:hover) > .icon g, 
-    :host(i-button[role="option"][aria-current="true"]:hover) > .icon path {
+    :host(i-button[role="option"][aria-current="true"]:hover) > .icon g { 
         --icon-fill: ${current_list_selected_icon_fill ? current_list_selected_icon_fill : 'var(--current-list-selected-icon-fill)'};
     }
     :host(i-button[role="option"][aria-selected="false"]) > .icon {
@@ -2564,7 +2656,7 @@ function make_element({name = '', classlist = null, role }) {
     }
     
     function set_role () {
-        const tabindex = role === 'button' ? 0 : -1
+        const tabindex = role.match(/button|switch/) ? 0 : -1
         el.setAttribute('role', role)
         el.setAttribute('tabindex',  tabindex)
     }
@@ -3155,6 +3247,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                     icon_size = 'var(--primary-icon-size)', 
                     avatar_width = 'var(--primary-avatar-width)', 
                     avatar_height = 'var(--primary-avatar-height)', 
+                    avatar_radius = 'var(--primary-avatar-radius)',
                     disabled_color = 'var(--primary-disabled-color)',
                     disabled_bg_color = 'var(--primary-disabled-bg-color)',
                     disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
@@ -3189,6 +3282,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                                 icon_size,
                                 avatar_width,
                                 avatar_height,
+                                avatar_radius,
                                 disabled_color,
                                 disabled_bg_color,
                                 disabled_icon_fill,
@@ -3219,6 +3313,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                                 icon_size,
                                 avatar_width,
                                 avatar_height,
+                                avatar_radius,
                                 disabled_color,
                                 disabled_icon_fill,
                             },
@@ -3249,8 +3344,9 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                     icon_size = 'var(--primary-icon-size)',
                     icon_fill = 'var(--primary-icon-fill)',
                     icon_fill_hover = 'var(--primary-icon-fill-hover)',
-                    avatar_width = 'var(--avatar-width)', 
-                    avatar_height = 'var(--avatar-height)', 
+                    avatar_width = 'var(--primary-avatar-width)', 
+                    avatar_height = 'var(--primary-avatar-height)', 
+                    avatar_radius = 'var(--primary-avatar-radius)',
                     current_size = 'var(--current-list-size)',
                     current_color = 'var(--current-list-color)',
                     current_weight = 'var(--current-list-weight)',
@@ -3297,6 +3393,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                             icon_fill_hover,
                             avatar_width,
                             avatar_height,
+                            avatar_radius,
                             current_size,
                             current_color,
                             current_weight,
