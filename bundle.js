@@ -52,7 +52,7 @@ function demo () {
                     // list_selected_icon_size: '50px',
                     current_list_selected_icon_size: '30px',
                     current_list_selected_icon_fill: 'var(--color-blue)',
-                    avatar_width: '1000px',
+                    avatar_width: '2000px',
                     current_icon_size: '30px',
                     current_icon_fill: 'var(--color-light-green)',
                     current_size: '50px',
@@ -116,7 +116,7 @@ function demo () {
             role: 'link',
             url: 'https://datdot.org/',
             target: '_blank',
-            // icon: {name: 'check'},
+            icon: {name: 'star'},
             cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
             theme: {
                 props: {
@@ -144,6 +144,7 @@ function demo () {
             text: 'GitHub',
             role: 'link',
             url: 'https://github.com/',
+            icon: {name: 'star'},
             cover: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
             target: '_new',
             theme: {
@@ -155,10 +156,9 @@ function demo () {
         },
         {
             text: 'DatDot app',
+            // default is menuitem
             role: 'menuitem',
-            icons: {
-                icon: {name: 'datdot-black'}
-            },
+            icon: {name: 'datdot-black'},
             // disabled: true,
             theme: {
                 props: {
@@ -207,7 +207,9 @@ function demo () {
                 button: {
                     areas: 'option icon',
                     // first step for responsive
-                    columns: 'minmax(0, 100%) 44px',
+                    columns: 'minmax(0, 100%) 1fr',
+                    // 50% 50%
+                    // columns: 'minmax(0, 1fr) 1fr',
                     align: 'items-center'
                 },
                 option: {
@@ -300,8 +302,21 @@ function demo () {
                     gap: '5px'
                 },
                 button: {
+                    auto: {
+                        auto_flow: 'column'
+                    },
+                    gap: '5px',
                     justify: 'content-left'
-                }
+                },
+                // icon: {
+                //     column: '1'
+                // },
+                // text: {
+                //     column: '3'
+                // },
+                // avatar: {
+                //     column: '2'
+                // }
             }
         }
     }, protocol('dropdown-list'))
