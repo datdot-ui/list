@@ -5,7 +5,8 @@ const button = i_button
 const message_maker = require('message-maker')
 module.exports = i_list
 
-function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme = {} }, protocol) {
+function i_list (opts = {}, protocol) {
+    const {page = 'Demo', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
     const recipients = []
     const make = message_maker(`${name} / ${flow} / i_list`)
     const message = make({type: 'ready'})
@@ -35,7 +36,7 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
             }
             if (body.length === 0) send(make({type: 'error', data: 'body no items'}))
         } catch(e) {
-            send(make({type: 'error', data: 'something went wrong'}))
+            send(make({type: 'error', data: {message: 'something went wrong', opts }}))
         }
         
         return list
