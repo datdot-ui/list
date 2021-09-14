@@ -33,9 +33,9 @@ function i_list ({page = 'Demo', flow = 'ui-list', name, body = [{text: 'no item
                 list.setAttribute('role', 'menubar')
                 make_list()
             }
-            if (body.length === 0) send({type: 'error', data: 'body no items'})
+            if (body.length === 0) send(make({type: 'error', data: 'body no items'}))
         } catch(e) {
-            send({type: 'error', data: 'something went wrong'})
+            send(make({type: 'error', data: 'something went wrong'}))
         }
         
         return list
