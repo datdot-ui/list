@@ -234,8 +234,8 @@ function i_list (opts = {}, protocol) {
             })
         }
         function handle_expanded_event (data) {
-            list.ariaHidden = data
-            list.ariaExpanded = !data
+            list.setAttribute('aria-hidden', data)
+            list.setAttribute('aria-expanded', !data)
         }
         function handle_select_event (from, data) {
             const selected = data.selected
