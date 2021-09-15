@@ -88,7 +88,7 @@ function demo () {
             text: 'Landscape2',
             icon: {name: 'edit'},
             cover: 'https://cdn.pixabay.com/photo/2016/02/27/06/43/cherry-blossom-tree-1225186_960_720.jpg',
-            selected: 'true',
+            selected: true,
             disabled: true,
             theme: {
                 props: {
@@ -380,14 +380,20 @@ function demo () {
 
     function change_event (data) {
         const {mode, selected} = data
-        if (typeof selected === 'string' && selected.match(/Compact|Comfortable/)) return terminal_change_event(selected.toLowerCase())
-        if (mode === 'single-select') return select.textContent = selected
+        if (mode === 'single-select') {
+            selected.forEach( item => {
+                if (item.current && item.text.match(/Compact|Comfortable/)) return terminal_change_event(item.text.toLowerCase())
+                if (item.current) return select.textContent = item.text 
+            })
+        }
         if (mode === 'multiple-select') {
-            const selected_length = bel`<span class="${css.count}">${selected.length}</span>`
+            const items = selected.filter( item => item.selected)
+            const total = items.length
+            const selected_length = bel`<span class="${css.count}">${total}</span>`
             select_items = bel`<span>${selected_length} ${selected.length > 1 ? `items` : `item`}</span>`
-            selects = data.selected.map( option => bel`<span class=${css.badge}>${option}</span>`)
+            selects = items.map( item => bel`<span class=${css.badge}>${item.text}</span>`)
             selects_result.innerHTML = ''
-            selects.map( item => selects_result.append(item))
+            selects.map( element => selects_result.append(element))
             total_selected.lastChild.remove()
             total_selected.append(select_items)
         }

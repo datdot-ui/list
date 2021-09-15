@@ -89,7 +89,7 @@ function demo () {
             text: 'Landscape2',
             icon: {name: 'edit'},
             cover: 'https://cdn.pixabay.com/photo/2016/02/27/06/43/cherry-blossom-tree-1225186_960_720.jpg',
-            selected: 'true',
+            selected: true,
             disabled: true,
             theme: {
                 props: {
@@ -381,14 +381,20 @@ function demo () {
 
     function change_event (data) {
         const {mode, selected} = data
-        if (typeof selected === 'string' && selected.match(/Compact|Comfortable/)) return terminal_change_event(selected.toLowerCase())
-        if (mode === 'single-select') return select.textContent = selected
+        if (mode === 'single-select') {
+            selected.forEach( item => {
+                if (item.current && item.text.match(/Compact|Comfortable/)) return terminal_change_event(item.text.toLowerCase())
+                if (item.current) return select.textContent = item.text 
+            })
+        }
         if (mode === 'multiple-select') {
-            const selected_length = bel`<span class="${css.count}">${selected.length}</span>`
+            const items = selected.filter( item => item.selected)
+            const total = items.length
+            const selected_length = bel`<span class="${css.count}">${total}</span>`
             select_items = bel`<span>${selected_length} ${selected.length > 1 ? `items` : `item`}</span>`
-            selects = data.selected.map( option => bel`<span class=${css.badge}>${option}</span>`)
+            selects = items.map( item => bel`<span class=${css.badge}>${item.text}</span>`)
             selects_result.innerHTML = ''
-            selects.map( item => selects_result.append(item))
+            selects.map( element => selects_result.append(element))
             total_selected.lastChild.remove()
             total_selected.append(select_items)
         }
@@ -2120,7 +2126,7 @@ function i_button (option, protocol) {
         const add_text = body && typeof body === 'string' ? text : body
         if (typeof cover === 'string') avatar.append(img({src: cover, alt: name}))
         if (typeof cover === 'object') send(make({type: 'error', data: `cover[${typeof cover}] must to be a string`}))
-        if (typeof body === 'object' && body.localName !== 'div') send(make({type: 'error', data: {body: `content is an ${typeof body}`, content: body }}))
+        if (typeof body === 'object') send(make({type: 'error', data: {body: `content is an ${typeof body}`, content: body }}))
         if (!is_disabled) el.onclick = handle_click
         el.setAttribute('aria-label', name)
         text.append(body)
@@ -2393,13 +2399,6 @@ function i_button (option, protocol) {
     }
     :host(i-button:hover) g {
         --icon-fill: ${icon_fill_hover ? icon_fill_hover : 'var(--primary-icon-fill-hover)'};
-    }
-    :host(i-button) .col2 {
-        display: flex;
-        flex-direction: row;
-        column-gap: 8px;
-        justify-content: center;
-        align-items: center;
     }
     :host(i-button) .avatar {
         display: block;
@@ -3224,12 +3223,13 @@ const message_maker = require('message-maker')
 module.exports = i_list
 
 function i_list (opts = {}, protocol) {
-    const {page = 'Demo', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
+    const {page = '*', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
     const recipients = []
     const make = message_maker(`${name} / ${flow} / i_list`)
     const message = make({type: 'ready'})
     let is_hidden = hidden
     let is_expanded = !is_hidden ? !is_hidden : expanded
+    const store_selected = []
     const {grid} = theme
 
     function widget () {
@@ -3455,35 +3455,65 @@ function i_list (opts = {}, protocol) {
             list.setAttribute('aria-hidden', data)
             list.setAttribute('aria-expanded', !data)
         }
-        function handle_select_event (from, data) {
-            const selected = data.selected
-            const type = selected ? 'selected' : 'unselected'
+        function handle_mutiple_selected (from, lists) {
+            // Old codes
+            // const make = message_maker(`${from} / option / ${flow}`)
+            // const arr = []
+            // args.forEach( child => {
+            //     if (child.dataset.option === from ) child.setAttribute('aria-selected', selected )
+            //     if (child.getAttribute('aria-selected') === 'true') arr[arr.length] = child.dataset.option
+            // })
+            // recipients[from]( make({type, data: selected}) )
+            // send( make({to: name, type, data: {mode, selected: arr, length: arr.length}}))
+            // New codes for store data
+            body.map((obj, index) => {
+                const state = obj.text === from
+                const make = message_maker(`${obj.text} / option / ${flow}`)
+                if (state) obj.selected = !obj.selected
+                const type = obj.selected ? 'selected' : 'unselected'
+                lists[index].setAttribute('aria-selected', obj.selected)
+                store_data = body
+                if (state) recipients[from]( make({type, data: obj.selected}) )
+                send( make({to: name, type, data: {mode, selected: store_data}}))
+            })
+        }
+
+        function handle_single_selected (from, lists) {
+            // Old codes
+            // args.forEach( child => {
+            //     const state = from === child.dataset.option ? selected : !selected
+            //     const current = state ? from : child.dataset.option
+            //     const make = message_maker(`${current} / option / ${flow}`)
+            //     const type = state ? 'selected' : 'unselected'
+            //     list.setAttribute('aria-activedescendant', from)
+            //     child.setAttribute('aria-selected', state )
+            //     if (state) child.setAttribute('aria-current', state)
+            //     else child.removeAttribute('aria-current')
+            //     recipients[current]( make({type, data: state}) )
+            //     send(make({to: name, type, data: {mode, selected: from} }))
+            // })
+            // New codes for store data
+            body.map((obj, index) => {
+                const state = obj.text === from
+                const current = state ? from : lists[index].dataset.option
+                const make = message_maker(`${current} / option / ${flow}`)
+                const type = state ? 'selected' : 'unselected'
+                obj.selected = state
+                obj.current = state
+                lists[index].setAttribute('aria-activedescendant', from)
+                lists[index].setAttribute('aria-selected', obj.selected)
+                if (state) lists[index].setAttribute('aria-current', obj.current)
+                else lists[index].removeAttribute('aria-current')
+                store_data = body
+                recipients[current]( make({type, data: state}) )
+                send(make({to: name, type, data: {mode, selected: store_data} }))
+            })
+        }
+        function handle_select_event (from) {
             const { childNodes } = shadow
             const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
-            if (mode === 'multiple-select') {
-                const make = message_maker(`${from} / option / ${flow}`)
-                const arr = []
-                lists.forEach( child => {
-                    if (child.dataset.option === from ) child.setAttribute('aria-selected', selected )
-                    if (child.getAttribute('aria-selected') === 'true') arr[arr.length] = child.dataset.option
-                })
-                recipients[from]( make({type, data: selected}) )
-                send( make({to: name, type, data: {mode, selected: arr, length: arr.length}}))
-            }
-            if (mode === 'single-select') {
-                lists.forEach( child => {
-                    const state = from === child.dataset.option ? data.selected : !data.selected
-                    const current = state ? from : child.dataset.option
-                    const make = message_maker(`${current} / option / ${flow}`)
-                    const type = state ? 'selected' : 'unselected'
-                    recipients[current]( make({type, data: state}) )
-                    send(make({to: name, type, data: {mode, selected: from} }))
-                    list.setAttribute('aria-activedescendant', from)
-                    child.setAttribute('aria-selected', state )
-                    if (state) child.setAttribute('aria-current', state)
-                    else child.removeAttribute('aria-current')
-                })
-            }
+            if (mode === 'single-select')  handle_single_selected (from, lists)
+            if (mode === 'multiple-select') handle_mutiple_selected (from, lists)
         }
         function button_protocol (name) {
             return (send) => {
@@ -3498,7 +3528,6 @@ function i_list (opts = {}, protocol) {
             const make = message_maker(`${from} / ${role} / ${flow}`)
             const message = make({to: '*', type, data})
             send(message)
-
         }
         function get (msg) {
             const {head, refs, type, data} = msg
@@ -3507,7 +3536,7 @@ function i_list (opts = {}, protocol) {
             const role = head[0].split(' / ')[1]
             const from = head[0].split(' / ')[0]
             if (role === 'menuitem') return handle_click_event(msg)
-            if (type === 'click' && role === 'option') return handle_select_event(from, data)
+            if (type === 'click' && role === 'option') return handle_select_event(from)
             if (type.match(/expanded|collapse/)) return handle_expanded_event(data)
         }
     }

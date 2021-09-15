@@ -6,12 +6,13 @@ const message_maker = require('message-maker')
 module.exports = i_list
 
 function i_list (opts = {}, protocol) {
-    const {page = 'Demo', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
+    const {page = '*', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
     const recipients = []
     const make = message_maker(`${name} / ${flow} / i_list`)
     const message = make({type: 'ready'})
     let is_hidden = hidden
     let is_expanded = !is_hidden ? !is_hidden : expanded
+    const store_selected = []
     const {grid} = theme
 
     function widget () {
@@ -237,35 +238,65 @@ function i_list (opts = {}, protocol) {
             list.setAttribute('aria-hidden', data)
             list.setAttribute('aria-expanded', !data)
         }
-        function handle_select_event (from, data) {
-            const selected = data.selected
-            const type = selected ? 'selected' : 'unselected'
+        function handle_mutiple_selected (from, lists) {
+            // Old codes
+            // const make = message_maker(`${from} / option / ${flow}`)
+            // const arr = []
+            // args.forEach( child => {
+            //     if (child.dataset.option === from ) child.setAttribute('aria-selected', selected )
+            //     if (child.getAttribute('aria-selected') === 'true') arr[arr.length] = child.dataset.option
+            // })
+            // recipients[from]( make({type, data: selected}) )
+            // send( make({to: name, type, data: {mode, selected: arr, length: arr.length}}))
+            // New codes for store data
+            body.map((obj, index) => {
+                const state = obj.text === from
+                const make = message_maker(`${obj.text} / option / ${flow}`)
+                if (state) obj.selected = !obj.selected
+                const type = obj.selected ? 'selected' : 'unselected'
+                lists[index].setAttribute('aria-selected', obj.selected)
+                store_data = body
+                if (state) recipients[from]( make({type, data: obj.selected}) )
+                send( make({to: name, type, data: {mode, selected: store_data}}))
+            })
+        }
+
+        function handle_single_selected (from, lists) {
+            // Old codes
+            // args.forEach( child => {
+            //     const state = from === child.dataset.option ? selected : !selected
+            //     const current = state ? from : child.dataset.option
+            //     const make = message_maker(`${current} / option / ${flow}`)
+            //     const type = state ? 'selected' : 'unselected'
+            //     list.setAttribute('aria-activedescendant', from)
+            //     child.setAttribute('aria-selected', state )
+            //     if (state) child.setAttribute('aria-current', state)
+            //     else child.removeAttribute('aria-current')
+            //     recipients[current]( make({type, data: state}) )
+            //     send(make({to: name, type, data: {mode, selected: from} }))
+            // })
+            // New codes for store data
+            body.map((obj, index) => {
+                const state = obj.text === from
+                const current = state ? from : lists[index].dataset.option
+                const make = message_maker(`${current} / option / ${flow}`)
+                const type = state ? 'selected' : 'unselected'
+                obj.selected = state
+                obj.current = state
+                lists[index].setAttribute('aria-activedescendant', from)
+                lists[index].setAttribute('aria-selected', obj.selected)
+                if (state) lists[index].setAttribute('aria-current', obj.current)
+                else lists[index].removeAttribute('aria-current')
+                store_data = body
+                recipients[current]( make({type, data: state}) )
+                send(make({to: name, type, data: {mode, selected: store_data} }))
+            })
+        }
+        function handle_select_event (from) {
             const { childNodes } = shadow
             const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
-            if (mode === 'multiple-select') {
-                const make = message_maker(`${from} / option / ${flow}`)
-                const arr = []
-                lists.forEach( child => {
-                    if (child.dataset.option === from ) child.setAttribute('aria-selected', selected )
-                    if (child.getAttribute('aria-selected') === 'true') arr[arr.length] = child.dataset.option
-                })
-                recipients[from]( make({type, data: selected}) )
-                send( make({to: name, type, data: {mode, selected: arr, length: arr.length}}))
-            }
-            if (mode === 'single-select') {
-                lists.forEach( child => {
-                    const state = from === child.dataset.option ? data.selected : !data.selected
-                    const current = state ? from : child.dataset.option
-                    const make = message_maker(`${current} / option / ${flow}`)
-                    const type = state ? 'selected' : 'unselected'
-                    recipients[current]( make({type, data: state}) )
-                    send(make({to: name, type, data: {mode, selected: from} }))
-                    list.setAttribute('aria-activedescendant', from)
-                    child.setAttribute('aria-selected', state )
-                    if (state) child.setAttribute('aria-current', state)
-                    else child.removeAttribute('aria-current')
-                })
-            }
+            if (mode === 'single-select')  handle_single_selected (from, lists)
+            if (mode === 'multiple-select') handle_mutiple_selected (from, lists)
         }
         function button_protocol (name) {
             return (send) => {
@@ -280,7 +311,6 @@ function i_list (opts = {}, protocol) {
             const make = message_maker(`${from} / ${role} / ${flow}`)
             const message = make({to: '*', type, data})
             send(message)
-
         }
         function get (msg) {
             const {head, refs, type, data} = msg
@@ -289,7 +319,7 @@ function i_list (opts = {}, protocol) {
             const role = head[0].split(' / ')[1]
             const from = head[0].split(' / ')[0]
             if (role === 'menuitem') return handle_click_event(msg)
-            if (type === 'click' && role === 'option') return handle_select_event(from, data)
+            if (type === 'click' && role === 'option') return handle_select_event(from)
             if (type.match(/expanded|collapse/)) return handle_expanded_event(data)
         }
     }
