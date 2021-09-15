@@ -2141,7 +2141,6 @@ function i_button (option, protocol) {
             if (role === 'listbox') {
                 set_attr({aria: 'haspopup', prop: role})
             }
-
             if (disabled) {
                 set_attr({aria: 'disabled', prop: is_disabled})
                 el.setAttribute('disabled', is_disabled)
@@ -2166,15 +2165,28 @@ function i_button (option, protocol) {
         // make element to append into shadowDOM
         function append_items() {
             const items = [make_icon, add_cover, add_text]
-            const target = role === 'listbox' ? listbox : role === 'option' ?  option : shadow
-            // listbox or dropdown button
-            if (role === 'listbox') shadow.append(make_select_icon, target)
+            
+            if (!role.match(/listbox/)) {
+                const target = role === 'listbox' ? listbox : role === 'option' ?  option : shadow
+                items.forEach( item => {
+                    if (item === undefined) return
+                    target.append(item)
+                })
+            }
             // list of listbox or dropdown menu
-            if (role === 'option') shadow.append(make_list_icon, target)
-            items.forEach( item => {
-                if (item === undefined) return
-                target.append(item)
-            })
+            if (role.match(/option/)) shadow.append(make_list_icon, option)
+
+            // listbox or dropdown button
+            if (role.match(/listbox/)) {
+                if (make_icon || add_cover) {
+                    if (make_icon) option.append(make_icon)
+                    if (add_cover) option.append(add_cover)
+                    option.append(add_text)
+                    listbox.append(option)
+                }
+                if (make_icon == undefined && add_cover == undefined) listbox.append(add_text)
+                shadow.append(make_select_icon, listbox)
+            }
         }
 
         // toggle
@@ -2515,18 +2527,18 @@ function i_button (option, protocol) {
         --icon-size: ${listbox_collapse_option_icon_size_hover ? listbox_collapse_option_icon_size_hover : 'var(--listbox-collapse-option-icon-size-hover)'};
     }
     :host(i-button[role="listbox"]) > .icon g {
-        --icon-fill: ${listbox_collapse_icon_fill ? listbox_collapse_icon_fill : 'var(--listbox-collpase-icon-fill)'};
+        --icon-fill: ${listbox_collapse_icon_fill ? listbox_collapse_icon_fill : 'var(--listbox-collapse-icon-fill)'};
     }
     :host(i-button[role="listbox"]:hover) > .icon g {
-        --icon-fill: ${listbox_collapse_icon_fill_hover ? listbox_collapse_icon_fill_hover : 'var(--listbox-collpase-icon-fill-hover)'};
+        --icon-fill: ${listbox_collapse_icon_fill_hover ? listbox_collapse_icon_fill_hover : 'var(--listbox-collapse-icon-fill-hover)'};
     }
     :host(i-button[role="listbox"][aria-expanded="true"]) > .icon,
     :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon {
         --icon-size: ${listbox_expanded_icon_size ? listbox_expanded_icon_size : 'var(--listbox-expanded-icon-size)'};
     }
-    :host(i-button[role="listbox"][aria-expanded="true"]) > .icon g
+    :host(i-button[role="listbox"][aria-expanded="true"]) > .icon g,
     :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon g {
-        --icon-fill: ${listbox_expanded_icon_fill ? listbox_expanded_icon_fill : 'var(--listbox-expanded-icon-fill)'};
+        --icon-fill: ${listbox_expanded_icon_fill ? listbox_expanded_icon_fill : 'var(--listbox-expanded-icon-fill)'}
     }
     :host(i-button[role="listbox"][aria-expanded="true"]) .option > .icon {
         --icon-fill: ${listbox_expanded_option_icon_size ? listbox_expanded_option_icon_size : 'var(--listbox-expanded-option-icon-size)'};
@@ -3496,7 +3508,7 @@ function i_list (opts = {}, protocol) {
             const from = head[0].split(' / ')[0]
             if (role === 'menuitem') return handle_click_event(msg)
             if (type === 'click' && role === 'option') return handle_select_event(from, data)
-            if (type.match(/expanded|unexpanded/)) return handle_expanded_event(data)
+            if (type.match(/expanded|collapse/)) return handle_expanded_event(data)
         }
     }
 
