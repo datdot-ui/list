@@ -1863,7 +1863,7 @@ function support_style_sheet (root, style) {
 },{}],28:[function(require,module,exports){
 const style_sheet = require('support-style-sheet')
 const message_maker = require('message-maker')
-const img = require('make-image')
+const make_img = require('make-image')
 const make_element = require('make-element')
 const {main_icon, select_icon, list_icon} = require('make-icon')
 const make_grid = require('make-grid')
@@ -1896,7 +1896,7 @@ function i_link (option, protocol) {
         const add_cover = typeof cover === 'string' ? avatar : undefined
         const add_icon = icon ? make_icon : undefined
         const add_text = body ? typeof body === 'string' && (add_icon || add_cover ) ? text : body : typeof body === 'object' && body.localName === 'div' ? body : undefined
-        if (typeof cover === 'string') avatar.append(img({src: cover, alt: name}))
+        if (typeof cover === 'string') avatar.append(make_img({src: cover, alt: name}))
         if (typeof cover === 'object') send(make({type: 'error', data: `cover[${typeof cover}] must to be a string`}))
         if (add_icon) shadow.append(add_icon)
         if (add_cover) shadow.append(add_cover)
@@ -2124,7 +2124,7 @@ function i_button (option, protocol) {
         // check icon, img and body if has value
         const add_cover = typeof cover === 'string' ? avatar : undefined
         const add_text = body && typeof body === 'string' ? text : body
-        if (typeof cover === 'string') avatar.append(img({src: cover, alt: name}))
+        if (typeof cover === 'string') avatar.append(make_img({src: cover, alt: name}))
         if (typeof cover === 'object') send(make({type: 'error', data: `cover[${typeof cover}] must to be a string`}))
         if (typeof body === 'object') send(make({type: 'error', data: {body: `content is an ${typeof body}`, content: body }}))
         if (!is_disabled) el.onclick = handle_click
@@ -2171,28 +2171,15 @@ function i_button (option, protocol) {
         // make element to append into shadowDOM
         function append_items() {
             const items = [make_icon, add_cover, add_text]
-            
-            if (!role.match(/listbox/)) {
-                const target = role === 'listbox' ? listbox : role === 'option' ?  option : shadow
-                items.forEach( item => {
-                    if (item === undefined) return
-                    target.append(item)
-                })
-            }
+            const target = role === 'listbox' ? listbox : role === 'option' ?  option : shadow
             // list of listbox or dropdown menu
             if (role.match(/option/)) shadow.append(make_list_icon, option)
-
             // listbox or dropdown button
-            if (role.match(/listbox/)) {
-                if (make_icon || add_cover) {
-                    if (make_icon) option.append(make_icon)
-                    if (add_cover) option.append(add_cover)
-                    option.append(add_text)
-                    listbox.append(option)
-                }
-                if (make_icon == undefined && add_cover == undefined) listbox.append(add_text)
-                shadow.append(make_select_icon, listbox)
-            }
+            if (role.match(/listbox/)) shadow.append(make_select_icon, listbox)
+            items.forEach( item => {
+                if (item === undefined) return
+                target.append(item)
+            })
         }
 
         // toggle
@@ -2215,7 +2202,6 @@ function i_button (option, protocol) {
             el.setAttribute('tabindex', is_current ? 0 : -1)
         }
         function list_selected_event (state) {
-            const content = {body: option.cloneNode(true)}
             is_selected = state
             set_attr({aria: 'selected', prop: is_selected})
             if (mode === 'single-select') {
@@ -2223,17 +2209,54 @@ function i_button (option, protocol) {
                 set_attr({aria: 'current', prop: is_current})
             }
             // option is selected then send selected items to listbox button
-            if (is_selected) send(make({to: 'listbox', type: 'changed', data: content }))
+            if (is_selected) send(make({to: 'listbox', type: 'changed', data: {text: body, cover, icon} }))
         }
 
         function changed_event (data) {
-            if (role === 'listbox') {
-                const { body } = data
-                listbox.innerHTML = ''
-                listbox.append(body)
-                return
+            const {text, cover, icon} = data
+            const new_text = make_element({name: 'span', classlist: 'text'})
+            const new_avatar = make_element({name: 'span', classlist: 'avatar'})
+            // change content for button or switch or tab
+            if (role.match(/button|switch|tab/)) {
+                const old_icon = shadow.querySelector('.icon')
+                const old_avatar = shadow.querySelector('.avatar')
+                const old_text = shadow.querySelector('.text')
+                if (old_text) {
+                    if (text) old_text.textContent = text
+                }
+                if (cover) {
+                    if (old_avatar) {
+                        const img = old_avatar.querySelector('img')
+                        img.alt = text
+                        img.src = cover
+                    } else {
+                        new_avatar.append(make_img({src: cover, alt: text}))
+                        shadow.insertBefore(new_avatar, shadow.firstChild)
+                    }
+                }
+                if (icon) {
+                    const new_icon = main_icon(icon)
+                    if (old_icon) old_icon.parentNode.replaceChild(new_icon, old_icon)
+                    else shadow.insertBefore(new_icon, shadow.firstChild)
+                } 
+                
             }
-            if (role.match(/button|tab|switch/)) text.textContent = data
+            // change content for listbox
+            if (role.match(/listbox/)) {
+                listbox.innerHTML = ''
+                if (icon) {
+                    const new_icon = main_icon(icon)
+                    if (role.match(/listbox/)) listbox.append(new_icon)
+                }
+                if (cover) {
+                    new_avatar.append(make_img({src: cover, alt: text}))
+                    if (role.match(/listbox/)) listbox.append(new_avatar)
+                }
+                if (text) {
+                    new_text.append(text)
+                    if (role.match(/listbox/)) listbox.append(new_text)
+                }
+            } 
         }
         // button click
         function handle_click () {
@@ -2247,7 +2270,7 @@ function i_button (option, protocol) {
             }
             if (role === 'option') {
                 is_selected = !is_selected
-                return send( make({type, data: {selected: is_selected }}) )
+                return send( make({type, data: {selected: is_selected, content: is_selected ? {text: body, cover, icon} : '' }}) )
             }
             send( make({type}) )
         }
@@ -2316,24 +2339,29 @@ function i_button (option, protocol) {
         list_selected_icon_fill, list_selected_icon_fill_hover,
         // role === listbox ----------------------------------//
         // collapse settings
-        listbox_collapse_icon_size, listbox_collapse_icon_fill, listbox_collapse_icon_fill_hover, 
-        listbox_collapse_option_color, listbox_collapse_option_color_hover,
-        listbox_collapse_option_size, listbox_collapse_option_size_hover,
-        listbox_collapse_option_weight, listbox_collapse_option_weight_hover,
-        listbox_collapse_option_icon_size, listbox_collapse_option_icon_size_hover,
-        listbox_collapse_option_avatar_width, listbox_collapse_option_avatar_height,
+        listbox_collapse_icon_size, listbox_collapse_icon_size_hover,
+        listbox_collapse_icon_fill, listbox_collapse_icon_fill_hover, 
+        listbox_collapse_listbox_color, listbox_collapse_listbox_color_hover,
+        listbox_collapse_listbox_size, listbox_collapse_listbox_size_hover,
+        listbox_collapse_listbox_weight, listbox_collapse_listbox_weight_hover,
+        listbox_collapse_listbox_icon_size, listbox_collapse_listbox_icon_size_hover,
+        listbox_collapse_listbox_icon_fill, listbox_collapse_listbox_icon_fill_hover,
+        listbox_collapse_listbox_avatar_width, listbox_collapse_listbox_avatar_height,
         // expanded settings
-        listbox_expanded_option_color, listbox_expanded_option_color_hover,
-        listbox_expanded_option_size, listbox_expanded_option_size_hover,
-        listbox_expanded_option_weight, listbox_expanded_option_weight_hover,
-        listbox_expanded_icon_size, listbox_expanded_icon_fill, listbox_expanded_icon_fill_hover,
-        listbox_expanded_option_avatar_width, listbox_expanded_option_avatar_height,
-        listbox_expanded_option_icon_size, listbox_expanded_option_icon_size_hover,
-        listbox_expanded_option_icon_fill, listbox_expanded_option_icon_fill_hover
+        listbox_expanded_listbox_color,
+        listbox_expanded_listbox_size, 
+        listbox_expanded_listbox_weight,
+        listbox_expanded_icon_size, 
+        listbox_expanded_icon_fill,
+        listbox_expanded_listbox_avatar_width, 
+        listbox_expanded_listbox_avatar_height,
+        listbox_expanded_listbox_icon_size, 
+        listbox_expanded_listbox_icon_fill, 
     } = props
 
-    const grid_option = grid.option ? grid.option : {auto: {auto_flow: 'column'}, align: 'items-center', gap: '5px', justify: 'items-center'}
-
+    const grid_init = {auto: {auto_flow: 'column'}, align: 'items-center', gap: '5px', justify: 'items-center'}
+    const grid_option = grid.option ? grid.option : grid_init
+    const grid_listbox = grid.listbox ? grid.listbox : grid_init
     const style = `
     :host(i-button) {
         --size: ${size ? size : 'var(--primary-size)'};
@@ -2439,32 +2467,32 @@ function i_button (option, protocol) {
         --size: ${size_hover ? size_hover : 'var(--primary-size-hover)'};
     }
     :host(i-button[role="listbox"]) {
-        --color: ${listbox_collapse_option_color ? listbox_collapse_option_color : 'var(--listbox-collapse-option-color)'};
-        --size: ${listbox_collapse_option_size ? listbox_collapse_option_size : 'var(--listbox-collapse-option-size)'};
-        --weight: ${listbox_collapse_option_weight ? listbox_collapse_option_weight : 'var(--listbox-collapse-option-weight)'};
+        --color: ${listbox_collapse_listbox_color ? listbox_collapse_listbox_color : 'var(--listbox-collapse-listbox-color)'};
+        --size: ${listbox_collapse_listbox_size ? listbox_collapse_listbox_size : 'var(--listbox-collapse-listbox-size)'};
+        --weight: ${listbox_collapse_listbox_weight ? listbox_collapse_listbox_weight : 'var(--listbox-collapse-listbox-weight)'};
     }
     :host(i-button[role="listbox"]:hover) {
-        --color: ${listbox_collapse_option_color_hover ? listbox_collapse_option_color_hover : 'var(--listbox-collapse-option-color-hover)'};
-        --size: ${listbox_collapse_option_size_hover ? listbox_collapse_option_size_hover : 'var(--listbox-collapse-option-size-hover)'};
-        --weight: ${listbox_collapse_option_weight_hover ? listbox_collapse_option_weight_hover : 'var(--listbox-collapse-option-weight-hover)'};
+        --color: ${listbox_collapse_listbox_color_hover ? listbox_collapse_listbox_color_hover : 'var(--listbox-collapse-listbox-color-hover)'};
+        --size: ${listbox_collapse_listbox_size_hover ? listbox_collapse_listbox_size_hover : 'var(--listbox-collapse-listbox-size-hover)'};
+        --weight: ${listbox_collapse_listbox_weight_hover ? listbox_collapse_listbox_weight_hover : 'var(--listbox-collapse-listbox-weight-hover)'};
     }
     :host(i-button[role="listbox"]) > .icon {
         ${grid.icon ? make_grid(grid.icon) : make_grid({column: '2'})}
     }
     :host(i-button[role="listbox"]) .text {}
     :host(i-button[role="listbox"]) .avatar {
-        --avatar-width: ${listbox_collapse_option_avatar_width ? listbox_collapse_option_avatar_width : 'var(--listbox-collapse-option-avatar-width)'};
-        --avatar-height: ${listbox_collapse_option_avatar_height ? listbox_collapse_option_avatar_height : 'var(--listbox-collapse-option-avatar-height)'}
+        --avatar-width: ${listbox_collapse_listbox_avatar_width ? listbox_collapse_listbox_avatar_width : 'var(--listbox-collapse-listbox-avatar-width)'};
+        --avatar-height: ${listbox_collapse_listbox_avatar_height ? listbox_collapse_listbox_avatar_height : 'var(--listbox-collapse-listbox-avatar-height)'}
     }
     :host(i-button[role="listbox"][aria-expanded="true"]),
     :host(i-button[role="listbox"][aria-expanded="true"]:hover) {
-        --size: ${listbox_expanded_option_size ? listbox_expanded_option_size : 'var(--listbox-expanded-option-size)' };
-        --color: ${listbox_expanded_option_color ? listbox_expanded_option_color : 'var(--listbox-expanded-option-color)' };
-        --weight: ${listbox_expanded_option_weight ? listbox_expanded_option_weight : 'var(--listbox-expanded-option-weight)' };
+        --size: ${listbox_expanded_listbox_size ? listbox_expanded_listbox_size : 'var(--listbox-expanded-listbox-size)' };
+        --color: ${listbox_expanded_listbox_color ? listbox_expanded_listbox_color : 'var(--listbox-expanded-listbox-color)' };
+        --weight: ${listbox_expanded_listbox_weight ? listbox_expanded_listbox_weight : 'var(--listbox-expanded-listbox-weight)' };
     }
     :host(i-button[role="listbox"][aria-expanded="true"]) .avatar {
-        --avatar-width: ${listbox_expanded_option_avatar_width ? listbox_expanded_option_avatar_width : 'var(--listbox-expanded-option-avatar-width)'};
-        --avatar-height: ${listbox_expanded_option_avatar_height ? listbox_expanded_option_avatar_height : 'var(--listbox-expanded-option-avatar-height)'};
+        --avatar-width: ${listbox_expanded_listbox_avatar_width ? listbox_expanded_listbox_avatar_width : 'var(--listbox-expanded-listbox-avatar-width)'};
+        --avatar-height: ${listbox_expanded_listbox_avatar_height ? listbox_expanded_listbox_avatar_height : 'var(--listbox-expanded-listbox-avatar-height)'};
     }
     :host(i-button[role="option"]) {
         --border-radius: ${border_radius ? border_radius : '0'};
@@ -2482,7 +2510,6 @@ function i_button (option, protocol) {
         --bg-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
         --opacity: ${opacity ? opacity : '0'}
     }
-    
     :host(i-button[aria-disabled="true"]) .icon, 
     :host(i-button[aria-disabled="true"]:hover) .icon,
     :host(i-button[role="option"][aria-disabled="true"]) .icon, 
@@ -2515,15 +2542,18 @@ function i_button (option, protocol) {
         --color: ${current_color ? current_color : 'var(--current-color)'};
         --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
     }
-    :host(i-button[role="listbox"]) > .icon,
-    :host(i-button[role="listbox"]:hover) > .icon {
+    /* listbox collapse */
+    :host(i-button[role="listbox"]) > .icon {
         --icon-size: ${listbox_collapse_icon_size ? listbox_collapse_icon_size : 'var(--listbox-collapse-icon-size)'};
     }
-    :host(i-button[role="listbox"]) .option > .icon {
-        --icon-size: ${listbox_collapse_option_icon_size ? listbox_collapse_option_icon_size : 'var(--listbox-collapse-option-icon-size)'};
+    :host(i-button[role="listbox"]:hover) > .icon {
+        --icon-size: ${listbox_collapse_icon_size_hover ? listbox_collapse_icon_size_hover : 'var(--listbox-collapse-icon-size-hover)'};
     }
-    :host(i-button[role="listbox"]:hover) .option > .icon {
-        --icon-size: ${listbox_collapse_option_icon_size_hover ? listbox_collapse_option_icon_size_hover : 'var(--listbox-collapse-option-icon-size-hover)'};
+    :host(i-button[role="listbox"]) .listbox > .icon {
+        --icon-size: ${listbox_collapse_listbox_icon_size ? listbox_collapse_listbox_icon_size : 'var(--listbox-collapse-listbox-icon-size)'};
+    }
+    :host(i-button[role="listbox"]:hover) .listbox > .icon {
+        --icon-size: ${listbox_collapse_listbox_icon_size_hover ? listbox_collapse_listbox_icon_size_hover : 'var(--listbox-collapse-listbox-icon-size-hover)'};
     }
     :host(i-button[role="listbox"]) > .icon g {
         --icon-fill: ${listbox_collapse_icon_fill ? listbox_collapse_icon_fill : 'var(--listbox-collapse-icon-fill)'};
@@ -2531,28 +2561,28 @@ function i_button (option, protocol) {
     :host(i-button[role="listbox"]:hover) > .icon g {
         --icon-fill: ${listbox_collapse_icon_fill_hover ? listbox_collapse_icon_fill_hover : 'var(--listbox-collapse-icon-fill-hover)'};
     }
+    :host(i-button[role="listbox"]) .listbox > .icon g {
+        --icon-fill: ${listbox_collapse_listbox_icon_fill ? listbox_collapse_listbox_icon_fill : 'var(--listbox-collaps-listbox-icon-fill)'};
+    }
+    :host(i-button[role="listbox"]:hover) .listbox > .icon g {
+        --icon-fill: ${listbox_collapse_listbox_icon_fill_hover ? listbox_collapse_listbox_icon_fill_hover : 'var(--listbox-collapse-listbox-icon-fill-hover)'};
+    }
+    /* listbox expanded */
     :host(i-button[role="listbox"][aria-expanded="true"]) > .icon,
     :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon {
         --icon-size: ${listbox_expanded_icon_size ? listbox_expanded_icon_size : 'var(--listbox-expanded-icon-size)'};
     }
-    :host(i-button[role="listbox"][aria-expanded="true"]) > .icon g,
+    :host(i-button[role="listbox"][aria-expanded="true"]) > .icon g, 
     :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon g {
         --icon-fill: ${listbox_expanded_icon_fill ? listbox_expanded_icon_fill : 'var(--listbox-expanded-icon-fill)'}
     }
-    :host(i-button[role="listbox"][aria-expanded="true"]) .option > .icon {
-        --icon-fill: ${listbox_expanded_option_icon_size ? listbox_expanded_option_icon_size : 'var(--listbox-expanded-option-icon-size)'};
+    :host(i-button[role="listbox"][aria-expanded="true"]) .listbox > .icon, 
+    :host(i-button[role="listbox"][aria-expanded="true"]:hover) .listbox > .icon {
+        --icon-fill: ${listbox_expanded_listbox_icon_size ? listbox_expanded_listbox_icon_size : 'var(--listbox-expanded-listbox-icon-size)'};
     }
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) .option > .icon {
-        --icon-fill: ${listbox_expanded_option_icon_size_hover ? listbox_expanded_option_icon_size_hover : 'var(--listbox-expanded-option-icon-size-hover)'};
-    }
-    :host(i-button[role="listbox"][aria-expanded="true"]) .option > .icon g {
-        --icon-fill: ${listbox_expanded_option_icon_fill ? listbox_expanded_option_icon_fill : 'var(--listbox-expanded-option-icon-fill)'};
-    }
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) .option > .icon g {
-        --icon-fill: ${listbox_expanded_option_icon_fill_hover ? listbox_expanded_option_icon_fill_hover : 'var(--listbox-expanded-option-icon-fill-hover)'};
-    }
-    :host(i-button[role="listbox"][aria-expanded="true"]:hover) > .icon g {
-        --icon-fill: ${listbox_expanded_icon_fill_hover ? listbox_expanded_icon_fill_hover : 'var(--listbox-expanded-icon-fill-hover)'};
+    :host(i-button[role="listbox"][aria-expanded="true"]) .listbox > .icon g,
+    :host(i-button[role="listbox"][aria-expanded="true"]:hover) .listbox > .icon g {
+        --icon-fill: ${listbox_expanded_listbox_icon_fill ? listbox_expanded_listbox_icon_fill : 'var(--listbox-expanded-listbox-icon-fill)'};
     }
     :host(i-button[aria-checked="true"]) > .icon g {
         --icon-fill: ${current_icon_fill ? current_icon_fill : 'var(--color-white)' };
@@ -2647,7 +2677,7 @@ function i_button (option, protocol) {
     :host(i-button) .listbox {
         display: grid;
         max-width: 100%;
-        ${make_grid(grid.listbox)}
+        ${make_grid(grid_listbox)}
     }
     :host(i-button) .option {
         display: grid;
