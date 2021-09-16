@@ -320,7 +320,7 @@ function i_list (opts = {}, protocol) {
             const from = head[0].split(' / ')[0]
             if (role === 'menuitem') return handle_click_event(msg)
             if (type === 'click' && role === 'option') return handle_select_event(from)
-            if (type.match(/expanded|collapse/)) return handle_expanded_event(data)
+            if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
         }
     }
 
