@@ -462,6 +462,7 @@ const css = csjs`
     --color-bright-yellow-crayola: 35, 100%, 58%;
     --color-green-yellow-crayola: 51, 100%, 83%;
     --color-purple: 283, var(--r);
+    --color-heliotrope: 288, 100%, 73%;
     --color-medium-purple: 269, 100%, 70%;
     --color-electric-violet: 276, 98%, 48%;
     --color-grey33: var(--b), 20%;
