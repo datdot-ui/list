@@ -569,6 +569,8 @@ const css = csjs`
     --current-list-avatar-height: var(--primary-list-avatar-height);
     /* role listbox settings ---------------------------------------------*/
     /*-- collapsed --*/
+    --listbox-collapsed-bg-color: var(--primary-bg-color);
+    --listbox-collapsed-bg-color-hover: var(--primary-bg-color-hover);
     --listbox-collapsed-icon-size: var(--size20);
     --listbox-collapsed-icon-size-hover: var(--size20);
     --listbox-collapsed-icon-fill: var(--primary-icon-fill);
@@ -586,6 +588,7 @@ const css = csjs`
     --listbox-collapsed-listbox-icon-fill: var(--color-blue);
     --listbox-collapsed-listbox-icon-fill-hover: var(--color-yellow);
     /*-- expanded ---*/
+    --listbox-expanded-bg-color: var(--current-bg-color);
     --listbox-expanded-icon-size: var(--size20);
     --listbox-expanded-icon-size-hover: var(--size20);
     --listbox-expanded-icon-fill: var(--color-light-green);
