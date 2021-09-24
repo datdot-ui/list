@@ -11,7 +11,7 @@ const button = i_button
 
 function demo () {
     const recipients = []
-    const logs = terminal({mode: 'comfortable'}, protocol('logs'))
+    const logs = terminal({mode: 'compact'}, protocol('logs'))
     const make = message_maker('demo / demo.js')
     const options1 = [
         {

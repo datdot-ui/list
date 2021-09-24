@@ -12,7 +12,7 @@ const button = i_button
 
 function demo () {
     const recipients = []
-    const logs = terminal({mode: 'comfortable'}, protocol('logs'))
+    const logs = terminal({mode: 'compact'}, protocol('logs'))
     const make = message_maker('demo / demo.js')
     const options1 = [
         {
@@ -770,7 +770,7 @@ function head (lang = 'UTF-8', title = 'List - DatDot UI') {
     const description = document.createElement('meta')
     lan.setAttribute('charset', lang)
     viewport.setAttribute('name', 'viewport')
-    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0')
+    viewport.setAttribute('content', 'width=device-width, initial-scale=1, user-scalable=no')
     description.setAttribute('name', 'description')
     description.setAttribute('content', 'Datdot-UI is a web component and the widgets for datdot.org using.')
     document.head.append(lan, viewport)
@@ -3484,16 +3484,6 @@ function i_list (opts = {}, protocol) {
             list.setAttribute('aria-expanded', !data)
         }
         function handle_mutiple_selected (from, lists) {
-            // Old codes
-            // const make = message_maker(`${from} / option / ${flow}`)
-            // const arr = []
-            // args.forEach( child => {
-            //     if (child.dataset.option === from ) child.setAttribute('aria-selected', selected )
-            //     if (child.getAttribute('aria-selected') === 'true') arr[arr.length] = child.dataset.option
-            // })
-            // recipients[from]( make({type, data: selected}) )
-            // send( make({to: name, type, data: {mode, selected: arr, length: arr.length}}))
-            // New codes for store data
             body.map((obj, index) => {
                 const state = obj.text === from
                 const make = message_maker(`${obj.text} / option / ${flow}`)
@@ -3507,20 +3497,6 @@ function i_list (opts = {}, protocol) {
         }
 
         function handle_single_selected (from, lists) {
-            // Old codes
-            // args.forEach( child => {
-            //     const state = from === child.dataset.option ? selected : !selected
-            //     const current = state ? from : child.dataset.option
-            //     const make = message_maker(`${current} / option / ${flow}`)
-            //     const type = state ? 'selected' : 'unselected'
-            //     list.setAttribute('aria-activedescendant', from)
-            //     child.setAttribute('aria-selected', state )
-            //     if (state) child.setAttribute('aria-current', state)
-            //     else child.removeAttribute('aria-current')
-            //     recipients[current]( make({type, data: state}) )
-            //     send(make({to: name, type, data: {mode, selected: from} }))
-            // })
-            // New codes for store data
             body.map((obj, index) => {
                 const state = obj.text === from
                 const current = state ? from : lists[index].dataset.option
