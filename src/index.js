@@ -270,6 +270,7 @@ function i_list (opts = {}, protocol) {
         }
         function handle_select_event (from) {
             const { childNodes } = shadow
+            // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
             const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
             if (mode === 'single-select')  handle_single_selected (from, lists)
             if (mode === 'multiple-select') handle_mutiple_selected (from, lists)
