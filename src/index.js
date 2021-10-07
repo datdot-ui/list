@@ -19,7 +19,7 @@ function i_list (opts = {}, protocol) {
         const send = protocol( get )
         send(message)
         const list = document.createElement('i-list')
-        const shadow = list.attachShadow({mode: 'open'})
+        const shadow = list.attachShadow({mode: 'closed'})
         list.ariaHidden = is_hidden
         list.ariaLabel = name
         list.tabIndex = -1
