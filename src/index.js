@@ -275,13 +275,22 @@ function i_list (opts = {}, protocol) {
                 send(make({to: name, type, data: {mode, selected: store_data} }))
             })
         }
-        function handle_select_event (from) {
-            const { childNodes } = shadow
+        function handle_select_event ({from, to, data}) {
+            const {selected} = data
             // // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
             // const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
             // if (mode === 'single-select')  handle_single_selected (from, lists)
             // if (mode === 'multiple-select') handle_mutiple_selected (from, lists)
-            console.log(recipients, from);
+            const make = message_maker(`${from} / option / ${flow}`)
+            Object.entries(recipients).forEach(([key, value]) => {
+                if (key === from) {
+                    recipients[from](make({type: 'selected', data: {selected}}))
+                    send( make({type: 'selected', data: {selected: from}}) )
+                    return recipients[from](make({type: 'current', data: selected}))
+                }
+                recipients[key](make({type: 'unselected', data: {selected: !selected}}))
+                return recipients[key](make({type: 'current', data: !selected}))
+            }) 
         }
         function button_protocol (name) {
             return (send) => {
@@ -304,7 +313,7 @@ function i_list (opts = {}, protocol) {
             const role = head[0].split(' / ')[1]
             const from = head[0].split(' / ')[0]
             if (role === 'menuitem') return handle_click_event(msg)
-            if (type === 'click' && role === 'option') return handle_select_event(from)
+            if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
             if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
         }
     }
