@@ -534,8 +534,10 @@ const css = csjs`
     --primary-weight-hover: 300;
     --primary-color: var(--color-black);
     --primary-color-hover: var(--color-white);
+    --primary-color-focus: var(--color-orange);
     --primary-bg-color: var(--color-white);
     --primary-bg-color-hover: var(--color-black);
+    --primary-bg-color-focus: var(--color-greyA2), 1;
     --primary-border-width: 1px;
     --primary-border-style: solid;
     --primary-border-color: var(--color-black);

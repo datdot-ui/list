@@ -1963,7 +1963,6 @@ function i_button (opt, protocol) {
         --avatar-width: ${avatar_width ? avatar_width : 'var(--primary-avatar-width)'};
         --avatar-height: ${avatar_height ? avatar_height : 'var(--primary-avatar-height)'};
         --avatar-radius: ${avatar_radius ? avatar_radius : 'var(--primary-avatar-radius)'};
-        --current-icon-fill: ${current_icon_fill ? current_icon_fill : 'var(--current-icon)'};
         --current-icon-size: ${current_icon_size ? current_icon_size : 'var(--current-icon-size)'};
         display: inline-grid;
         ${grid.button ? make_grid(grid.button) : make_grid({auto: {auto_flow: 'column'}, gap: '5px', justify: 'content-center', align: 'items-center'})}
@@ -2132,7 +2131,7 @@ function i_button (opt, protocol) {
         --icon-size: var(--current-icon-size);
     }
     :host(i-button[aria-current="true"]) g {
-        --icon-fill: var(--current-icon-fill);
+        --icon-fill: ${current_icon_fill ? current_icon_fill : 'var(--current-icon-fill)'};
     }
     :host(i-button[aria-current="true"]:focus) {
         --color: var(--color-focus);
@@ -2142,10 +2141,11 @@ function i_button (opt, protocol) {
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]:hover) .option > .icon {
         --icon-size: var(--current-icon-size);
     }
+    /*
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]) .option > .icon g,
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]:hover) .option > .icon g {
         --icon-fill: var(--current-icon-fill);
-    }
+    }*/
     :host(i-button[aria-checked="true"]), :host(i-button[aria-expanded="true"]),
     :host(i-button[aria-checked="true"]:hover), :host(i-button[aria-expanded="true"]:hover) {
         --size: ${current_size ? current_size : 'var(--current-size)'};
@@ -2153,9 +2153,10 @@ function i_button (opt, protocol) {
         --color: ${current_color ? current_color : 'var(--current-color)'};
         --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
     }
+    /*
     :host(i-button[role="switch"][aria-expanded="true"]) g {
         --icon-fill: var(--current-icon-fill);
-    }
+    }*/
     /* listbox collapsed */
     :host(i-button[role="listbox"]) > .icon {
         --icon-size: ${listbox_collapsed_icon_size ? listbox_collapsed_icon_size : 'var(--listbox-collapsed-icon-size)'};
@@ -4643,8 +4644,10 @@ const css = csjs`
     --primary-weight-hover: 300;
     --primary-color: var(--color-black);
     --primary-color-hover: var(--color-white);
+    --primary-color-focus: var(--color-orange);
     --primary-bg-color: var(--color-white);
     --primary-bg-color-hover: var(--color-black);
+    --primary-bg-color-focus: var(--color-greyA2), 1;
     --primary-border-width: 1px;
     --primary-border-style: solid;
     --primary-border-color: var(--color-black);
@@ -5552,9 +5555,10 @@ function i_list (opts = {}, protocol) {
                     weight = '300', 
                     color = 'var(--primary-color)', 
                     color_hover = 'var(--primary-color-hover)', 
-                    color_focus = "var(--color-white)",
+                    color_focus = 'var(--color-white)',
                     bg_color = 'var(--primary-bg-color)', 
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    bg_color_focus = 'var(--primary-bg-color-focus)',
                     icon_size = 'var(--primary-icon-size)',
                     icon_fill = 'var(--primary-icon-fill)',
                     icon_fill_hover = 'var(--primary-icon-fill-hover)',
@@ -5603,6 +5607,7 @@ function i_list (opts = {}, protocol) {
                             color_focus,
                             bg_color,
                             bg_color_hover,
+                            bg_color_focus,
                             icon_size,
                             icon_fill,
                             icon_fill_hover,
@@ -5650,17 +5655,27 @@ function i_list (opts = {}, protocol) {
             list.setAttribute('aria-hidden', data)
             list.setAttribute('aria-expanded', !data)
         }
-        function handle_mutiple_selected (from, lists) {
-            body.map((obj, index) => {
-                const state = obj.text === from
-                const make = message_maker(`${obj.text} / option / ${flow}`)
-                if (state) obj.selected = !obj.selected
-                const type = obj.selected ? 'selected' : 'unselected'
-                lists[index].setAttribute('aria-selected', obj.selected)
-                store_data = body
-                if (state) recipients[from]( make({type, data: obj.selected}) )
-                send( make({to: name, type, data: {mode, selected: store_data}}))
-            })
+        function handle_mutiple_selected ({make, from, lists, selected}) {
+            // body.map((obj, index) => {
+            //     const state = obj.text === from
+            //     const make = message_maker(`${obj.text} / option / ${flow}`)
+            //     if (state) obj.selected = !obj.selected
+            //     const type = obj.selected ? 'selected' : 'unselected'
+            //     lists[index].setAttribute('aria-selected', obj.selected)
+            //     store_data = body
+            //     if (state) recipients[from]( make({type, data: obj.selected}) )
+            //     send( make({to: name, type, data: {mode, selected: store_data}}))
+            // })
+            Object.entries(recipients).forEach(([key, value], index) => {
+                if (key === from) {
+                    lists[index].setAttribute('aria-current', selected)
+                    recipients[from](make({type: 'selected', data: selected}))
+                    send( make({type: 'selected', data: {selected: from}}) )
+                    return recipients[from](make({type: 'current', data: selected}))
+                }
+                lists[index].removeAttribute('aria-current')
+                return recipients[key](make({type: 'current', data: !selected}))
+            }) 
         }
 
         function handle_single_selected ({make, from, lists, selected}) {
@@ -5685,7 +5700,7 @@ function i_list (opts = {}, protocol) {
             const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
             const make = message_maker(`${from} / option / ${flow}`)
             if (mode === 'single-select')  handle_single_selected({make, from, lists, selected})
-            // if (mode === 'multiple-select') handle_mutiple_selected({make, from, lists, selected})
+            if (mode === 'multiple-select') handle_mutiple_selected({make, from, lists, selected})
             
         }
         function button_protocol (name) {

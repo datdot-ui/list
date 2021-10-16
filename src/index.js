@@ -149,9 +149,10 @@ function i_list (opts = {}, protocol) {
                     weight = '300', 
                     color = 'var(--primary-color)', 
                     color_hover = 'var(--primary-color-hover)', 
-                    color_focus = "var(--color-white)",
+                    color_focus = 'var(--color-white)',
                     bg_color = 'var(--primary-bg-color)', 
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    bg_color_focus = 'var(--primary-bg-color-focus)',
                     icon_size = 'var(--primary-icon-size)',
                     icon_fill = 'var(--primary-icon-fill)',
                     icon_fill_hover = 'var(--primary-icon-fill-hover)',
@@ -200,6 +201,7 @@ function i_list (opts = {}, protocol) {
                             color_focus,
                             bg_color,
                             bg_color_hover,
+                            bg_color_focus,
                             icon_size,
                             icon_fill,
                             icon_fill_hover,
@@ -247,17 +249,27 @@ function i_list (opts = {}, protocol) {
             list.setAttribute('aria-hidden', data)
             list.setAttribute('aria-expanded', !data)
         }
-        function handle_mutiple_selected (from, lists) {
-            body.map((obj, index) => {
-                const state = obj.text === from
-                const make = message_maker(`${obj.text} / option / ${flow}`)
-                if (state) obj.selected = !obj.selected
-                const type = obj.selected ? 'selected' : 'unselected'
-                lists[index].setAttribute('aria-selected', obj.selected)
-                store_data = body
-                if (state) recipients[from]( make({type, data: obj.selected}) )
-                send( make({to: name, type, data: {mode, selected: store_data}}))
-            })
+        function handle_mutiple_selected ({make, from, lists, selected}) {
+            // body.map((obj, index) => {
+            //     const state = obj.text === from
+            //     const make = message_maker(`${obj.text} / option / ${flow}`)
+            //     if (state) obj.selected = !obj.selected
+            //     const type = obj.selected ? 'selected' : 'unselected'
+            //     lists[index].setAttribute('aria-selected', obj.selected)
+            //     store_data = body
+            //     if (state) recipients[from]( make({type, data: obj.selected}) )
+            //     send( make({to: name, type, data: {mode, selected: store_data}}))
+            // })
+            Object.entries(recipients).forEach(([key, value], index) => {
+                if (key === from) {
+                    lists[index].setAttribute('aria-current', selected)
+                    recipients[from](make({type: 'selected', data: selected}))
+                    send( make({type: 'selected', data: {selected: from}}) )
+                    return recipients[from](make({type: 'current', data: selected}))
+                }
+                lists[index].removeAttribute('aria-current')
+                return recipients[key](make({type: 'current', data: !selected}))
+            }) 
         }
 
         function handle_single_selected ({make, from, lists, selected}) {
@@ -282,7 +294,7 @@ function i_list (opts = {}, protocol) {
             const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
             const make = message_maker(`${from} / option / ${flow}`)
             if (mode === 'single-select')  handle_single_selected({make, from, lists, selected})
-            // if (mode === 'multiple-select') handle_mutiple_selected({make, from, lists, selected})
+            if (mode === 'multiple-select') handle_mutiple_selected({make, from, lists, selected})
             
         }
         function button_protocol (name) {
