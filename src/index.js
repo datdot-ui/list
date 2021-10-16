@@ -14,7 +14,6 @@ function i_list (opts = {}, protocol) {
     let is_expanded = !is_hidden ? !is_hidden : expanded
     const store_selected = []
     const {grid} = theme
-
     function widget () {
         const send = protocol( get )
         send(message)
@@ -29,7 +28,7 @@ function i_list (opts = {}, protocol) {
         try {
             if (mode.match(/single|multiple/)) {
                 list.setAttribute('role', 'listbox')
-                make_select_list()
+                make_select_list(body)
             }   
             if (mode.match(/dropdown/)) {
                 list.setAttribute('role', 'menubar')
@@ -44,7 +43,7 @@ function i_list (opts = {}, protocol) {
 
         function make_list () {
             return body.map( (list, i) => {
-                const {text = undefined, role = 'link', url = '#', target, icon, cover, disabled = false, theme = {}} = list
+                const {list_name, text = undefined, role = 'link', url = '#', target, icon, cover, disabled = false, theme = {}} = list
                 const {style = ``, props = {}} = theme
                 const {
                     size = `var(--primary-size)`, 
@@ -63,11 +62,10 @@ function i_list (opts = {}, protocol) {
                     disabled_bg_color = 'var(--primary-disabled-bg-color)',
                     disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
                 } = props
-                var item = text
                 if (role === 'link' ) {
                     var item = i_link({
                         page,
-                        name: text,
+                        name: list_name,
                         body: text,
                         role: 'menuitem',
                         link: {
@@ -100,11 +98,12 @@ function i_list (opts = {}, protocol) {
                             },
                             grid
                         }
-                    }, button_protocol(text))
+                    }, button_protocol(list_name))
                 }
+
                 if (role === 'menuitem') {
                     var item = i_button({
-                        name: text,
+                        name: list_name,
                         body: text,
                         role,
                         icons: {
@@ -130,7 +129,7 @@ function i_list (opts = {}, protocol) {
                             },
                             grid
                         }
-                    }, button_protocol(text))
+                    }, button_protocol(list_name))
                 }
                 
                 const li = bel`<li role="none">${item}</li>`
@@ -139,9 +138,9 @@ function i_list (opts = {}, protocol) {
             })
             
         }
-        function make_select_list () {
-            return body.map( (option, i) => {
-                const {text, icon, list, cover, current = false, selected = false, disabled = false, theme = {}} = option
+        function make_select_list (args) {
+            return args.map( (option, i) => {
+                const {list_name, text, icon, list, cover, current = false, selected = false, disabled = false, theme = {}} = option
                 const is_current = mode === 'single-select' ? current : false
                 const {style = ``, props = {}} = theme
                 const {
@@ -177,7 +176,7 @@ function i_list (opts = {}, protocol) {
                 const item = button(
                 {
                     page, 
-                    name: text, 
+                    name: list_name,
                     body: text,
                     cover,
                     role: 'option',
@@ -222,10 +221,12 @@ function i_list (opts = {}, protocol) {
                         },
                         grid
                     }
-                }, button_protocol(text))
+                }, button_protocol(list_name))
+
                 const li = (text === 'no items') 
                 ? bel`<li role="listitem" data-option=${text}">${text}</li>`
-                : bel`<li role="option" data-option=${text}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
+                : bel`<li role="option" data-option=${list_name}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
+
                 if (is_current) li.setAttribute('aria-current', is_current)
                 if (disabled) li.setAttribute('disabled', disabled)
                 const option_list = text.toLowerCase().split(' ').join('-')
