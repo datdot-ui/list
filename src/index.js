@@ -223,11 +223,15 @@ function i_list (opts = {}, protocol) {
                     }
                 }, button_protocol(list_name))
 
-                const li = (text === 'no items' ) 
-                ? bel`<li role="listitem" data-option=${text}">${text}</li>`
-                : bel`<li role="option" data-option=${text ? text : list_name}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
+                // const li = (text === 'no items' ) 
+                // ? bel`<li role="listitem" data-option=${text}">${text}</li>`
+                // : bel`<li role="option" data-option=${text ? text : list_name}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
 
-                console.log(li);
+                const li = document.createElement('li')
+                li.setAttribute('role', 'option')
+                li.setAttribute('data-option', text ? text : list_name)
+                li.setAttribute('aria-selected', is_current ? is_current : selected)
+                li.append(item)
 
                 if (is_current) li.setAttribute('aria-current', is_current)
                 if (disabled) li.setAttribute('disabled', disabled)
@@ -273,10 +277,11 @@ function i_list (opts = {}, protocol) {
         }
         function handle_select_event (from) {
             const { childNodes } = shadow
-            // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
-            const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
-            if (mode === 'single-select')  handle_single_selected (from, lists)
-            if (mode === 'multiple-select') handle_mutiple_selected (from, lists)
+            // // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
+            // const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
+            // if (mode === 'single-select')  handle_single_selected (from, lists)
+            // if (mode === 'multiple-select') handle_mutiple_selected (from, lists)
+            console.log(recipients, from);
         }
         function button_protocol (name) {
             return (send) => {
