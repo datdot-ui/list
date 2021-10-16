@@ -223,9 +223,11 @@ function i_list (opts = {}, protocol) {
                     }
                 }, button_protocol(list_name))
 
-                const li = (text === 'no items') 
+                const li = (text === 'no items' ) 
                 ? bel`<li role="listitem" data-option=${text}">${text}</li>`
-                : bel`<li role="option" data-option=${list_name}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
+                : bel`<li role="option" data-option=${text ? text : list_name}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
+
+                console.log(li);
 
                 if (is_current) li.setAttribute('aria-current', is_current)
                 if (disabled) li.setAttribute('disabled', disabled)

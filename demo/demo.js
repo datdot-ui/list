@@ -181,9 +181,11 @@ function demo () {
         name: 'terminal-select-list',
         body: [
             {
+                list_name: 'compact',
                 text: 'Compact messages',
             },
             {
+                list_name: 'comfortable',
                 text: 'Comfortable messages',
                 current: true
             }
