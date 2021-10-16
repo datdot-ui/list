@@ -5552,6 +5552,7 @@ function i_list (opts = {}, protocol) {
                     weight = '300', 
                     color = 'var(--primary-color)', 
                     color_hover = 'var(--primary-color-hover)', 
+                    color_focus = "var(--color-white)",
                     bg_color = 'var(--primary-bg-color)', 
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
                     icon_size = 'var(--primary-icon-size)',
@@ -5599,6 +5600,7 @@ function i_list (opts = {}, protocol) {
                             weight,
                             color,
                             color_hover,
+                            color_focus,
                             bg_color,
                             bg_color_hover,
                             icon_size,
@@ -5661,39 +5663,30 @@ function i_list (opts = {}, protocol) {
             })
         }
 
-        function handle_single_selected (from, lists) {
-            body.map((obj, index) => {
-                const state = obj.text === from
-                const current = state ? from : lists[index].dataset.option
-                const make = message_maker(`${current} / option / ${flow}`)
-                const type = state ? 'selected' : 'unselected'
-                obj.selected = state
-                obj.current = state
+        function handle_single_selected ({make, from, lists, selected}) {
+            Object.entries(recipients).forEach(([key, value], index) => {
                 lists[index].setAttribute('aria-activedescendant', from)
-                lists[index].setAttribute('aria-selected', obj.selected)
-                if (state) lists[index].setAttribute('aria-current', obj.current)
-                else lists[index].removeAttribute('aria-current')
-                store_data = body
-                recipients[current]( make({type, data: state}) )
-                send(make({to: name, type, data: {mode, selected: store_data} }))
-            })
-        }
-        function handle_select_event ({from, to, data}) {
-            const {selected} = data
-            // // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
-            // const lists = shadow.firstChild.tagName !== 'STYLE' ? childNodes : [...childNodes].filter( (child, index) => index !== 0)
-            // if (mode === 'single-select')  handle_single_selected (from, lists)
-            // if (mode === 'multiple-select') handle_mutiple_selected (from, lists)
-            const make = message_maker(`${from} / option / ${flow}`)
-            Object.entries(recipients).forEach(([key, value]) => {
+                lists[index].setAttribute('aria-selected', key === from)
+
                 if (key === from) {
-                    recipients[from](make({type: 'selected', data: {selected}}))
+                    lists[index].setAttribute('aria-current', selected)
+                    recipients[from](make({type: 'selected', data: selected}))
                     send( make({type: 'selected', data: {selected: from}}) )
                     return recipients[from](make({type: 'current', data: selected}))
                 }
-                recipients[key](make({type: 'unselected', data: {selected: !selected}}))
+                lists[index].removeAttribute('aria-current')
+                recipients[key](make({type: 'unselected', data: !selected}))
                 return recipients[key](make({type: 'current', data: !selected}))
             }) 
+        }
+        function handle_select_event ({from, to, data}) {
+            const {selected} = data
+            // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
+            const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
+            const make = message_maker(`${from} / option / ${flow}`)
+            if (mode === 'single-select')  handle_single_selected({make, from, lists, selected})
+            // if (mode === 'multiple-select') handle_mutiple_selected({make, from, lists, selected})
+            
         }
         function button_protocol (name) {
             return (send) => {
