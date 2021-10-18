@@ -3,6 +3,7 @@ const style_sheet = require('support-style-sheet')
 const {i_button, i_link} = require('datdot-ui-button')
 const button = i_button
 const message_maker = require('message-maker')
+const make_grid = require('make-grid')
 module.exports = i_list
 
 function i_list (opts = {}, protocol) {
@@ -14,7 +15,6 @@ function i_list (opts = {}, protocol) {
     let is_expanded = !is_hidden ? !is_hidden : expanded
     const store_selected = []
     const {grid} = theme
-
 
     function widget () {
         const send = protocol( get )
@@ -87,7 +87,9 @@ function i_list (opts = {}, protocol) {
                     body: text, 
                     role, icons, cover, 
                     current: is_current, selected, disabled, 
-                    theme: {style, props: {
+                    theme: {
+                        style,
+                        props: {
                         size, size_hover, weight, 
                         color, color_hover, color_focus,
                         bg_color, bg_color_hover, bg_color_focus,
@@ -285,6 +287,7 @@ function i_list (opts = {}, protocol) {
         ${width && 'width: var(--width);'};
         ${height && 'height: var(--height);'};
         display: grid;
+        ${make_grid(grid)}
         margin-top: 5px;
         max-width: 100%;
     }
@@ -294,7 +297,6 @@ function i_list (opts = {}, protocol) {
         pointer-events: none;
     }
     :host([aria-hidden="false"]) {
-        display: grid;
         animation: open 0.3s;
     }
     li {
