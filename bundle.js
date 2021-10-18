@@ -1653,7 +1653,7 @@ function i_link (opt, protocol) {
 }
 
 function i_button (opt, protocol) {
-    const {page = "*", flow = 'ui-button', name, role = 'button', controls, body = '', icons = {}, cover, classlist = null, mode = '', state, expanded = false, current = undefined, selected = false, checked = false, disabled = false, theme = {}} = opt
+    const {page = "*", flow = 'ui-button', name, role = 'button', controls, body = '', icons = {}, cover, classlist = null, mode = '', state, expanded = undefined, current = undefined, selected = false, checked = false, disabled = false, theme = {}} = opt
     const {icon, select = {}, list = {}} = icons
     const make_icon = icon ? main_icon(icon) : undefined
     if (role === 'listbox') var make_select_icon = select_icon(select)
@@ -1698,7 +1698,9 @@ function i_button (opt, protocol) {
                 set_attr({aria: 'controls', prop: controls})
                 el.setAttribute('tabindex', is_current ? 0 : -1)
             }
-            if (role === 'switch') set_attr({aria: 'checked', prop: is_checked})
+            if (role === 'switch') {
+                set_attr({aria: 'checked', prop: is_checked})
+            }
             if (role === 'listbox') set_attr({aria: 'haspopup', prop: role})
             if (disabled) {
                 set_attr({aria: 'disabled', prop: is_disabled})
@@ -1709,7 +1711,7 @@ function i_button (opt, protocol) {
                 is_selected = is_current ? is_current : is_selected
                 set_attr({aria: 'selected', prop: is_selected})
             }
-            if ('expanded' in opt) {
+            if (expanded !== undefined) {
                 set_attr({aria: 'expanded', prop: is_expanded})
             }
             // make current status
@@ -1738,8 +1740,8 @@ function i_button (opt, protocol) {
         function switched_event (data) {
             const {checked} = data
             is_checked = checked
-            if (!is_checked) return el.removeAttribute('aria-checked')
-            set_attr({aria: 'checked', prop: is_checked})
+            if (is_checked) return set_attr({aria: 'checked', prop: is_checked})
+            else el.removeAttribute('aria-checked')
         }
         function expanded_event (data) {
             is_expanded = data
@@ -1816,7 +1818,7 @@ function i_button (opt, protocol) {
             if ('current' in opt) {
                 send( make({to: controls, type: 'current', data: {name, current: is_current}}) )
             }
-            if ('expanded' in opt) {
+            if (expanded !== undefined) {
                 const type = !is_expanded ? 'expanded' : 'collapsed'
                 send( make({type, data: {name, expanded: is_expanded}}))
             }
@@ -1963,7 +1965,6 @@ function i_button (opt, protocol) {
         --avatar-width: ${avatar_width ? avatar_width : 'var(--primary-avatar-width)'};
         --avatar-height: ${avatar_height ? avatar_height : 'var(--primary-avatar-height)'};
         --avatar-radius: ${avatar_radius ? avatar_radius : 'var(--primary-avatar-radius)'};
-        --current-icon-size: ${current_icon_size ? current_icon_size : 'var(--current-icon-size)'};
         display: inline-grid;
         ${grid.button ? make_grid(grid.button) : make_grid({auto: {auto_flow: 'column'}, gap: '5px', justify: 'content-center', align: 'items-center'})}
         ${width && 'width: var(--width);'};
@@ -2128,10 +2129,10 @@ function i_button (opt, protocol) {
         --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
     }
     :host(i-button[aria-current="true"]) .icon,  :host(i-button[aria-current="true"]:hover) .icon {
-        --icon-size: var(--current-icon-size);
+        --icon-size: ${current_icon_size || 'var(--current-icon-size)'};
     }
     :host(i-button[aria-current="true"]) g {
-        --icon-fill: ${current_icon_fill ? current_icon_fill : 'var(--current-icon-fill)'};
+        --icon-fill: ${current_icon_fill || 'var(--current-icon-fill)'};
     }
     :host(i-button[aria-current="true"]:focus) {
         --color: var(--color-focus);
@@ -2139,7 +2140,7 @@ function i_button (opt, protocol) {
     }
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]) .option > .icon, 
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]:hover) .option > .icon {
-        --icon-size: var(--current-icon-size);
+        --icon-size: ${current_icon_size || 'var(--current-icon-size)'};
     }
     /*
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]) .option > .icon g,
@@ -5717,7 +5718,6 @@ function i_list (opts = {}, protocol) {
         ${height && 'height: var(--height);'};
         display: grid;
         ${make_grid(grid)}
-        margin-top: 5px;
         max-width: 100%;
     }
     :host(i-list[aria-hidden="true"]) {

@@ -274,7 +274,6 @@ function i_list (opts = {}, protocol) {
         ${height && 'height: var(--height);'};
         display: grid;
         ${make_grid(grid)}
-        margin-top: 5px;
         max-width: 100%;
     }
     :host(i-list[aria-hidden="true"]) {
