@@ -5523,6 +5523,7 @@ function i_list (opts = {}, protocol) {
                     disabled_color = 'var(--primary-disabled-color)',
                     disabled_bg_color = 'var(--primary-disabled-bg-color)',
                     disabled_icon_fill = 'var(--primary-disabled-fill)',
+                    padding = '',
                     opacity = '0'
                 } = props
 
@@ -5548,11 +5549,12 @@ function i_list (opts = {}, protocol) {
                         current_list_selected_icon_size, current_list_selected_icon_fill,
                         list_selected_icon_size, list_selected_icon_fill, list_selected_icon_fill_hover,
                         disabled_color, disabled_bg_color, disabled_icon_fill,
+                        padding,
                         opacity
                     }, 
                     grid
                 }}, button_protocol(list_name))
-                
+
                 const li = document.createElement('li')
                 li.dataset.option = text || list_name
                 li.setAttribute('aria-selected', is_current || selected)
@@ -5585,6 +5587,7 @@ function i_list (opts = {}, protocol) {
                     disabled_color = 'var(--primary-disabled-color)',
                     disabled_bg_color = 'var(--primary-disabled-bg-color)',
                     disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
+                    padding = null
                 } = props
                 if (role === 'link' ) {
                     var item = i_link({
@@ -5624,7 +5627,8 @@ function i_list (opts = {}, protocol) {
                                 icon_fill, icon_fill_hover,
                                 icon_size,
                                 avatar_width, avatar_height, avatar_radius,
-                                disabled_color, disabled_bg_color, disabled_icon_fill
+                                disabled_color, disabled_bg_color, disabled_icon_fill,
+                                padding
                             },
                             grid
                         }
