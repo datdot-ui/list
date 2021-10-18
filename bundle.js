@@ -1706,7 +1706,7 @@ function i_button (opt, protocol) {
             } 
             if (is_checked) set_attr({aria: 'checked', prop: is_checked})
             if (role.match(/option/)) {
-                is_selected = is_current
+                is_selected = is_current ? is_current : is_selected
                 set_attr({aria: 'selected', prop: is_selected})
             }
             if ('expanded' in opt) {
@@ -4127,16 +4127,19 @@ function demo () {
     const option = [
         {
             list_name: 'robot',
+            text: 'robot',
             icons: {
                 icon: {name: 'star'}
             },
-            current: true
+            current: true,
+            selected: true
         },
         {
             list_name: 'edit',
             icons: {
                 icon: {name: 'edit'}
-            }
+            },
+            selected: false
         }
     ]
     const options1 = [
@@ -5440,7 +5443,6 @@ module.exports = function (css, options) {
 };
 
 },{}],69:[function(require,module,exports){
-const bel = require('bel')
 const style_sheet = require('support-style-sheet')
 const {i_button, i_link} = require('datdot-ui-button')
 const button = i_button
@@ -5472,7 +5474,6 @@ function i_list (opts = {}, protocol) {
         try {
             if (mode.match(/single|multiple/)) {
                 list.setAttribute('role', 'listbox')
-                // make_select_list(body)
                 make_selector(body)
             }   
             if (mode.match(/dropdown/)) {
@@ -5488,7 +5489,7 @@ function i_list (opts = {}, protocol) {
 
         function make_selector (args) {
             args.forEach( (list, i) => {
-                const {list_name, text = undefined, role = 'option', icons, cover, current = false, selected = false, disabled = false, theme = {}} = list
+                const {list_name, text = undefined, role = 'option', icons = {}, cover, current = undefined, selected = false, disabled = false, theme = {}} = list
                 const {style = ``, props = {}} = theme
                 const {
                     size = 'var(--primary-size)', 
@@ -5528,7 +5529,9 @@ function i_list (opts = {}, protocol) {
                     name: list_name, 
                     body: text, 
                     role, icons, cover, 
-                    current: is_current, selected, disabled, 
+                    current: is_current, 
+                    selected, 
+                    disabled,
                     theme: {
                         style,
                         props: {
@@ -5637,43 +5640,24 @@ function i_list (opts = {}, protocol) {
             list.setAttribute('aria-expanded', !data)
         }
         function handle_mutiple_selected ({make, from, lists, selected}) {
-            // body.map((obj, index) => {
-            //     const state = obj.text === from
-            //     const make = message_maker(`${obj.text} / option / ${flow}`)
-            //     if (state) obj.selected = !obj.selected
-            //     const type = obj.selected ? 'selected' : 'unselected'
-            //     lists[index].setAttribute('aria-selected', obj.selected)
-            //     store_data = body
-            //     if (state) recipients[from]( make({type, data: obj.selected}) )
-            //     send( make({to: name, type, data: {mode, selected: store_data}}))
-            // })
-            Object.entries(recipients).forEach(([key, value], index) => {
-                if (key === from) {
-                    lists[index].setAttribute('aria-current', selected)
-                    recipients[from](make({type: 'selected', data: selected}))
-                    send( make({type: 'selected', data: {selected: from}}) )
-                    return recipients[from](make({type: 'current', data: selected}))
-                }
-                lists[index].removeAttribute('aria-current')
-                return recipients[key](make({type: 'current', data: !selected}))
-            }) 
+            const type = selected ? 'selected' : 'unselected'
+            recipients[from](make({type, data: selected}))
+            const message = make({type: 'selected', data: {selected: from}})
+            send( message )
         }
 
         function handle_single_selected ({make, from, lists, selected}) {
-            Object.entries(recipients).forEach(([key, value], index) => {
-                lists[index].setAttribute('aria-activedescendant', from)
-                lists[index].setAttribute('aria-selected', key === from)
-
-                if (key === from) {
-                    lists[index].setAttribute('aria-current', selected)
-                    recipients[from](make({type: 'selected', data: selected}))
-                    send( make({type: 'selected', data: {selected: from}}) )
-                    return recipients[from](make({type: 'current', data: selected}))
-                }
-                lists[index].removeAttribute('aria-current')
-                recipients[key](make({type: 'unselected', data: !selected}))
-                return recipients[key](make({type: 'current', data: !selected}))
-            }) 
+            lists.forEach( list => {
+                const label = list.firstChild.getAttribute('aria-label') 
+                const state = label === from
+                const type = state ? 'selected' : 'unselected'
+                const name = state ? from : label
+                recipients[name](make({type, data: state}))
+                recipients[name](make({type: 'current', data: state}))
+                list.setAttribute('aria-current', label === from)
+            })
+            const message = make({type: 'selected', data: {selected: from}})
+            send( message )
         }
         function handle_select_event ({from, to, data}) {
             const {selected} = data
@@ -5714,14 +5698,14 @@ function i_list (opts = {}, protocol) {
     const custom_style = theme ? theme.style : ''
     // set CSS variables
     if (theme && theme.props) {
-    var {
-        bg_color, bg_color_hover,
-        current_bg_color, current_bg_color_hover, disabled_bg_color,
-        width, height, border_width, border_style, border_opacity, border_color,
-        border_color_hover, border_radius, padding,  opacity,
-        shadow_color, offset_x, offset_y, blur, shadow_opacity,
-        shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
-    } = theme.props
+        var {
+            bg_color, bg_color_hover,
+            current_bg_color, current_bg_color_hover, disabled_bg_color,
+            width, height, border_width, border_style, border_opacity, border_color,
+            border_color_hover, border_radius, padding,  opacity,
+            shadow_color, offset_x, offset_y, blur, shadow_opacity,
+            shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
+        } = theme.props
     }
 
     const style = `
@@ -5821,7 +5805,7 @@ function i_list (opts = {}, protocol) {
 
     return widget()
 }
-},{"bel":46,"datdot-ui-button":11,"make-grid":70,"message-maker":71,"support-style-sheet":72}],70:[function(require,module,exports){
+},{"datdot-ui-button":11,"make-grid":70,"message-maker":71,"support-style-sheet":72}],70:[function(require,module,exports){
 arguments[4][8][0].apply(exports,arguments)
 },{"dup":8}],71:[function(require,module,exports){
 arguments[4][9][0].apply(exports,arguments)

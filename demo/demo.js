@@ -17,16 +17,19 @@ function demo () {
     const option = [
         {
             list_name: 'robot',
+            text: 'robot',
             icons: {
                 icon: {name: 'star'}
             },
-            current: true
+            current: true,
+            selected: true
         },
         {
             list_name: 'edit',
             icons: {
                 icon: {name: 'edit'}
-            }
+            },
+            selected: false
         }
     ]
     const options1 = [
