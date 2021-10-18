@@ -6,7 +6,7 @@ const message_maker = require('message-maker')
 module.exports = i_list
 
 function i_list (opts = {}, protocol) {
-    const {page = '*', flow = 'ui-list', name, body = [{text: 'no items'}], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
+    const {page = '*', flow = 'ui-list', name, body = [], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
     const recipients = []
     const make = message_maker(`${name} / ${flow} / i_list`)
     const message = make({type: 'ready'})
@@ -14,6 +14,8 @@ function i_list (opts = {}, protocol) {
     let is_expanded = !is_hidden ? !is_hidden : expanded
     const store_selected = []
     const {grid} = theme
+
+
     function widget () {
         const send = protocol( get )
         send(message)
@@ -28,7 +30,8 @@ function i_list (opts = {}, protocol) {
         try {
             if (mode.match(/single|multiple/)) {
                 list.setAttribute('role', 'listbox')
-                make_select_list(body)
+                // make_select_list(body)
+                make_selector(body)
             }   
             if (mode.match(/dropdown/)) {
                 list.setAttribute('role', 'menubar')
@@ -41,107 +44,9 @@ function i_list (opts = {}, protocol) {
         
         return list
 
-        function make_list () {
-            return body.map( (list, i) => {
-                const {list_name, text = undefined, role = 'link', url = '#', target, icon, cover, disabled = false, theme = {}} = list
-                const {style = ``, props = {}} = theme
-                const {
-                    size = `var(--primary-size)`, 
-                    size_hover = `var(--primary-size)`, 
-                    color = `var(--primary-color)`, 
-                    color_hover = `var(--primary-color-hover)`,     
-                    bg_color = 'var(--primary-bg-color)', 
-                    bg_color_hover = 'var(--primary-bg-color-hover)', 
-                    icon_fill = 'var(--primary-color)', 
-                    icon_fill_hover = 'var(--primary-color-hover)', 
-                    icon_size = 'var(--primary-icon-size)', 
-                    avatar_width = 'var(--primary-avatar-width)', 
-                    avatar_height = 'var(--primary-avatar-height)', 
-                    avatar_radius = 'var(--primary-avatar-radius)',
-                    disabled_color = 'var(--primary-disabled-color)',
-                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
-                    disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
-                } = props
-                if (role === 'link' ) {
-                    var item = i_link({
-                        page,
-                        name: list_name,
-                        body: text,
-                        role: 'menuitem',
-                        link: {
-                            url,
-                            target
-                        },
-                        icons: {
-                            icon
-                        },
-                        cover,
-                        disabled,
-                        theme: {
-                            style,
-                            props: {
-                                size,
-                                size_hover,
-                                color,
-                                color_hover,
-                                bg_color,
-                                bg_color_hover,
-                                icon_fill,
-                                icon_fill_hover,
-                                icon_size,
-                                avatar_width,
-                                avatar_height,
-                                avatar_radius,
-                                disabled_color,
-                                disabled_bg_color,
-                                disabled_icon_fill,
-                            },
-                            grid
-                        }
-                    }, button_protocol(list_name))
-                }
-
-                if (role === 'menuitem') {
-                    var item = i_button({
-                        name: list_name,
-                        body: text,
-                        role,
-                        icons: {
-                            icon
-                        },
-                        cover,
-                        disabled,
-                        theme: {
-                            style,
-                            props: {
-                                size,
-                                size_hover,
-                                color,
-                                color_hover,
-                                icon_fill,
-                                icon_fill_hover,
-                                icon_size,
-                                avatar_width,
-                                avatar_height,
-                                avatar_radius,
-                                disabled_color,
-                                disabled_icon_fill,
-                            },
-                            grid
-                        }
-                    }, button_protocol(list_name))
-                }
-                
-                const li = bel`<li role="none">${item}</li>`
-                if (disabled) li.setAttribute('disabled', disabled)
-                shadow.append(li)
-            })
-            
-        }
-        function make_select_list (args) {
-            return args.map( (option, i) => {
-                const {list_name, text, icon, list, cover, current = false, selected = false, disabled = false, theme = {}} = option
-                const is_current = mode === 'single-select' ? current : false
+        function make_selector (args) {
+            args.forEach( (list, i) => {
+                const {list_name, text = undefined, role = 'option', icons, cover, current = false, selected = false, disabled = false, theme = {}} = list
                 const {style = ``, props = {}} = theme
                 const {
                     size = 'var(--primary-size)', 
@@ -175,75 +80,113 @@ function i_list (opts = {}, protocol) {
                     opacity = '0'
                 } = props
 
-                const item = button(
-                {
-                    page, 
-                    name: list_name,
-                    body: text,
-                    cover,
-                    role: 'option',
-                    mode,
-                    icons: {
-                        icon,
-                        list
-                    },
-                    current: is_current, 
-                    selected,
-                    disabled,
-                    theme: {
-                        style,
-                        props: {
-                            size,
-                            size_hover,
-                            weight,
-                            color,
-                            color_hover,
-                            color_focus,
-                            bg_color,
-                            bg_color_hover,
-                            bg_color_focus,
-                            icon_size,
-                            icon_fill,
-                            icon_fill_hover,
-                            avatar_width,
-                            avatar_height,
-                            avatar_radius,
-                            current_size,
-                            current_color,
-                            current_weight,
-                            current_icon_size,
-                            current_icon_fill,
-                            current_list_selected_icon_size,
-                            current_list_selected_icon_fill,
-                            list_selected_icon_size,
-                            list_selected_icon_fill,
-                            list_selected_icon_fill_hover,
-                            disabled_color,
-                            disabled_bg_color,
-                            disabled_icon_fill,
-                            opacity
-                        },
-                        grid
-                    }
-                }, button_protocol(list_name))
-
-                // const li = (text === 'no items' ) 
-                // ? bel`<li role="listitem" data-option=${text}">${text}</li>`
-                // : bel`<li role="option" data-option=${text ? text : list_name}" aria-selected=${is_current ? is_current : selected}>${item}</li>`
-
+                const is_current = mode === 'single-select' ? current : false
+                const make_button = button({
+                    page,
+                    name: list_name, 
+                    body: text, 
+                    role, icons, cover, 
+                    current: is_current, selected, disabled, 
+                    theme: {style, props: {
+                        size, size_hover, weight, 
+                        color, color_hover, color_focus,
+                        bg_color, bg_color_hover, bg_color_focus,
+                        icon_size, icon_fill, icon_fill_hover,
+                        avatar_width, avatar_height, avatar_radius,
+                        current_size, current_color, current_weight,
+                        current_icon_size, current_icon_fill,
+                        current_list_selected_icon_size, current_list_selected_icon_fill,
+                        list_selected_icon_size, list_selected_icon_fill, list_selected_icon_fill_hover,
+                        disabled_color, disabled_bg_color, disabled_icon_fill,
+                        opacity
+                    }, 
+                    grid
+                }}, button_protocol(list_name))
+                
                 const li = document.createElement('li')
-                li.setAttribute('role', 'option')
-                li.setAttribute('data-option', text ? text : list_name)
-                li.setAttribute('aria-selected', is_current ? is_current : selected)
-                li.append(item)
-
+                li.dataset.option = text || list_name
+                li.setAttribute('aria-selected', is_current || selected)
                 if (is_current) li.setAttribute('aria-current', is_current)
                 if (disabled) li.setAttribute('disabled', disabled)
-                const option_list = text.toLowerCase().split(' ').join('-')
-                const make = message_maker(`${option_list} / option / ${flow} / widget`)
+                const make = message_maker(`${list_name} / option / ${flow} / widget`)
+                li.append(make_button)
+                shadow.append(li)
                 send( make({type: 'ready'}) )
+            })
+        }
+
+        function make_list () {
+            body.map( (list, i) => {
+                const {list_name, text = undefined, role = 'option', url = '#', target, icons, cover, disabled = false, theme = {}} = list
+                const {style = ``, props = {}} = theme
+                const {
+                    size = `var(--primary-size)`, 
+                    size_hover = `var(--primary-size)`, 
+                    color = `var(--primary-color)`, 
+                    color_hover = `var(--primary-color-hover)`,     
+                    bg_color = 'var(--primary-bg-color)', 
+                    bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    icon_fill = 'var(--primary-color)', 
+                    icon_fill_hover = 'var(--primary-color-hover)', 
+                    icon_size = 'var(--primary-icon-size)', 
+                    avatar_width = 'var(--primary-avatar-width)', 
+                    avatar_height = 'var(--primary-avatar-height)', 
+                    avatar_radius = 'var(--primary-avatar-radius)',
+                    disabled_color = 'var(--primary-disabled-color)',
+                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
+                    disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
+                } = props
+                if (role === 'link' ) {
+                    var item = i_link({
+                        page,
+                        name: list_name,
+                        body: text,
+                        role: 'menuitem',
+                        link: {
+                            url,
+                            target
+                        },
+                        icons,
+                        cover,
+                        disabled,
+                        theme: {
+                            style,
+                            props,
+                            grid
+                        }
+                    }, button_protocol(list_name))
+                }
+
+                if (role === 'menuitem') {
+                    var item = i_button({
+                        name: list_name,
+                        body: text,
+                        role,
+                        icons,
+                        cover,
+                        disabled,
+                        theme: {
+                            style,
+                            props: {
+                                size, size_hover,
+                                color, color_hover,
+                                bg_color, bg_color_hover,
+                                icon_fill, icon_fill_hover,
+                                icon_size,
+                                avatar_width, avatar_height, avatar_radius,
+                                disabled_color, disabled_bg_color, disabled_icon_fill
+                            },
+                            grid
+                        }
+                    }, button_protocol(list_name))
+                }
+                const li = document.createElement('li')
+                li.setAttribute('role', 'none')
+                if (disabled) li.setAttribute('disabled', disabled)
+                li.append(item)
                 shadow.append(li)
             })
+            
         }
         function handle_expanded_event (data) {
             list.setAttribute('aria-hidden', data)
