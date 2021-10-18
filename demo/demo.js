@@ -731,6 +731,10 @@ h2 {
 .content {
     padding: 2% 5%;
 }
+section {
+    display: grid;
+    gap: 8px;
+}
 .text, .icon {
     display: flex;
 }
