@@ -4131,15 +4131,13 @@ function demo () {
             icons: {
                 icon: {name: 'star'}
             },
-            current: true,
-            selected: true
+            current: true
         },
         {
             list_name: 'edit',
             icons: {
                 icon: {name: 'edit'}
             },
-            selected: false
         }
     ]
     const options1 = [
@@ -4231,7 +4229,7 @@ function demo () {
                 icon: {name: 'edit'},
             },
             cover: 'https://cdn.pixabay.com/photo/2016/02/27/06/43/cherry-blossom-tree-1225186_960_720.jpg',
-            selected: true,
+            // selected: true,
             disabled: true,
             theme: {
                 props: {
@@ -5641,8 +5639,12 @@ function i_list (opts = {}, protocol) {
         }
         function handle_mutiple_selected ({make, from, lists, selected}) {
             const type = selected ? 'selected' : 'unselected'
-            recipients[from](make({type, data: selected}))
             const message = make({type: 'selected', data: {selected: from}})
+            recipients[from](make({type, data: selected}))
+            lists.forEach( list => {
+                const label = list.firstChild.getAttribute('aria-label') 
+                if (label === from) list.setAttribute('aria-selected', selected)
+            })
             send( message )
         }
 
@@ -5654,7 +5656,8 @@ function i_list (opts = {}, protocol) {
                 const name = state ? from : label
                 recipients[name](make({type, data: state}))
                 recipients[name](make({type: 'current', data: state}))
-                list.setAttribute('aria-current', label === from)
+                list.setAttribute('aria-current', state)
+                list.setAttribute('aria-selected', state)
             })
             const message = make({type: 'selected', data: {selected: from}})
             send( message )
