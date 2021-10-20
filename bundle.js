@@ -5492,7 +5492,7 @@ function i_list (opts = {}, protocol) {
 
         function make_selector (args) {
             args.forEach( (list, i) => {
-                const {list_name, text = undefined, role = 'option', icons = {}, cover, current = undefined, selected = false, disabled = false, theme = {}} = list
+                const {list_name, address = undefined, text = undefined, role = 'option', icons = {}, cover, current = undefined, selected = false, disabled = false, theme = {}} = list
                 const {style = ``, props = {}} = theme
                 const {
                     size = 'var(--primary-size)', 
@@ -5556,6 +5556,7 @@ function i_list (opts = {}, protocol) {
                 }}, button_protocol(list_name))
 
                 const li = document.createElement('li')
+                if (address) li.dataset.address = address
                 li.dataset.option = text || list_name
                 li.setAttribute('aria-selected', is_current || selected)
                 if (is_current) li.setAttribute('aria-current', is_current)
