@@ -1768,32 +1768,41 @@ function i_button (opt, protocol) {
             if (is_selected) send(make({to: 'listbox', type: 'changed', data: {text: body, cover, icon} }))
         }
         function changed_event (data) {
-            const {text, cover, icon} = data
+            const {text, cover, icon, title} = data
+            // new element
             const new_text = make_element({name: 'span', classlist: 'text'})
             const new_avatar = make_element({name: 'span', classlist: 'avatar'})
+            // old element
+            const old_icon = shadow.querySelector('.icon')
+            const old_avatar = shadow.querySelector('.avatar')
+            const old_text = shadow.querySelector('.text')
             // change content for button or switch or tab
             if (role.match(/button|switch|tab/)) {
-                const old_icon = shadow.querySelector('.icon')
-                const old_avatar = shadow.querySelector('.avatar')
-                const old_text = shadow.querySelector('.text')
-                if (old_text) {
-                    if (text) old_text.textContent = text
+                el.setAttribute('aria-label', text || title)
+                if (text) {
+                    if (old_text) old_text.textContent = text
+                } else {
+                    if (old_text) old_text.remove()
                 }
                 if (cover) {
                     if (old_avatar) {
                         const img = old_avatar.querySelector('img')
-                        img.alt = text
+                        img.alt = text || title
                         img.src = cover
                     } else {
-                        new_avatar.append(make_img({src: cover, alt: text}))
+                        new_avatar.append(make_img({src: cover, alt: text || title}))
                         shadow.insertBefore(new_avatar, shadow.firstChild)
                     }
+                } else {
+                    if (old_avatar) old_avatar.remove()
                 }
                 if (icon) {
                     const new_icon = main_icon(icon)
                     if (old_icon) old_icon.parentNode.replaceChild(new_icon, old_icon)
                     else shadow.insertBefore(new_icon, shadow.firstChild)
-                } 
+                } else {
+                    if (old_icon) old_icon.remove()
+                }
             }
             // change content for listbox
             if (role.match(/listbox/)) {
@@ -2306,6 +2315,9 @@ function i_button (opt, protocol) {
     }
     :host(i-button) .option > .icon {
         ${make_grid(grid.option_icon)}
+    }
+    :host(i-button:hover) .option > .icon {
+        --icon-size: ${icon_size_hover ? icon_size_hover : 'var(--primary-icon-size-hover)'};
     }
     :host(i-button) .option > .avatar {
         ${make_grid(grid.option_avatar)}
@@ -5505,6 +5517,7 @@ function i_list (opts = {}, protocol) {
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
                     bg_color_focus = 'var(--primary-bg-color-focus)',
                     icon_size = 'var(--primary-icon-size)',
+                    icon_size_hover = 'var(--primary-icon-size_hover)',
                     icon_fill = 'var(--primary-icon-fill)',
                     icon_fill_hover = 'var(--primary-icon-fill-hover)',
                     avatar_width = 'var(--primary-avatar-width)', 
@@ -5542,7 +5555,7 @@ function i_list (opts = {}, protocol) {
                         size, size_hover, weight, 
                         color, color_hover, color_focus,
                         bg_color, bg_color_hover, bg_color_focus,
-                        icon_size, icon_fill, icon_fill_hover,
+                        icon_size, icon_size_hover, icon_fill, icon_fill_hover,
                         avatar_width, avatar_height, avatar_radius,
                         current_size, current_color, current_weight,
                         current_icon_size, current_icon_fill,
@@ -5581,7 +5594,8 @@ function i_list (opts = {}, protocol) {
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
                     icon_fill = 'var(--primary-color)', 
                     icon_fill_hover = 'var(--primary-color-hover)', 
-                    icon_size = 'var(--primary-icon-size)', 
+                    icon_size = 'var(--primary-icon-size)',
+                    icon_size_hover = 'var(--primary-icon-size-hover)',
                     avatar_width = 'var(--primary-avatar-width)', 
                     avatar_height = 'var(--primary-avatar-height)', 
                     avatar_radius = 'var(--primary-avatar-radius)',
@@ -5626,7 +5640,7 @@ function i_list (opts = {}, protocol) {
                                 color, color_hover,
                                 bg_color, bg_color_hover,
                                 icon_fill, icon_fill_hover,
-                                icon_size,
+                                icon_size, icon_size_hover,
                                 avatar_width, avatar_height, avatar_radius,
                                 disabled_color, disabled_bg_color, disabled_icon_fill,
                                 padding
