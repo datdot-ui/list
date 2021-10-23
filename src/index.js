@@ -136,6 +136,7 @@ function i_list (opts = {}, protocol) {
                     icon_fill_hover = 'var(--primary-color-hover)', 
                     icon_size = 'var(--primary-icon-size)',
                     icon_size_hover = 'var(--primary-icon-size-hover)',
+                    current_icon_size = 'var(--primary-current-icon-size)',
                     avatar_width = 'var(--primary-avatar-width)', 
                     avatar_height = 'var(--primary-avatar-height)', 
                     avatar_radius = 'var(--primary-avatar-radius)',
@@ -181,6 +182,7 @@ function i_list (opts = {}, protocol) {
                                 bg_color, bg_color_hover,
                                 icon_fill, icon_fill_hover,
                                 icon_size, icon_size_hover,
+                                current_icon_size,
                                 avatar_width, avatar_height, avatar_radius,
                                 disabled_color, disabled_bg_color, disabled_icon_fill,
                                 padding
