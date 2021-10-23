@@ -2138,10 +2138,10 @@ function i_button (opt, protocol) {
         --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
     }
     :host(i-button[aria-current="true"]) .icon,  :host(i-button[aria-current="true"]:hover) .icon {
-        --icon-size: ${current_icon_size || 'var(--current-icon-size)'};
+        --icon-size: ${current_icon_size ? current_icon_size : 'var(--current-icon-size)'};
     }
     :host(i-button[aria-current="true"]) g {
-        --icon-fill: ${current_icon_fill || 'var(--current-icon-fill)'};
+        --icon-fill: ${current_icon_fill ? current_icon_fill : 'var(--current-icon-fill)'};
     }
     :host(i-button[aria-current="true"]:focus) {
         --color: var(--color-focus);
@@ -2149,7 +2149,7 @@ function i_button (opt, protocol) {
     }
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]) .option > .icon, 
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]:hover) .option > .icon {
-        --icon-size: ${current_icon_size || 'var(--current-icon-size)'};
+        --icon-size: ${current_icon_size ? current_icon_size : 'var(--current-icon-size)'};
     }
     /*
     :host(i-button[role="option"][aria-current="true"][aria-selected="true"]) .option > .icon g,
@@ -5593,7 +5593,7 @@ function i_list (opts = {}, protocol) {
                     icon_fill_hover = 'var(--primary-color-hover)', 
                     icon_size = 'var(--primary-icon-size)',
                     icon_size_hover = 'var(--primary-icon-size-hover)',
-                    current_icon_size = 'var(--primary-current-icon-size)',
+                    current_icon_size = 'var(--current-icon-size)',
                     avatar_width = 'var(--primary-avatar-width)', 
                     avatar_height = 'var(--primary-avatar-height)', 
                     avatar_radius = 'var(--primary-avatar-radius)',
