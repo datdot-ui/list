@@ -18,7 +18,7 @@
     "widget",
     "list"
   ],
-  "author": "fionataeyang",
+  "author": "datdotorg",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/playproject-io/datdot-ui-list/issues"
@@ -30,8 +30,8 @@
   "dependencies": {
     "bel": "^6.0.0",
     "csjs-inject": "^1.0.1",
-    "datdot-terminal": "git+https://github.com/fionataeyang/datdot-terminal.git",
-    "datdot-ui-button": "git+https://github.com/fionataeyang/datdot-ui-button.git",
-    "datdot-ui-icon": "git+https://github.com/fionataeyang/datdot-ui-icon.git"
+    "datdot-terminal": "git+https://github.com/datdotorg/datdot-terminal.git",
+    "datdot-ui-button": "git+https://github.com/datdotorg/datdot-ui-button.git",
+    "datdot-ui-icon": "git+https://github.com/datdotorg/datdot-ui-icon.git"
   }
 }
