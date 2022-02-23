@@ -1,19 +1,46 @@
 const head = require('head')()
 const bel = require('bel')
 const csjs = require('csjs-inject')
-const message_maker = require('../src/node_modules/message-maker')
+const message_maker = require('message-maker')
 const make_grid = require('../src/node_modules/make-grid')
 
 // datdot-ui dependences
 const list = require('..')
 const terminal = require('datdot-terminal')
-const {i_button} = require('datdot-ui-button')
-const button = i_button
+const button = require('datdot-ui-button')
+
+var id = 0
 
 function demo () {
-    const recipients = []
-    const logs = terminal({mode: 'compact'}, protocol('logs'))
-    const make = message_maker('demo / demo.js')
+// ------------------------------------
+    const myaddress = `${__filename}-${id++}`
+    const inbox = {}
+    const outbox = {}
+    const recipients = {}
+    const names = {}
+    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
+
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+    function listen (msg) {
+        console.log('New message', { msg })
+        const { head, refs, type, data, meta } = msg // receive msg
+        inbox[head.join('/')] = msg                  // store msg
+        const [from] = head
+        // send back ack
+        const { notify, make, address } = names[from]
+        notify(make({ to: address, type: 'ack', refs: { 'cause': head } }))
+        // handle
+        recipients['logs'].notify(msg)
+        if (type === 'click') return click_event (from, role, data)
+        if (type.match(/selected/)) return change_event(data)
+    }
+// ------------------------------------
+    const logs = terminal({mode: 'compact'}, make_protocol('logs'))
     const option = [
         {
             list_name: 'robot',
@@ -240,7 +267,7 @@ function demo () {
                 }
             }
         }
-    }, protocol('terminal-select-list'))
+    }, make_protocol('terminal-select-list'))
     const single_select_list = list(
     {
         name: 'single-select-list', 
@@ -292,7 +319,7 @@ function demo () {
                 }
             }
         }
-    }, protocol('single-select-list'))
+    }, make_protocol('single-select-list'))
     const multiple_select_list = list(
     {
         name: 'multiple-select-list', 
@@ -331,7 +358,7 @@ function demo () {
                 }
             }
         }
-    }, protocol('multiple-select-list'))
+    }, make_protocol('multiple-select-list'))
     const dropdown_list = list(
     {
         name: 'dropdown-list',
@@ -366,7 +393,7 @@ function demo () {
                 // }
             }
         }
-    }, protocol('dropdown-list'))
+    }, make_protocol('dropdown-list'))
     const expanded = button(
     {
         name: 'expanded', 
@@ -377,7 +404,7 @@ function demo () {
                 width: '120px',
             }
         }
-    }, protocol('expanded'))
+    }, make_protocol('expanded'))
     const current_single_selected = options1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
     const current_multiple_selected = options2.filter( option => option.selected)
     const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
@@ -452,23 +479,9 @@ function demo () {
         recipients['logs']( make({to: from, type: 'triggered', data: {checked: state}}) )
         recipients['logs'](make({to: 'logs', type: 'layout-mode', data: {expanded: state}}))
     }
-    function protocol (name) {
-        return send => {
-            recipients[name] = send
-            return get
-        }
-    }
     function click_event (from, role, data) {
         if (role === 'switch') return switch_event(from, data)
         if (role === 'menuitem') return recipients['logs'](make({to: '*', type: 'triggered', data: {app: 'datdot', install: true}}))
-    }
-    function get (msg) {
-        const {head, type, data} = msg
-        const from = head[0].split('/')[0].trim()
-        const role = head[0].split(' / ')[1]
-        recipients['logs'](msg)
-        if (type === 'click') return click_event (from, role, data)
-        if (type.match(/selected/)) return change_event(data)
     }
 }
 

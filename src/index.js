@@ -1,23 +1,42 @@
 const style_sheet = require('support-style-sheet')
-const {i_button, i_link} = require('datdot-ui-button')
-const button = i_button
+const button = require('datdot-ui-button')
 const message_maker = require('message-maker')
 const make_grid = require('make-grid')
 module.exports = i_list
 
-function i_list (opts = {}, protocol) {
+var id = 0
+
+function i_list (opts = {}, parent_protocol) {
+// -----------------------------------
+    const myaddress = `${__filename}-${id++}`
+    const inbox = {}
+    const outbox = {}
+    const recipients = {}
+    const names = {}
+    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
+
+    const {notify, address} = parent_protocol(myaddress, listen)
+    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
+    notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
+
+    function listen (msg) {
+        const { head, refs, type, data, meta } = msg // receive msg
+        inbox[head.join('/')] = msg                  // store msg
+        const [from, to] = head
+        console.log('New message', { from, name: recipients[from].name, msg })
+        // handle
+        if (from === 'menuitem') return handle_click_event(msg)
+        if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
+        if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
+    }
+// -----------------------------------
     const {page = '*', flow = 'ui-list', name, body = [], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
-    const recipients = []
-    const make = message_maker(`${name} / ${flow} / i_list`)
-    const message = make({type: 'ready'})
     let is_hidden = hidden
     let is_expanded = !is_hidden ? !is_hidden : expanded
     const store_selected = []
     const {grid} = theme
 
     function widget () {
-        const send = protocol( get )
-        send(message)
         const list = document.createElement('i-list')
         const shadow = list.attachShadow({mode: 'closed'})
         list.ariaHidden = is_hidden
@@ -26,6 +45,7 @@ function i_list (opts = {}, protocol) {
         list.ariaExpanded = is_expanded
         list.dataset.mode = mode
         style_sheet(shadow, style)
+        const { make } = recipients['parent']
         try {
             if (mode.match(/single|multiple/)) {
                 list.setAttribute('role', 'listbox')
@@ -35,9 +55,9 @@ function i_list (opts = {}, protocol) {
                 list.setAttribute('role', 'menubar')
                 make_list()
             }
-            if (body.length === 0) send(make({type: 'error', data: 'body no items'}))
+            if (body.length === 0) notify(make({ to: address, type: 'error', data: { text: 'body no items', opts } }))
         } catch(e) {
-            send(make({type: 'error', data: {message: 'something went wrong', opts }}))
+            notify(make({ to: address, type: 'error', data: {text: 'something went wrong', opts }}))
         }
         
         return list
@@ -106,7 +126,7 @@ function i_list (opts = {}, protocol) {
                         opacity
                     }, 
                     grid
-                }}, button_protocol(list_name))
+                }}, make_protocol(list_name))
 
                 const li = document.createElement('li')
                 if (address) li.dataset.address = address
@@ -117,7 +137,7 @@ function i_list (opts = {}, protocol) {
                 const make = message_maker(`${list_name} / option / ${flow} / widget`)
                 li.append(make_button)
                 shadow.append(li)
-                send( make({type: 'ready'}) )
+                notify(make({ to: address, type: 'ready' }))
             })
         }
 
@@ -163,7 +183,7 @@ function i_list (opts = {}, protocol) {
                             props,
                             grid
                         }
-                    }, button_protocol(list_name))
+                    }, make_protocol(list_name))
                 }
 
                 if (role === 'menuitem') {
@@ -189,7 +209,7 @@ function i_list (opts = {}, protocol) {
                             },
                             grid
                         }
-                    }, button_protocol(list_name))
+                    }, make_protocol(list_name))
                 }
                 const li = document.createElement('li')
                 li.setAttribute('role', 'none')
@@ -203,63 +223,43 @@ function i_list (opts = {}, protocol) {
             list.setAttribute('aria-hidden', data)
             list.setAttribute('aria-expanded', !data)
         }
-        function handle_mutiple_selected ({make, from, lists, selected}) {
+        function handle_mutiple_selected ({from, lists, selected}) {
             const type = selected ? 'selected' : 'unselected'
-            const message = make({type: 'selected', data: {selected: from}})
-            recipients[from](make({type, data: selected}))
+            const { notify, address, make } = recipients[from]
+            notify(make({ to: address, type, data: { selected } }))
             lists.forEach( list => {
                 const label = list.firstChild.getAttribute('aria-label') 
                 if (label === from) list.setAttribute('aria-selected', selected)
             })
-            send( message )
+            notify(make({type: 'selected', data: {selected: from}}))
         }
 
-        function handle_single_selected ({make, from, lists, selected}) {
+        function handle_single_selected ({from, lists, selected}) {
             lists.forEach( list => {
                 const label = list.firstChild.getAttribute('aria-label') 
                 const state = label === from
                 const type = state ? 'selected' : 'unselected'
                 const name = state ? from : label
-                recipients[name](make({type, data: state}))
-                recipients[name](make({type: 'current', data: state}))
+                const { notify, address, make } = recipients[name]
+                notify(make({ to: address, type, data: { state } }))
+                notify(make({ to: address, type: 'current', data: { state }}))
                 list.setAttribute('aria-current', state)
                 list.setAttribute('aria-selected', state)
             })
-            const message = make({type: 'selected', data: {selected: from}})
-            send( message )
+            notify(make({ to: address, type: 'selected', data: { selected: from } }))
         }
         function handle_select_event ({from, to, data}) {
             const {selected} = data
             // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
             const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
-            const make = message_maker(`${from} / option / ${flow}`)
-            if (mode === 'single-select')  handle_single_selected({make, from, lists, selected})
-            if (mode === 'multiple-select') handle_mutiple_selected({make, from, lists, selected})
+            if (mode === 'single-select')  handle_single_selected({from, lists, selected})
+            if (mode === 'multiple-select') handle_mutiple_selected({from, lists, selected})
             
-        }
-        function button_protocol (name) {
-            return (send) => {
-                recipients[name] = send
-                return get
-            }
         }
         function handle_click_event(msg) {
             const {head, type, data} = msg
-            const role = head[0].split(' / ')[1]
-            const from = head[0].split(' / ')[0]
-            const make = message_maker(`${from} / ${role} / ${flow}`)
-            const message = make({to: '*', type, data})
-            send(message)
-        }
-        function get (msg) {
-            const {head, refs, type, data} = msg
-            const to = head[1]
-            const id = head[2]
-            const role = head[0].split(' / ')[1]
-            const from = head[0].split(' / ')[0]
-            if (role === 'menuitem') return handle_click_event(msg)
-            if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
-            if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
+            const [from] = head
+            notify(make({to: address, type, data}))
         }
     }
 

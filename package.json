@@ -26,12 +26,14 @@
   "homepage": "https://github.com/datdot-ui/list#readme",
   "devDependencies": {
     "budo": "^11.6.4",
+    "browserify": "^17.0.0",
     "datdot-terminal": "github:datdot-ui/terminal#v0.0.0-alpha"
   },
   "dependencies": {
     "bel": "^6.0.0",
     "csjs-inject": "^1.0.1",
     "datdot-ui-button": "github:datdot-ui/button#v0.0.0-alpha",
-    "datdot-ui-icon": "github:datdot-ui/icon#v0.0.0-alpha"
+    "datdot-ui-icon": "github:datdot-ui/icon#v0.0.0-alpha",
+    "message-maker": "github:datdotorg/message-maker"
   }
 }
