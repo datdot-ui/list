@@ -4339,7 +4339,7 @@ function i_list (opts = {}, parent_protocol) {
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
     }
 // -----------------------------------
-    const {page = '*', flow = 'ui-list', name, body = [], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
+    const {name, body = [], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
     let is_hidden = hidden
     let is_expanded = !is_hidden ? !is_hidden : expanded
     const store_selected = []
@@ -4411,7 +4411,6 @@ function i_list (opts = {}, parent_protocol) {
 
                 const is_current = mode === 'single-select' ? current : false
                 const make_button = button({
-                    page,
                     name: list_name, 
                     body: text, 
                     role, icons, cover, 
@@ -4443,7 +4442,6 @@ function i_list (opts = {}, parent_protocol) {
                 li.setAttribute('aria-selected', is_current || selected)
                 if (is_current) li.setAttribute('aria-current', is_current)
                 if (disabled) li.setAttribute('disabled', disabled)
-                const make = message_maker(`${list_name} / option / ${flow} / widget`)
                 li.append(make_button)
                 shadow.append(li)
                 notify(make({ to: address, type: 'ready' }))
@@ -4476,7 +4474,6 @@ function i_list (opts = {}, parent_protocol) {
                 } = props
                 if (role === 'link' ) {
                     var item = i_link({
-                        page,
                         name: list_name,
                         body: text,
                         role: 'menuitem',
