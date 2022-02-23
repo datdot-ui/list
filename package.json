@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/playproject-io/datdot-ui-list#readme",
   "devDependencies": {
+    "browserify": "^17.0.0",
     "budo": "^11.6.4"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "csjs-inject": "^1.0.1",
     "datdot-terminal": "git+https://github.com/datdotorg/datdot-terminal.git",
     "datdot-ui-button": "git+https://github.com/datdotorg/datdot-ui-button.git",
-    "datdot-ui-icon": "git+https://github.com/datdotorg/datdot-ui-icon.git"
+    "datdot-ui-icon": "git+https://github.com/datdotorg/datdot-ui-icon.git",
+    "message-maker": "github:datdotorg/message-maker"
   }
 }
