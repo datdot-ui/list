@@ -34,10 +34,11 @@ function demo () {
         inbox[head.join('/')] = msg                  // store msg
         const [from] = head
         // send back ack
-        const { notify, make, address } = names[from]
-        notify(make({ to: address, type: 'ack', refs: { 'cause': head } }))
+        const { notify: from_notify, make: from_make, address: from_address } = names[from]
+        from_notify(from_make({ to: from_address, type: 'ack', refs: { 'cause': head } }))
         // handle
-        recipients['logs'].notify(msg)
+        const { notify: logs_notify, make: logs_make, address: logs_address } = names[logs]
+        logs_notify(logs_make({ to: logs_address, type, data }))
         if (type === 'click') return click_event (from, role, data)
         if (type.match(/selected/)) return change_event(data)
     }
@@ -4327,6 +4328,13 @@ function i_list (opts = {}, parent_protocol) {
     const {notify, address} = parent_protocol(myaddress, listen)
     names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
     notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
+
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
 
     function listen (msg) {
         const { head, refs, type, data, meta } = msg // receive msg

@@ -19,6 +19,13 @@ function i_list (opts = {}, parent_protocol) {
     names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
     notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
 
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+
     function listen (msg) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
