@@ -30,7 +30,7 @@ function i_list (opts = {}, parent_protocol) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
         const [from, to] = head
-        console.log('New message', { from, name: recipients[from].name, msg })
+        console.log('New message', { from, name: names[from].name, msg })
         // handle
         if (from === 'menuitem') return handle_click_event(msg)
         if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
@@ -229,7 +229,7 @@ function i_list (opts = {}, parent_protocol) {
         }
         function handle_mutiple_selected ({from, lists, selected}) {
             const type = selected ? 'selected' : 'unselected'
-            const { notify, address, make } = recipients[from]
+            const { notify, address, make } = names[from]
             notify(make({ to: address, type, data: { selected } }))
             lists.forEach( list => {
                 const label = list.firstChild.getAttribute('aria-label') 

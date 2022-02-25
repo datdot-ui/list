@@ -37,7 +37,7 @@ function demo () {
         const { notify: from_notify, make: from_make, address: from_address } = names[from]
         from_notify(from_make({ to: from_address, type: 'ack', refs: { 'cause': head } }))
         // handle
-        const { notify: logs_notify, make: logs_make, address: logs_address } = names[logs]
+        const { notify: logs_notify, make: logs_make, address: logs_address } = recipients['logs']
         logs_notify(logs_make({ to: logs_address, type, data }))
         if (type === 'click') return click_event (from, role, data)
         if (type.match(/selected/)) return change_event(data)
@@ -478,13 +478,16 @@ function demo () {
     }
     function switch_event (from, data) {
         const state = !data
-        recipients[from](make({type: 'switched', data: state}))
-        recipients['logs']( make({to: from, type: 'triggered', data: {checked: state}}) )
-        recipients['logs'](make({to: 'logs', type: 'layout-mode', data: {expanded: state}}))
+        const { address: from_address, notify: from_notify, make: from_make } = names[from]
+        from_notify(from_make({ to: from_address, type: 'switched', data: state}))
+        const { address: logs_address, notify: logs_notify, make: logs_make } = names['logs']
+        logs_notify(logs_make({to: logs_address, type: 'triggered', data: {checked: state}}) )
+        logs_notify(logs_make({to: logs_address, type: 'layout-mode', data: {expanded: state}}))
     }
     function click_event (from, role, data) {
+        const { address: logs_address, notify: logs_notify, make: logs_make } = names['logs']
         if (role === 'switch') return switch_event(from, data)
-        if (role === 'menuitem') return recipients['logs'](make({to: '*', type: 'triggered', data: {app: 'datdot', install: true}}))
+        if (role === 'menuitem') return logs_notify(logs_make({to: logs_address, type: 'triggered', data: {app: 'datdot', install: true}}))
     }
 }
 
@@ -807,7 +810,7 @@ section {
 
 document.body.append(demo())
 }).call(this)}).call(this,"/demo/demo.js")
-},{"..":53,"../src/node_modules/make-grid":54,"bel":4,"csjs-inject":7,"datdot-terminal":24,"datdot-ui-button":30,"head":2,"message-maker":49}],2:[function(require,module,exports){
+},{"..":48,"../src/node_modules/make-grid":49,"bel":4,"csjs-inject":7,"datdot-terminal":24,"datdot-ui-button":29,"head":2,"message-maker":44}],2:[function(require,module,exports){
 module.exports = head
 
 function head (lang = 'UTF-8', title = 'List - DatDot UI') {
@@ -1057,7 +1060,7 @@ module.exports = hyperx(belCreateElement, {comments: true})
 module.exports.default = module.exports
 module.exports.createElement = belCreateElement
 
-},{"./appendChild":3,"hyperx":51}],5:[function(require,module,exports){
+},{"./appendChild":3,"hyperx":46}],5:[function(require,module,exports){
 (function (global){(function (){
 'use strict';
 
@@ -1076,7 +1079,7 @@ function csjsInserter() {
 module.exports = csjsInserter;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"csjs":10,"insert-css":52}],6:[function(require,module,exports){
+},{"csjs":10,"insert-css":47}],6:[function(require,module,exports){
 'use strict';
 
 module.exports = require('csjs/get-css');
@@ -1554,26 +1557,60 @@ function scopify(css, ignores) {
 }
 
 },{"./regex":20,"./replace-animations":21,"./scoped-name":22}],24:[function(require,module,exports){
+(function (__filename){(function (){
 const bel = require('bel')
 const style_sheet = require('support-style-sheet')
 const message_maker = require('message-maker')
 const make_grid = require('make-grid')
 const {int2hsla, str2hashint} = require('generator-color')
 const i_footer = require('footer')
-const {i_button} = require('datdot-ui-button')
+const i_button = require('datdot-ui-button')
+
+var id = 0
 
 module.exports = logs
 
-function logs ({name = 'terminal', mode = 'compact', expanded = false, init = 15, limit = 15}, protocol) {
+function logs (opts, parent_protocol) {
+    const {name = 'terminal', mode = 'compact', expanded = false, init = 15, limit = 15} = opts
     let is_expanded = expanded
     let types = {}
     let range = init
     let store_msg = []
     let len = store_msg.length
-    const recipients = []
-    const send = protocol(get)
-    const make = message_maker(`${name} / index.js`)
-    const message = make({to: name, type: 'ready', refs: ['old_logs', 'new_logs']})
+// --------------------------------
+    const myaddress = `${__filename}-${id++}`
+    const inbox = {}
+    const outbox = {}
+    const recipients = {}
+    const names = {}
+    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
+    
+    const {notify, address} = parent_protocol(myaddress, listen)
+    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
+    notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
+    
+    function listen (msg) {
+        console.log('New message', { msg })
+        const { head, refs, type, data, meta } = msg // receive msg
+        inbox[head.join('/')] = msg                  // store msg
+        const [from, to] = head
+        make_logs(msg)
+        //handle
+        if (type === 'click') handle_load_more(store_msg)
+        if (type.match(/messages-count/)) return
+        if (type === 'layout-mode') return handle_change_layout(data)
+        if (type === 'selected') return handle_selected(data.selected)
+        if (type === 'search-filter') return handle_search_filter(data.letter)
+        if (type === 'cleared-search') return handle_search_filter(data)
+    }
+
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+// --------------------------------
     const el = document.createElement('i-terminal')
     const shadow = el.attachShadow({mode: 'closed'})
     const container = document.createElement('div')
@@ -1587,9 +1624,8 @@ function logs ({name = 'terminal', mode = 'compact', expanded = false, init = 15
                 width: '50vw',
             }
         }
-    }, load_more_protocol('load-more'))
-    const footer = i_footer({name}, footer_protocol(`${name}-footer`))
-    send(message)
+    }, make_protocol('load-more'))
+    const footer = i_footer({name}, make_protocol(`${name}-footer`))
     container.classList.add('container')
     i_logs.setAttribute('aria-label', mode)
     container.append(i_logs, load_more)
@@ -1745,39 +1781,6 @@ function logs ({name = 'terminal', mode = 'compact', expanded = false, init = 15
         range = start + limit
         args.filter( (msg, index) => index >= start && index < (start + limit))
             .forEach( msg => add_log(msg) )
-    }
-
-    function load_more_protocol (name) {
-        return send => {
-            recipients[name] = send
-            return load_more_get
-        }   
-    }
-    function load_more_get (msg) {
-        const {head, refs, type, data, meta} = msg
-        const from = head[0].split('/')[0].trim()
-        if (type === 'click') handle_load_more(store_msg)
-    }
-    function footer_protocol (name) {
-        return send => {
-            recipients[name] = send
-            return footer_get
-        }   
-    }
-    // make i-footer not count into logs list
-    function footer_get (msg) {
-        const {head, refs, type, data, meta} = msg
-        const from = head[0].split('/')[0].trim()
-        if (type.match(/messages-count/)) return
-        if (type === 'layout-mode') return handle_change_layout(data)
-        if (type === 'selected') return handle_selected(data.selected)
-        if (type === 'search-filter') return handle_search_filter(data.letter)
-        if (type === 'cleared-search') return handle_search_filter(data)
-    }
-    function get (msg) {
-        const {head, refs, type, data, meta} = msg
-        const from = head[0].split('/')[0].trim()
-        make_logs(msg)
     }
 }
 
@@ -2047,27 +2050,60 @@ mark.current {
     }
 }
 `
-},{"bel":4,"datdot-ui-button":30,"footer":25,"generator-color":26,"make-grid":27,"message-maker":28,"support-style-sheet":29}],25:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/datdot-terminal/src/index.js")
+},{"bel":4,"datdot-ui-button":29,"footer":25,"generator-color":26,"make-grid":27,"message-maker":44,"support-style-sheet":28}],25:[function(require,module,exports){
+(function (__filename){(function (){
 const bel = require('bel')
 const style_sheet = require('support-style-sheet')
-const {i_button} = require('datdot-ui-button')
+const i_button = require('datdot-ui-button')
 const i_dropdown = require('datdot-ui-dropdown')
 const message_maker = require('message-maker')
 const make_grid = require('./make-grid')
 
+var id = 0
+
 module.exports = footer
 
-function footer (opts = {}, protocol) {
+function footer (opts = {}, parent_protocol) {
+// --------------------------------------------
+    const myaddress = `${__filename}-${id++}`
+    const inbox = {}
+    const outbox = {}
+    const recipients = {}
+    const names = {}
+    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
+
+    const {notify, address} = parent_protocol(myaddress, listen)
+    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
+    notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
+
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+    
+    function listen (msg) {
+        console.log('New message', { msg })
+        const { head, refs, type, data, meta } = msg // receive msg
+        inbox[head.join('/')] = msg                  // store msg
+        const [from, to] = head
+        // handle
+        const { notify, address, make } = recipients['parent']
+        if (type.match(/ready|click|changed|selected|unselected/)) notify(make({ to: address, type, data }))
+        if (type === 'messages-count') return num.textContent = data
+        if (type === 'click') return click_event (from, role, data)
+    }
+
+// --------------------------------------------
     const {flow = 'i-footer', name, theme = {}} = opts
-    const recipients = []
     const make = message_maker(`${name} / ${flow}`)
 
     function widget () {
-        const send = protocol(get)
         const footer = document.createElement('i-footer')
         const shadow = footer.attachShadow({mode: 'closed'})
         footer.setAttribute('aria-label', `${name}-footer`)
-        send(make({type: 'ready'}))
         style_sheet(shadow, style)
         const theme_option = {
             message: {
@@ -2099,7 +2135,7 @@ function footer (opts = {}, protocol) {
                     padding: '4px'
                 }
             }
-        }, footer_protocol('clear-filter'))
+        }, make_protocol('clear-filter'))
         const search = bel`<div class="search">${filter}${clear}</div>`
         const expanded = i_button(
         {
@@ -2111,7 +2147,7 @@ function footer (opts = {}, protocol) {
                     ...theme_option.button
                 }
             }
-        }, footer_protocol('expanded'))
+        }, make_protocol('expanded'))
 
         // option for terminal-selector 
         const terminal_option = 
@@ -2153,7 +2189,7 @@ function footer (opts = {}, protocol) {
             }
         }
 
-        const terminal_selector = i_dropdown(terminal_option, footer_protocol(terminal_option.name))
+        const terminal_selector = i_dropdown(terminal_option, make_protocol(terminal_option.name))
         const num = bel`<span>0</span>`
         const total = bel`<span class="total">All messages: ${num}</span>`
         const actions = bel`<div class="actions">${search}${terminal_selector}${expanded}</div>`
@@ -2208,20 +2244,6 @@ function footer (opts = {}, protocol) {
             if (role === 'listbox') return selector_event(from, data)
             if (from === 'clear-filter') return clear_input_event()
         }   
-        function footer_protocol (name) {
-            return send => {
-                recipients[name] = send
-                return get
-            }
-        }
-        function get (msg) {
-            const {head, type, data} = msg
-            const from = head[0].split('/')[0].trim()
-            const role = head[0].split(' / ')[1]
-            if (type.match(/ready|click|changed|selected|unselected/)) send(msg)
-            if (type === 'messages-count') return num.textContent = data
-            if (type === 'click') return click_event (from, role, data)
-        }
     }
     
     const style = `
@@ -2298,7 +2320,8 @@ function footer (opts = {}, protocol) {
     `
     return widget()
 }
-},{"./make-grid":27,"bel":4,"datdot-ui-button":30,"datdot-ui-dropdown":37,"message-maker":28,"support-style-sheet":29}],26:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-terminal@1d03cc5ee47906a79726a4884cd75cf8ff8c6c4c/node_modules/datdot-terminal/src/node_modules/footer.js")
+},{"./make-grid":27,"bel":4,"datdot-ui-button":29,"datdot-ui-dropdown":35,"message-maker":44,"support-style-sheet":28}],26:[function(require,module,exports){
  module.exports = {int2hsla, str2hashint}
  function int2hsla (i) { return `hsla(${i % 360}, 100%, 70%, 1)` }
  function str2hashint (str) {
@@ -2387,15 +2410,6 @@ function make_grid (opts = {}) {
     }
 }
 },{}],28:[function(require,module,exports){
-module.exports = function message_maker (from) {
-    let msg_id = 0
-    return function make ({to, type, data = null, refs = []}) {
-        const stack = (new Error().stack.split('\n').slice(2).filter(x => x.trim()))
-        const message = { head: [from, to, ++msg_id], refs, type, data, meta: { stack }}
-        return message
-    }
-}
-},{}],29:[function(require,module,exports){
 module.exports = support_style_sheet
 function support_style_sheet (root, style) {
     return (() => {
@@ -2411,14 +2425,17 @@ function support_style_sheet (root, style) {
         }
     })()
 }
-},{}],30:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 (function (__filename){(function (){
 const style_sheet = require('support-style-sheet')
 const message_maker = require('message-maker')
 const make_img = require('make-image')
 const make_element = require('make-element')
-const {main_icon, select_icon, list_icon} = require('make-icon')
 const make_grid = require('make-grid')
+const i_icon = require('datdot-ui-icon')
+
+var id = 0
+var icon_count = 0
 
 module.exports = i_button
 
@@ -2435,15 +2452,37 @@ function i_button (opts, parent_protocol) {
     names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
     notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
 
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+
     function listen (msg) {
-        console.log('New message', { msg })
+        const { head, refs, type, data, meta } = msg // receive msg
+        inbox[head.join('/')] = msg                  // store msg
+        const [from, to, msg_id] = head
+        console.log('New message', { from, msg })
+        // toggle
+        if (type.match(/switched/)) return switched_event(data)
+        // dropdown
+        if (type.match(/expanded/)) return expanded_event(data)
+        if (type.match(/collapsed/)) return collapsed_event(data)
+        // tab, checkbox
+        if (type.match(/tab-selected/)) return tab_selected_event(data)
+        // option
+        if (type.match(/selected|unselected/)) return list_selected_event(data)
+        if (type.match(/changed/)) return changed_event(data)
+        if (type.match(/current/)) {
+            is_current = data
+            return set_attr({aria: 'current', prop: is_current})
+        }
     }
 //-------------------------------------------------
-    const {page = "*", flow = 'ui-button', name, role = 'button', controls, body = '', icons = {}, cover, classlist = null, mode = '', state, expanded = undefined, current = undefined, selected = false, checked = false, disabled = false, theme = {}} = opts
-    const {icon, select = {}, list = {}} = icons
-    const make_icon = icon ? main_icon(icon) : undefined
-    if (role === 'listbox') var make_select_icon = select_icon(select)
-    if (role === 'option') var make_list_icon = list_icon(list)
+    const {name, role = 'button', controls, body = '', icons = {}, cover, classlist = null, mode = '', state, expanded = undefined, current = undefined, selected = false, checked = false, disabled = false, theme = {}} = opts
+    const {icon} = icons
+    const main_icon = i_icon({ name: icon?.name, path: icon?.path}, make_protocol(`${icon?.name}-${icon_count++}`))
     let is_current = current
     let is_checked = checked
     let is_disabled = disabled
@@ -2508,12 +2547,12 @@ function i_button (opts, parent_protocol) {
 
         // make element to append into shadowDOM
         function append_items() {           
-            const items = [make_icon, add_cover, add_text]
+            const items = [main_icon, add_cover, add_text]
             const target = role === 'listbox' ? listbox : role === 'option' ?  option : shadow
             // list of listbox or dropdown menu
-            if (role.match(/option/)) shadow.append(make_list_icon, option)
+            if (role.match(/option/)) shadow.append(i_icon({ name: 'check'},  make_protocol(`check-${icon_count++}`)), option)
             // listbox or dropdown button
-            if (role.match(/listbox/)) shadow.append(make_select_icon, listbox)
+            if (role.match(/listbox/)) shadow.append(i_icon({ name: 'arrow-down' }, make_protocol(`arrow-down-${icon_count++}`)), listbox)
             items.forEach( item => {
                 if (item === undefined) return
                 target.append(item)
@@ -2581,7 +2620,7 @@ function i_button (opts, parent_protocol) {
                     if (old_avatar) old_avatar.remove()
                 }
                 if (icon) {
-                    const new_icon = main_icon(icon)
+                    const new_icon = i_icon({ name: icon.name, path: icon.path}, make_protocol(`${icon.name}-${icon_count++}`))
                     if (old_icon) old_icon.parentNode.replaceChild(new_icon, old_icon)
                     else shadow.insertBefore(new_icon, shadow.firstChild)
                 } else {
@@ -2592,7 +2631,7 @@ function i_button (opts, parent_protocol) {
             if (role.match(/listbox/)) {
                 listbox.innerHTML = ''
                 if (icon) {
-                    const new_icon = main_icon(icon)
+                    const new_icon = i_icon({ name: icon.name, path: icon.path}, make_protocol(`${icon.name}-${icon_count++}`))
                     if (role.match(/listbox/)) listbox.append(new_icon)
                 }
                 if (cover) {
@@ -2633,24 +2672,6 @@ function i_button (opts, parent_protocol) {
             if (role === 'option') {
                 is_selected = !is_selected
                 return notify(make({ to: address, type, data: {name, selected: is_selected, content: is_selected ? {text: body, cover, icon} : '' } }) )
-            }
-        }
-        // protocol get msg
-        function get (msg) {
-            const { head, refs, type, data } = msg
-            // toggle
-            if (type.match(/switched/)) return switched_event(data)
-            // dropdown
-            if (type.match(/expanded/)) return expanded_event(data)
-            if (type.match(/collapsed/)) return collapsed_event(data)
-            // tab, checkbox
-            if (type.match(/tab-selected/)) return tab_selected_event(data)
-            // option
-            if (type.match(/selected|unselected/)) return list_selected_event(data)
-            if (type.match(/changed/)) return changed_event(data)
-            if (type.match(/current/)) {
-                is_current = data
-                return set_attr({aria: 'current', prop: is_current})
             }
         }
     }
@@ -3107,7 +3128,7 @@ function i_button (opts, parent_protocol) {
     return widget()
 }
 }).call(this)}).call(this,"/node_modules/datdot-ui-button/src/index.js")
-},{"make-element":31,"make-grid":32,"make-icon":33,"make-image":34,"message-maker":35,"support-style-sheet":36}],31:[function(require,module,exports){
+},{"datdot-ui-icon":38,"make-element":30,"make-grid":31,"make-image":32,"message-maker":33,"support-style-sheet":34}],30:[function(require,module,exports){
 module.exports = make_element
 
 function make_element({name = '', classlist = null, role }) {
@@ -3128,30 +3149,9 @@ function make_element({name = '', classlist = null, role }) {
 }
 
 
-},{}],32:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
-},{"dup":27}],33:[function(require,module,exports){
-const i_icon = require('datdot-ui-icon')
-
-module.exports = {main_icon, select_icon, list_icon}
-
-function main_icon ({name, path}) {
-    const el = i_icon({name, path})
-    return el
-}
-
-function select_icon ({name = 'arrow-down', path}) {
-    const el =  i_icon({name, path})
-    return el
-}
-
-function list_icon ({name = 'check', path} ) {
-    const el =  i_icon({name, path})
-    return el
-}
-
-
-},{"datdot-ui-icon":42}],34:[function(require,module,exports){
+},{"dup":27}],32:[function(require,module,exports){
 module.exports = img
 
 function img ({src, alt}) {
@@ -3160,25 +3160,62 @@ function img ({src, alt}) {
     img.setAttribute('alt', alt)
     return img
 }
-},{}],35:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
+module.exports = function message_maker (from) {
+    let msg_id = 0
+    return function make ({to, type, data = null, refs = []}) {
+        const stack = (new Error().stack.split('\n').slice(2).filter(x => x.trim()))
+        const message = { head: [from, to, ++msg_id], refs, type, data, meta: { stack }}
+        return message
+    }
+}
+},{}],34:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],36:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],37:[function(require,module,exports){
+},{"dup":28}],35:[function(require,module,exports){
+(function (__filename){(function (){
 const style_sheet = require('support-style-sheet')
 const message_maker = require('message-maker')
-const make_button = require('make-button')
+const i_button = require('datdot-ui-button')
 const make_list = require('make-list')
+
+var id = 0
 
 module.exports = i_dropdown
 
-function i_dropdown ({page = '*', flow = 'ui-dropdown', name, options = {}, expanded = false, disabled = false, mode = 'single-select', theme}, protocol) {
-    const {button = {}, list = {}} = options
-    const recipients = []
-    const make = message_maker(`${name} / ${flow} / ${page}`)
-    const message = make({type: 'ready'})
-    const list_name = `${name}-list`
+function i_dropdown (opts, parent_protocol) {
+// -----------------------------------------
+    const myaddress = `${__filename}-${id++}`
+    const inbox = {}
+    const outbox = {}
+    const recipients = {}
+    const names = {}
+    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
 
+    const {notify, address} = parent_protocol(myaddress, listen)
+    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
+    notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
+
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+    
+    function listen (msg) {
+        const { head, refs, type, data, meta } = msg // receive msg
+        inbox[head.join('/')] = msg                  // store msg
+        const [from, to, msg_id] = head
+        console.log('New message', { from, msg })
+        // handle
+        const { notify, address, make } = recipients['parent']
+        notify(make({ to: address, type, data }))
+        if (type.match(/expanded|collapsed/)) return handle_expanded_event( data)
+        if (type.match(/selected/)) return handle_select_event(data)
+    }
+// -----------------------------------------
+    const {page = '*', flow = 'ui-dropdown', name, options: {button = {}, list = {}}, expanded = false, disabled = false, mode = 'single-select', theme} = opts
+    const list_name = `${name}-list`
     let is_expanded = expanded
     let is_disabled = disabled
     let store_data = []
@@ -3204,12 +3241,31 @@ function i_dropdown ({page = '*', flow = 'ui-dropdown', name, options = {}, expa
         })
     }
     function widget () {
-        const send = protocol(get)
         const dropdown = document.createElement('i-dropdown')
         const shadow = dropdown.attachShadow({mode: 'closed'})
-        const i_button = make_button({page, name, option: mode === 'single-select' ? init_selected : button, mode, expanded: is_expanded, theme: button.theme}, dropdown_protocol)
-        const i_list = make_list({page, name: list_name, option: list, mode, hidden: is_expanded}, dropdown_protocol)
-        send(message)
+        i_button({ 
+            name, 
+            role: 'listbox', 
+            mode: mode.match(/single|multiple/) ? 'selector' : 'menu', 
+            expanded: is_expanded, 
+            disabled: is_disabled, 
+            theme: {
+                style: `
+                    :host(i-button) > .icon {
+                        transform: rotate(0deg);
+                        transition: transform 0.4s ease-in-out;
+                    }
+                    :host(i-button[aria-expanded="true"]) > .icon {
+                        transform: rotate(${mode === 'single-select' ? '-180' : '0' }deg);
+                    }
+                    ${style}
+                `,
+                props: {},
+                grid: {}
+            }
+        }, make_protocol(name))
+        const i_list = make_list({page, name: list_name, option: list, mode, hidden: is_expanded}, make_protocol('list'))
+        // notify(message)
         dropdown.setAttribute('aria-label', name)
         if (is_disabled) dropdown.setAttribute('disabled', is_disabled)
         style_sheet(shadow, style)
@@ -3222,21 +3278,24 @@ function i_dropdown ({page = '*', flow = 'ui-dropdown', name, options = {}, expa
         function handle_collapsed () {
             // trigger expanded event via document.body
             document.body.addEventListener('click', (e)=> {
-                const make = message_maker(`All`)
-                const to = `${name} / ${flow} / ${page}`
                 const type = 'collapsed'
                 if (is_expanded) {
                     is_expanded = false
-                    recipients[name]( make({type, data: is_expanded}) )
-                    recipients[list_name]( make({type, data: !is_expanded}) )
-                    send( make({to, type, data: {selected: store_data}}) )
+                    const { name: name_notify, make: name_make, address: name_address } = recipients[name]
+                    name_notify(name_make({ to: name_address, type, data: is_expanded }))
+                    const { notify: list_notify, make: list_make, address: list_address } = recipients[list_name]
+                    list_notify(list_make({ to: list_address, type, data: !is_expanded }))
+                    const { notify, make, address } = recipients['parent']
+                    notify(make({to: address, type, data: { selected: store_data }}) )
                 }
             })
         }
         function handle_change_event (content) {
-            const msg = make({type: 'changed', data: content})
-            recipients[name](msg)
-            send(msg)
+            const { notify: name_notify, make: name_make, address: name_address } = recipients[name]
+            name_notify(name_make({ to: name_address, type: 'changed', data: content }))
+            
+            const { notify, make, address } = recipients['parent']
+            notify(make({ to: address, type: 'changed', data: content }))
         }
         function handle_select_event (data) {
             const {mode, selected} = data
@@ -3261,26 +3320,16 @@ function i_dropdown ({page = '*', flow = 'ui-dropdown', name, options = {}, expa
             is_expanded = expanded
             const type = is_expanded ? 'expanded' : 'collapsed'
             // check which one dropdown is not using then do collapsed
+            const { notify: name_notify, make: name_make, address: name_address } = recipients[name]
+            const { notify: list_notify, make: list_make, address: list_address } = recipients[list_name]
             if (from !== name) {
-                recipients[name](make({type: 'collapsed', data: is_expanded}))
-                recipients[list_name](make({type, data: !is_expanded}))
+                name_notify(name_make({ to: name_address,type: 'collapsed', data: is_expanded }))
+                list_notify(list_make({ to: list_address, type, data: !is_expanded }))
             }
             // check which dropdown is currently using then do expanded
-            recipients[name](make({type, data: is_expanded}))
-            recipients[list_name](make({type, data: !is_expanded}))
+            name_notify(name_make({ to: name_address, type, data: is_expanded }))
+            list_notify(list_make({ to: list_address, type, data: !is_expanded }))
             if (is_expanded && from == name) shadow.append(i_list)
-        }
-        function dropdown_protocol (name) {
-            return send => {
-                recipients[name] = send
-                return get
-            }
-        }
-        function get (msg) {
-            const {head, refs, type, data} = msg 
-            send(msg)
-            if (type.match(/expanded|collapsed/)) return handle_expanded_event( data)
-            if (type.match(/selected/)) return handle_select_event(data)
         }
     }
 
@@ -3370,45 +3419,40 @@ function i_dropdown ({page = '*', flow = 'ui-dropdown', name, options = {}, expa
 }
 
 
-},{"make-button":38,"make-list":39,"message-maker":40,"support-style-sheet":41}],38:[function(require,module,exports){
-const {i_button} = require('datdot-ui-button')
-module.exports = make_button
-function make_button ({page, name, option = {}, mode, expanded, theme = {}}, protocol) {
-    const {flow = 'ui-dropdown', role = 'listbox', body, icons, cover, disabled = false} = option
-    const match = mode.match(/single|multiple/)
-    const button_mode = match ? 'selector' : 'menu'
-    const {style = ``, props = {}, grid = {}} = theme
-    return i_button({
-        page,
-        flow, 
-        name, 
-        role,
-        body,
-        icons,
-        cover, 
-        mode: button_mode, 
-        expanded, disabled, 
-        theme: {
-            style: `
-                :host(i-button) > .icon {
-                    transform: rotate(0deg);
-                    transition: transform 0.4s ease-in-out;
-                }
-                :host(i-button[aria-expanded="true"]) > .icon {
-                    transform: rotate(${mode === 'single-select' ? '-180' : '0' }deg);
-                }
-                ${style}
-            `,
-            props,
-            grid
-        }
-    }, protocol(name))
-}
-
-},{"datdot-ui-button":30}],39:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-terminal@1d03cc5ee47906a79726a4884cd75cf8ff8c6c4c/node_modules/datdot-ui-dropdown/src/index.js")
+},{"datdot-ui-button":29,"make-list":36,"message-maker":44,"support-style-sheet":37}],36:[function(require,module,exports){
+(function (__filename){(function (){
 const i_list = require('datdot-ui-list')
+const message_maker = require('message-maker')
+
+var id = 0
+
 module.exports = make_list
-function make_list ({page, name, option = {}, mode, hidden}, protocol) {
+
+function make_list ({page, name, option = {}, mode, hidden}, parent_protocol) {
+// ----------------------------------------
+    const myaddress = `${__filename}-${id++}`
+    const inbox = {}
+    const outbox = {}
+    const recipients = {}
+    const names = {}
+    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
+
+    const {notify, address} = parent_protocol(myaddress, listen)
+    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
+    notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
+
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+    
+    function listen (msg) {
+        console.log('New message', { msg })
+    }
+// ----------------------------------------
     const {flow = 'ui-dropdown-list', role = 'option', array, theme} = option
     let store_selected = []
     let render_list = []
@@ -3419,7 +3463,7 @@ function make_list ({page, name, option = {}, mode, hidden}, protocol) {
     render_list.filter( item => {
         if (item.selected) return store_selected.push(item.text)
     })
-    return i_list({page, flow, name, role, body: render_list, mode, hidden, expanded: !hidden, theme}, protocol(name))
+    return i_list({page, flow, name, role, body: render_list, mode, hidden, expanded: !hidden, theme}, make_protocol(name))
 
     function make_single_select (args) {
         return args.map((opt, index) => {
@@ -3466,11 +3510,10 @@ function make_list ({page, name, option = {}, mode, hidden}, protocol) {
         })
     }
 }
-},{"datdot-ui-list":45}],40:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-dropdown@33f8bcb041c9061a14232822825fa7bcf170aebb/node_modules/datdot-ui-dropdown/src/node_modules/make-list.js")
+},{"datdot-ui-list":41,"message-maker":44}],37:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],41:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],42:[function(require,module,exports){
+},{"dup":28}],38:[function(require,module,exports){
 (function (__filename){(function (){
 const style_sheet = require('support-style-sheet')
 const svg = require('svg')
@@ -3557,10 +3600,10 @@ module.exports = ({name, path, is_shadow = false, theme}, parent_protocol) => {
     return symbol
 }
 
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-button@6628768ef8c5e7142fd202d8b2d2120ebfe81f57/node_modules/datdot-ui-icon/src/index.js")
-},{"message-maker":49,"support-style-sheet":43,"svg":44}],43:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],44:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-button@e81cbd843fcfa8a5452a7d591a9e6f367d5317ea/node_modules/datdot-ui-icon/src/index.js")
+},{"message-maker":44,"support-style-sheet":39,"svg":40}],39:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"dup":28}],40:[function(require,module,exports){
 module.exports = svg
 function svg (path) {
     const span = document.createElement('span')
@@ -3574,739 +3617,7 @@ function svg (path) {
     }
     return span
 }   
-},{}],45:[function(require,module,exports){
-const style_sheet = require('support-style-sheet')
-const {i_button, i_link} = require('datdot-ui-button')
-const button = i_button
-const message_maker = require('message-maker')
-const make_grid = require('make-grid')
-module.exports = i_list
-
-function i_list (opts = {}, protocol) {
-    const {page = '*', flow = 'ui-list', name, body = [], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
-    const recipients = []
-    const make = message_maker(`${name} / ${flow} / i_list`)
-    const message = make({type: 'ready'})
-    let is_hidden = hidden
-    let is_expanded = !is_hidden ? !is_hidden : expanded
-    const store_selected = []
-    const {grid} = theme
-
-    function widget () {
-        const send = protocol( get )
-        send(message)
-        const list = document.createElement('i-list')
-        const shadow = list.attachShadow({mode: 'closed'})
-        list.ariaHidden = is_hidden
-        list.ariaLabel = name
-        list.tabIndex = -1
-        list.ariaExpanded = is_expanded
-        list.dataset.mode = mode
-        style_sheet(shadow, style)
-        try {
-            if (mode.match(/single|multiple/)) {
-                list.setAttribute('role', 'listbox')
-                make_selector(body)
-            }   
-            if (mode.match(/dropdown/)) {
-                list.setAttribute('role', 'menubar')
-                make_list()
-            }
-            if (body.length === 0) send(make({type: 'error', data: 'body no items'}))
-        } catch(e) {
-            send(make({type: 'error', data: {message: 'something went wrong', opts }}))
-        }
-        
-        return list
-
-        function make_selector (args) {
-            args.forEach( (list, i) => {
-                const {list_name, address = undefined, text = undefined, role = 'option', icons = {}, cover, current = undefined, selected = false, disabled = false, theme = {}} = list
-                const {style = ``, props = {}} = theme
-                const {
-                    size = 'var(--primary-size)', 
-                    size_hover = 'var(--primary-size)',
-                    weight = '300', 
-                    color = 'var(--primary-color)', 
-                    color_hover = 'var(--primary-color-hover)', 
-                    color_focus = 'var(--color-white)',
-                    bg_color = 'var(--primary-bg-color)', 
-                    bg_color_hover = 'var(--primary-bg-color-hover)', 
-                    bg_color_focus = 'var(--primary-bg-color-focus)',
-                    icon_size = 'var(--primary-icon-size)',
-                    icon_size_hover = 'var(--primary-icon-size_hover)',
-                    icon_fill = 'var(--primary-icon-fill)',
-                    icon_fill_hover = 'var(--primary-icon-fill-hover)',
-                    avatar_width = 'var(--primary-avatar-width)', 
-                    avatar_height = 'var(--primary-avatar-height)', 
-                    avatar_radius = 'var(--primary-avatar-radius)',
-                    current_size = 'var(--current-list-size)',
-                    current_color = 'var(--current-list-color)',
-                    current_weight = 'var(--current-list-weight)',
-                    current_icon_size = 'var(--current-icon-size)',
-                    current_icon_fill = 'var(--current-icon-fill)',
-                    current_list_selected_icon_size = 'var(--current-list-selected-icon-size)',
-                    current_list_selected_icon_fill = 'var(--current-list-selected-icon-fill)',
-                    list_selected_icon_size = 'var(--list-selected-icon-size)',
-                    list_selected_icon_fill = 'var(--list-selected-icon-fill)',
-                    list_selected_icon_fill_hover = 'var(--list-selected-icon-fill-hover)',
-                    disabled_color = 'var(--primary-disabled-color)',
-                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
-                    disabled_icon_fill = 'var(--primary-disabled-fill)',
-                    padding = '',
-                    opacity = '0'
-                } = props
-
-                const is_current = mode === 'single-select' ? current : false
-                const make_button = button({
-                    page,
-                    name: list_name, 
-                    body: text, 
-                    role, icons, cover, 
-                    current: is_current, 
-                    selected, 
-                    disabled,
-                    theme: {
-                        style,
-                        props: {
-                        size, size_hover, weight, 
-                        color, color_hover, color_focus,
-                        bg_color, bg_color_hover, bg_color_focus,
-                        icon_size, icon_size_hover, icon_fill, icon_fill_hover,
-                        avatar_width, avatar_height, avatar_radius,
-                        current_size, current_color, current_weight,
-                        current_icon_size, current_icon_fill,
-                        current_list_selected_icon_size, current_list_selected_icon_fill,
-                        list_selected_icon_size, list_selected_icon_fill, list_selected_icon_fill_hover,
-                        disabled_color, disabled_bg_color, disabled_icon_fill,
-                        padding,
-                        opacity
-                    }, 
-                    grid
-                }}, button_protocol(list_name))
-
-                const li = document.createElement('li')
-                if (address) li.dataset.address = address
-                li.dataset.option = text || list_name
-                li.setAttribute('aria-selected', is_current || selected)
-                if (is_current) li.setAttribute('aria-current', is_current)
-                if (disabled) li.setAttribute('disabled', disabled)
-                const make = message_maker(`${list_name} / option / ${flow} / widget`)
-                li.append(make_button)
-                shadow.append(li)
-                send( make({type: 'ready'}) )
-            })
-        }
-
-        function make_list () {
-            body.map( (list, i) => {
-                const {list_name, text = undefined, role = 'option', url = '#', target, icons, cover, disabled = false, theme = {}} = list
-                const {style = ``, props = {}} = theme
-                const {
-                    size = `var(--primary-size)`, 
-                    size_hover = `var(--primary-size)`, 
-                    color = `var(--primary-color)`, 
-                    color_hover = `var(--primary-color-hover)`,     
-                    bg_color = 'var(--primary-bg-color)', 
-                    bg_color_hover = 'var(--primary-bg-color-hover)', 
-                    icon_fill = 'var(--primary-color)', 
-                    icon_fill_hover = 'var(--primary-color-hover)', 
-                    icon_size = 'var(--primary-icon-size)',
-                    icon_size_hover = 'var(--primary-icon-size-hover)',
-                    current_icon_size = 'var(--current-icon-size)',
-                    avatar_width = 'var(--primary-avatar-width)', 
-                    avatar_height = 'var(--primary-avatar-height)', 
-                    avatar_radius = 'var(--primary-avatar-radius)',
-                    disabled_color = 'var(--primary-disabled-color)',
-                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
-                    disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
-                    padding = null
-                } = props
-                if (role === 'link' ) {
-                    var item = i_link({
-                        page,
-                        name: list_name,
-                        body: text,
-                        role: 'menuitem',
-                        link: {
-                            url,
-                            target
-                        },
-                        icons,
-                        cover,
-                        disabled,
-                        theme: {
-                            style,
-                            props,
-                            grid
-                        }
-                    }, button_protocol(list_name))
-                }
-
-                if (role === 'menuitem') {
-                    var item = i_button({
-                        name: list_name,
-                        body: text,
-                        role,
-                        icons,
-                        cover,
-                        disabled,
-                        theme: {
-                            style,
-                            props: {
-                                size, size_hover,
-                                color, color_hover,
-                                bg_color, bg_color_hover,
-                                icon_fill, icon_fill_hover,
-                                icon_size, icon_size_hover,
-                                current_icon_size,
-                                avatar_width, avatar_height, avatar_radius,
-                                disabled_color, disabled_bg_color, disabled_icon_fill,
-                                padding
-                            },
-                            grid
-                        }
-                    }, button_protocol(list_name))
-                }
-                const li = document.createElement('li')
-                li.setAttribute('role', 'none')
-                if (disabled) li.setAttribute('disabled', disabled)
-                li.append(item)
-                shadow.append(li)
-            })
-            
-        }
-        function handle_expanded_event (data) {
-            list.setAttribute('aria-hidden', data)
-            list.setAttribute('aria-expanded', !data)
-        }
-        function handle_mutiple_selected ({make, from, lists, selected}) {
-            const type = selected ? 'selected' : 'unselected'
-            const message = make({type: 'selected', data: {selected: from}})
-            recipients[from](make({type, data: selected}))
-            lists.forEach( list => {
-                const label = list.firstChild.getAttribute('aria-label') 
-                if (label === from) list.setAttribute('aria-selected', selected)
-            })
-            send( message )
-        }
-
-        function handle_single_selected ({make, from, lists, selected}) {
-            lists.forEach( list => {
-                const label = list.firstChild.getAttribute('aria-label') 
-                const state = label === from
-                const type = state ? 'selected' : 'unselected'
-                const name = state ? from : label
-                recipients[name](make({type, data: state}))
-                recipients[name](make({type: 'current', data: state}))
-                list.setAttribute('aria-current', state)
-                list.setAttribute('aria-selected', state)
-            })
-            const message = make({type: 'selected', data: {selected: from}})
-            send( message )
-        }
-        function handle_select_event ({from, to, data}) {
-            const {selected} = data
-            // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
-            const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
-            const make = message_maker(`${from} / option / ${flow}`)
-            if (mode === 'single-select')  handle_single_selected({make, from, lists, selected})
-            if (mode === 'multiple-select') handle_mutiple_selected({make, from, lists, selected})
-            
-        }
-        function button_protocol (name) {
-            return (send) => {
-                recipients[name] = send
-                return get
-            }
-        }
-        function handle_click_event(msg) {
-            const {head, type, data} = msg
-            const role = head[0].split(' / ')[1]
-            const from = head[0].split(' / ')[0]
-            const make = message_maker(`${from} / ${role} / ${flow}`)
-            const message = make({to: '*', type, data})
-            send(message)
-        }
-        function get (msg) {
-            const {head, refs, type, data} = msg
-            const to = head[1]
-            const id = head[2]
-            const role = head[0].split(' / ')[1]
-            const from = head[0].split(' / ')[0]
-            if (role === 'menuitem') return handle_click_event(msg)
-            if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
-            if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
-        }
-    }
-
-    // insert CSS style
-    const custom_style = theme ? theme.style : ''
-    // set CSS variables
-    if (theme && theme.props) {
-        var {
-            bg_color, bg_color_hover,
-            current_bg_color, current_bg_color_hover, disabled_bg_color,
-            width, height, border_width, border_style, border_opacity, border_color,
-            border_color_hover, border_radius, padding,  opacity,
-            shadow_color, offset_x, offset_y, blur, shadow_opacity,
-            shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
-        } = theme.props
-    }
-
-    const style = `
-    :host(i-list) {
-        ${width && 'width: var(--width);'};
-        ${height && 'height: var(--height);'};
-        display: grid;
-        ${make_grid(grid)}
-        max-width: 100%;
-    }
-    :host(i-list[aria-hidden="true"]) {
-        opacity: 0;
-        animation: close 0.3s;
-        pointer-events: none;
-    }
-    :host([aria-hidden="false"]) {
-        animation: open 0.3s;
-    }
-    li {
-        --bg-color: ${bg_color ? bg_color : 'var(--primary-bg-color)'};
-        --border-radius: ${border_radius ? border_radius : 'var(--primary-radius)'};
-        --border-width: ${border_width ? border_width : 'var(--primary-border-width)'};
-        --border-style: ${border_style ? border_style : 'var(--primary-border-style)'};
-        --border-color: ${border_color ? border_color : 'var(--primary-border-color)'};
-        --border-opacity: ${border_opacity ? border_opacity : 'var(--primary-border-opacity)'};
-        --border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity));
-        display: grid;
-        grid-template-columns: 1fr;
-        background-color: hsl(var(--bg-color));
-        border: var(--border);
-        margin-top: -1px;
-        cursor: pointer;
-        transition: background-color 0.3s ease-in-out;
-    }
-    li:hover {
-        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--primary-bg-color-hover)'};
-    }
-    :host(i-list) li:nth-of-type(1) {
-        border-top-left-radius: var(--border-radius);
-        border-top-right-radius: var(--border-radius);
-    }
-    li:last-child {
-        border-bottom-left-radius: var(--border-radius);
-        border-bottom-right-radius: var(--border-radius);
-    }
-    [role="listitem"] {
-        display: grid;
-        grid-template-rows: 24px;
-        padding: 11px;
-        align-items: center;
-    }
-    [role="listitem"]:hover {
-        cursor: default;
-    }
-    li[disabled="true"], li[disabled="true"]:hover {
-        background-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
-        cursor: not-allowed;
-    }
-    [role="none"] {
-        --bg-color: var(--list-bg-color);
-        --opacity: 1;
-        background-color: hsla(var(--bg-color), var(--opacity));
-    }
-    [role="none"]:hover {
-        --bg-color: var(--list-bg-color-hover);
-        --opacity: 1;
-        background-color: hsla(var(--bg-color), var(--opacity));
-    }
-    [role="none"] i-link {
-        padding: 12px;
-    }
-    [role="option"] i-button.icon-right, [role="option"] i-button.text-left {
-        grid-template-columns: auto 1fr auto;
-    }
-    [aria-current="true"] {
-        --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
-    }
-    @keyframes close {
-        0% {
-            opacity: 1;
-        }
-        100% {
-            opacity: 0;
-        }
-    }
-    @keyframes open {
-        0% {
-            opacity: 0;
-        }
-        100% {
-            opacity: 1;
-        }
-    }
-    ${custom_style}
-    `
-
-    return widget()
-}
-},{"datdot-ui-button":30,"make-grid":46,"message-maker":47,"support-style-sheet":48}],46:[function(require,module,exports){
-arguments[4][27][0].apply(exports,arguments)
-},{"dup":27}],47:[function(require,module,exports){
-arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],48:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],49:[function(require,module,exports){
-module.exports = function message_maker (from) {
-  let msg_id = 0
-  return function make ({to, type, data = null, refs = {} }) {
-      const stack = (new Error().stack.split('\n').slice(2).filter(x => x.trim()))
-      return { head: [from, to, msg_id++], refs, type, data, meta: { stack }}
-  }
-}
-},{}],50:[function(require,module,exports){
-module.exports = attributeToProperty
-
-var transform = {
-  'class': 'className',
-  'for': 'htmlFor',
-  'http-equiv': 'httpEquiv'
-}
-
-function attributeToProperty (h) {
-  return function (tagName, attrs, children) {
-    for (var attr in attrs) {
-      if (attr in transform) {
-        attrs[transform[attr]] = attrs[attr]
-        delete attrs[attr]
-      }
-    }
-    return h(tagName, attrs, children)
-  }
-}
-
-},{}],51:[function(require,module,exports){
-var attrToProp = require('hyperscript-attribute-to-property')
-
-var VAR = 0, TEXT = 1, OPEN = 2, CLOSE = 3, ATTR = 4
-var ATTR_KEY = 5, ATTR_KEY_W = 6
-var ATTR_VALUE_W = 7, ATTR_VALUE = 8
-var ATTR_VALUE_SQ = 9, ATTR_VALUE_DQ = 10
-var ATTR_EQ = 11, ATTR_BREAK = 12
-var COMMENT = 13
-
-module.exports = function (h, opts) {
-  if (!opts) opts = {}
-  var concat = opts.concat || function (a, b) {
-    return String(a) + String(b)
-  }
-  if (opts.attrToProp !== false) {
-    h = attrToProp(h)
-  }
-
-  return function (strings) {
-    var state = TEXT, reg = ''
-    var arglen = arguments.length
-    var parts = []
-
-    for (var i = 0; i < strings.length; i++) {
-      if (i < arglen - 1) {
-        var arg = arguments[i+1]
-        var p = parse(strings[i])
-        var xstate = state
-        if (xstate === ATTR_VALUE_DQ) xstate = ATTR_VALUE
-        if (xstate === ATTR_VALUE_SQ) xstate = ATTR_VALUE
-        if (xstate === ATTR_VALUE_W) xstate = ATTR_VALUE
-        if (xstate === ATTR) xstate = ATTR_KEY
-        if (xstate === OPEN) {
-          if (reg === '/') {
-            p.push([ OPEN, '/', arg ])
-            reg = ''
-          } else {
-            p.push([ OPEN, arg ])
-          }
-        } else if (xstate === COMMENT && opts.comments) {
-          reg += String(arg)
-        } else if (xstate !== COMMENT) {
-          p.push([ VAR, xstate, arg ])
-        }
-        parts.push.apply(parts, p)
-      } else parts.push.apply(parts, parse(strings[i]))
-    }
-
-    var tree = [null,{},[]]
-    var stack = [[tree,-1]]
-    for (var i = 0; i < parts.length; i++) {
-      var cur = stack[stack.length-1][0]
-      var p = parts[i], s = p[0]
-      if (s === OPEN && /^\//.test(p[1])) {
-        var ix = stack[stack.length-1][1]
-        if (stack.length > 1) {
-          stack.pop()
-          stack[stack.length-1][0][2][ix] = h(
-            cur[0], cur[1], cur[2].length ? cur[2] : undefined
-          )
-        }
-      } else if (s === OPEN) {
-        var c = [p[1],{},[]]
-        cur[2].push(c)
-        stack.push([c,cur[2].length-1])
-      } else if (s === ATTR_KEY || (s === VAR && p[1] === ATTR_KEY)) {
-        var key = ''
-        var copyKey
-        for (; i < parts.length; i++) {
-          if (parts[i][0] === ATTR_KEY) {
-            key = concat(key, parts[i][1])
-          } else if (parts[i][0] === VAR && parts[i][1] === ATTR_KEY) {
-            if (typeof parts[i][2] === 'object' && !key) {
-              for (copyKey in parts[i][2]) {
-                if (parts[i][2].hasOwnProperty(copyKey) && !cur[1][copyKey]) {
-                  cur[1][copyKey] = parts[i][2][copyKey]
-                }
-              }
-            } else {
-              key = concat(key, parts[i][2])
-            }
-          } else break
-        }
-        if (parts[i][0] === ATTR_EQ) i++
-        var j = i
-        for (; i < parts.length; i++) {
-          if (parts[i][0] === ATTR_VALUE || parts[i][0] === ATTR_KEY) {
-            if (!cur[1][key]) cur[1][key] = strfn(parts[i][1])
-            else parts[i][1]==="" || (cur[1][key] = concat(cur[1][key], parts[i][1]));
-          } else if (parts[i][0] === VAR
-          && (parts[i][1] === ATTR_VALUE || parts[i][1] === ATTR_KEY)) {
-            if (!cur[1][key]) cur[1][key] = strfn(parts[i][2])
-            else parts[i][2]==="" || (cur[1][key] = concat(cur[1][key], parts[i][2]));
-          } else {
-            if (key.length && !cur[1][key] && i === j
-            && (parts[i][0] === CLOSE || parts[i][0] === ATTR_BREAK)) {
-              // https://html.spec.whatwg.org/multipage/infrastructure.html#boolean-attributes
-              // empty string is falsy, not well behaved value in browser
-              cur[1][key] = key.toLowerCase()
-            }
-            if (parts[i][0] === CLOSE) {
-              i--
-            }
-            break
-          }
-        }
-      } else if (s === ATTR_KEY) {
-        cur[1][p[1]] = true
-      } else if (s === VAR && p[1] === ATTR_KEY) {
-        cur[1][p[2]] = true
-      } else if (s === CLOSE) {
-        if (selfClosing(cur[0]) && stack.length) {
-          var ix = stack[stack.length-1][1]
-          stack.pop()
-          stack[stack.length-1][0][2][ix] = h(
-            cur[0], cur[1], cur[2].length ? cur[2] : undefined
-          )
-        }
-      } else if (s === VAR && p[1] === TEXT) {
-        if (p[2] === undefined || p[2] === null) p[2] = ''
-        else if (!p[2]) p[2] = concat('', p[2])
-        if (Array.isArray(p[2][0])) {
-          cur[2].push.apply(cur[2], p[2])
-        } else {
-          cur[2].push(p[2])
-        }
-      } else if (s === TEXT) {
-        cur[2].push(p[1])
-      } else if (s === ATTR_EQ || s === ATTR_BREAK) {
-        // no-op
-      } else {
-        throw new Error('unhandled: ' + s)
-      }
-    }
-
-    if (tree[2].length > 1 && /^\s*$/.test(tree[2][0])) {
-      tree[2].shift()
-    }
-
-    if (tree[2].length > 2
-    || (tree[2].length === 2 && /\S/.test(tree[2][1]))) {
-      if (opts.createFragment) return opts.createFragment(tree[2])
-      throw new Error(
-        'multiple root elements must be wrapped in an enclosing tag'
-      )
-    }
-    if (Array.isArray(tree[2][0]) && typeof tree[2][0][0] === 'string'
-    && Array.isArray(tree[2][0][2])) {
-      tree[2][0] = h(tree[2][0][0], tree[2][0][1], tree[2][0][2])
-    }
-    return tree[2][0]
-
-    function parse (str) {
-      var res = []
-      if (state === ATTR_VALUE_W) state = ATTR
-      for (var i = 0; i < str.length; i++) {
-        var c = str.charAt(i)
-        if (state === TEXT && c === '<') {
-          if (reg.length) res.push([TEXT, reg])
-          reg = ''
-          state = OPEN
-        } else if (c === '>' && !quot(state) && state !== COMMENT) {
-          if (state === OPEN && reg.length) {
-            res.push([OPEN,reg])
-          } else if (state === ATTR_KEY) {
-            res.push([ATTR_KEY,reg])
-          } else if (state === ATTR_VALUE && reg.length) {
-            res.push([ATTR_VALUE,reg])
-          }
-          res.push([CLOSE])
-          reg = ''
-          state = TEXT
-        } else if (state === COMMENT && /-$/.test(reg) && c === '-') {
-          if (opts.comments) {
-            res.push([ATTR_VALUE,reg.substr(0, reg.length - 1)])
-          }
-          reg = ''
-          state = TEXT
-        } else if (state === OPEN && /^!--$/.test(reg)) {
-          if (opts.comments) {
-            res.push([OPEN, reg],[ATTR_KEY,'comment'],[ATTR_EQ])
-          }
-          reg = c
-          state = COMMENT
-        } else if (state === TEXT || state === COMMENT) {
-          reg += c
-        } else if (state === OPEN && c === '/' && reg.length) {
-          // no-op, self closing tag without a space <br/>
-        } else if (state === OPEN && /\s/.test(c)) {
-          if (reg.length) {
-            res.push([OPEN, reg])
-          }
-          reg = ''
-          state = ATTR
-        } else if (state === OPEN) {
-          reg += c
-        } else if (state === ATTR && /[^\s"'=/]/.test(c)) {
-          state = ATTR_KEY
-          reg = c
-        } else if (state === ATTR && /\s/.test(c)) {
-          if (reg.length) res.push([ATTR_KEY,reg])
-          res.push([ATTR_BREAK])
-        } else if (state === ATTR_KEY && /\s/.test(c)) {
-          res.push([ATTR_KEY,reg])
-          reg = ''
-          state = ATTR_KEY_W
-        } else if (state === ATTR_KEY && c === '=') {
-          res.push([ATTR_KEY,reg],[ATTR_EQ])
-          reg = ''
-          state = ATTR_VALUE_W
-        } else if (state === ATTR_KEY) {
-          reg += c
-        } else if ((state === ATTR_KEY_W || state === ATTR) && c === '=') {
-          res.push([ATTR_EQ])
-          state = ATTR_VALUE_W
-        } else if ((state === ATTR_KEY_W || state === ATTR) && !/\s/.test(c)) {
-          res.push([ATTR_BREAK])
-          if (/[\w-]/.test(c)) {
-            reg += c
-            state = ATTR_KEY
-          } else state = ATTR
-        } else if (state === ATTR_VALUE_W && c === '"') {
-          state = ATTR_VALUE_DQ
-        } else if (state === ATTR_VALUE_W && c === "'") {
-          state = ATTR_VALUE_SQ
-        } else if (state === ATTR_VALUE_DQ && c === '"') {
-          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
-          reg = ''
-          state = ATTR
-        } else if (state === ATTR_VALUE_SQ && c === "'") {
-          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
-          reg = ''
-          state = ATTR
-        } else if (state === ATTR_VALUE_W && !/\s/.test(c)) {
-          state = ATTR_VALUE
-          i--
-        } else if (state === ATTR_VALUE && /\s/.test(c)) {
-          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
-          reg = ''
-          state = ATTR
-        } else if (state === ATTR_VALUE || state === ATTR_VALUE_SQ
-        || state === ATTR_VALUE_DQ) {
-          reg += c
-        }
-      }
-      if (state === TEXT && reg.length) {
-        res.push([TEXT,reg])
-        reg = ''
-      } else if (state === ATTR_VALUE && reg.length) {
-        res.push([ATTR_VALUE,reg])
-        reg = ''
-      } else if (state === ATTR_VALUE_DQ && reg.length) {
-        res.push([ATTR_VALUE,reg])
-        reg = ''
-      } else if (state === ATTR_VALUE_SQ && reg.length) {
-        res.push([ATTR_VALUE,reg])
-        reg = ''
-      } else if (state === ATTR_KEY) {
-        res.push([ATTR_KEY,reg])
-        reg = ''
-      }
-      return res
-    }
-  }
-
-  function strfn (x) {
-    if (typeof x === 'function') return x
-    else if (typeof x === 'string') return x
-    else if (x && typeof x === 'object') return x
-    else if (x === null || x === undefined) return x
-    else return concat('', x)
-  }
-}
-
-function quot (state) {
-  return state === ATTR_VALUE_SQ || state === ATTR_VALUE_DQ
-}
-
-var closeRE = RegExp('^(' + [
-  'area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed',
-  'frame', 'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param',
-  'source', 'track', 'wbr', '!--',
-  // SVG TAGS
-  'animate', 'animateTransform', 'circle', 'cursor', 'desc', 'ellipse',
-  'feBlend', 'feColorMatrix', 'feComposite',
-  'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
-  'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR',
-  'feGaussianBlur', 'feImage', 'feMergeNode', 'feMorphology',
-  'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile',
-  'feTurbulence', 'font-face-format', 'font-face-name', 'font-face-uri',
-  'glyph', 'glyphRef', 'hkern', 'image', 'line', 'missing-glyph', 'mpath',
-  'path', 'polygon', 'polyline', 'rect', 'set', 'stop', 'tref', 'use', 'view',
-  'vkern'
-].join('|') + ')(?:[\.#][a-zA-Z0-9\u007F-\uFFFF_:-]+)*$')
-function selfClosing (tag) { return closeRE.test(tag) }
-
-},{"hyperscript-attribute-to-property":50}],52:[function(require,module,exports){
-var inserted = {};
-
-module.exports = function (css, options) {
-    if (inserted[css]) return;
-    inserted[css] = true;
-    
-    var elem = document.createElement('style');
-    elem.setAttribute('type', 'text/css');
-
-    if ('textContent' in elem) {
-      elem.textContent = css;
-    } else {
-      elem.styleSheet.cssText = css;
-    }
-    
-    var head = document.getElementsByTagName('head')[0];
-    if (options && options.prepend) {
-        head.insertBefore(elem, head.childNodes[0]);
-    } else {
-        head.appendChild(elem);
-    }
-};
-
-},{}],53:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 (function (__filename){(function (){
 const style_sheet = require('support-style-sheet')
 const button = require('datdot-ui-button')
@@ -4687,9 +3998,745 @@ function i_list (opts = {}, parent_protocol) {
 
     return widget()
 }
-}).call(this)}).call(this,"/src/index.js")
-},{"datdot-ui-button":30,"make-grid":54,"message-maker":49,"support-style-sheet":55}],54:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-dropdown@33f8bcb041c9061a14232822825fa7bcf170aebb/node_modules/datdot-ui-list/src/index.js")
+},{"datdot-ui-button":29,"make-grid":42,"message-maker":44,"support-style-sheet":43}],42:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
-},{"dup":27}],55:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}]},{},[1]);
+},{"dup":27}],43:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"dup":28}],44:[function(require,module,exports){
+module.exports = function message_maker (from) {
+  let msg_id = 0
+  return function make ({to, type, data = null, refs = {} }) {
+      const stack = (new Error().stack.split('\n').slice(2).filter(x => x.trim()))
+      return { head: [from, to, msg_id++], refs, type, data, meta: { stack }}
+  }
+}
+},{}],45:[function(require,module,exports){
+module.exports = attributeToProperty
+
+var transform = {
+  'class': 'className',
+  'for': 'htmlFor',
+  'http-equiv': 'httpEquiv'
+}
+
+function attributeToProperty (h) {
+  return function (tagName, attrs, children) {
+    for (var attr in attrs) {
+      if (attr in transform) {
+        attrs[transform[attr]] = attrs[attr]
+        delete attrs[attr]
+      }
+    }
+    return h(tagName, attrs, children)
+  }
+}
+
+},{}],46:[function(require,module,exports){
+var attrToProp = require('hyperscript-attribute-to-property')
+
+var VAR = 0, TEXT = 1, OPEN = 2, CLOSE = 3, ATTR = 4
+var ATTR_KEY = 5, ATTR_KEY_W = 6
+var ATTR_VALUE_W = 7, ATTR_VALUE = 8
+var ATTR_VALUE_SQ = 9, ATTR_VALUE_DQ = 10
+var ATTR_EQ = 11, ATTR_BREAK = 12
+var COMMENT = 13
+
+module.exports = function (h, opts) {
+  if (!opts) opts = {}
+  var concat = opts.concat || function (a, b) {
+    return String(a) + String(b)
+  }
+  if (opts.attrToProp !== false) {
+    h = attrToProp(h)
+  }
+
+  return function (strings) {
+    var state = TEXT, reg = ''
+    var arglen = arguments.length
+    var parts = []
+
+    for (var i = 0; i < strings.length; i++) {
+      if (i < arglen - 1) {
+        var arg = arguments[i+1]
+        var p = parse(strings[i])
+        var xstate = state
+        if (xstate === ATTR_VALUE_DQ) xstate = ATTR_VALUE
+        if (xstate === ATTR_VALUE_SQ) xstate = ATTR_VALUE
+        if (xstate === ATTR_VALUE_W) xstate = ATTR_VALUE
+        if (xstate === ATTR) xstate = ATTR_KEY
+        if (xstate === OPEN) {
+          if (reg === '/') {
+            p.push([ OPEN, '/', arg ])
+            reg = ''
+          } else {
+            p.push([ OPEN, arg ])
+          }
+        } else if (xstate === COMMENT && opts.comments) {
+          reg += String(arg)
+        } else if (xstate !== COMMENT) {
+          p.push([ VAR, xstate, arg ])
+        }
+        parts.push.apply(parts, p)
+      } else parts.push.apply(parts, parse(strings[i]))
+    }
+
+    var tree = [null,{},[]]
+    var stack = [[tree,-1]]
+    for (var i = 0; i < parts.length; i++) {
+      var cur = stack[stack.length-1][0]
+      var p = parts[i], s = p[0]
+      if (s === OPEN && /^\//.test(p[1])) {
+        var ix = stack[stack.length-1][1]
+        if (stack.length > 1) {
+          stack.pop()
+          stack[stack.length-1][0][2][ix] = h(
+            cur[0], cur[1], cur[2].length ? cur[2] : undefined
+          )
+        }
+      } else if (s === OPEN) {
+        var c = [p[1],{},[]]
+        cur[2].push(c)
+        stack.push([c,cur[2].length-1])
+      } else if (s === ATTR_KEY || (s === VAR && p[1] === ATTR_KEY)) {
+        var key = ''
+        var copyKey
+        for (; i < parts.length; i++) {
+          if (parts[i][0] === ATTR_KEY) {
+            key = concat(key, parts[i][1])
+          } else if (parts[i][0] === VAR && parts[i][1] === ATTR_KEY) {
+            if (typeof parts[i][2] === 'object' && !key) {
+              for (copyKey in parts[i][2]) {
+                if (parts[i][2].hasOwnProperty(copyKey) && !cur[1][copyKey]) {
+                  cur[1][copyKey] = parts[i][2][copyKey]
+                }
+              }
+            } else {
+              key = concat(key, parts[i][2])
+            }
+          } else break
+        }
+        if (parts[i][0] === ATTR_EQ) i++
+        var j = i
+        for (; i < parts.length; i++) {
+          if (parts[i][0] === ATTR_VALUE || parts[i][0] === ATTR_KEY) {
+            if (!cur[1][key]) cur[1][key] = strfn(parts[i][1])
+            else parts[i][1]==="" || (cur[1][key] = concat(cur[1][key], parts[i][1]));
+          } else if (parts[i][0] === VAR
+          && (parts[i][1] === ATTR_VALUE || parts[i][1] === ATTR_KEY)) {
+            if (!cur[1][key]) cur[1][key] = strfn(parts[i][2])
+            else parts[i][2]==="" || (cur[1][key] = concat(cur[1][key], parts[i][2]));
+          } else {
+            if (key.length && !cur[1][key] && i === j
+            && (parts[i][0] === CLOSE || parts[i][0] === ATTR_BREAK)) {
+              // https://html.spec.whatwg.org/multipage/infrastructure.html#boolean-attributes
+              // empty string is falsy, not well behaved value in browser
+              cur[1][key] = key.toLowerCase()
+            }
+            if (parts[i][0] === CLOSE) {
+              i--
+            }
+            break
+          }
+        }
+      } else if (s === ATTR_KEY) {
+        cur[1][p[1]] = true
+      } else if (s === VAR && p[1] === ATTR_KEY) {
+        cur[1][p[2]] = true
+      } else if (s === CLOSE) {
+        if (selfClosing(cur[0]) && stack.length) {
+          var ix = stack[stack.length-1][1]
+          stack.pop()
+          stack[stack.length-1][0][2][ix] = h(
+            cur[0], cur[1], cur[2].length ? cur[2] : undefined
+          )
+        }
+      } else if (s === VAR && p[1] === TEXT) {
+        if (p[2] === undefined || p[2] === null) p[2] = ''
+        else if (!p[2]) p[2] = concat('', p[2])
+        if (Array.isArray(p[2][0])) {
+          cur[2].push.apply(cur[2], p[2])
+        } else {
+          cur[2].push(p[2])
+        }
+      } else if (s === TEXT) {
+        cur[2].push(p[1])
+      } else if (s === ATTR_EQ || s === ATTR_BREAK) {
+        // no-op
+      } else {
+        throw new Error('unhandled: ' + s)
+      }
+    }
+
+    if (tree[2].length > 1 && /^\s*$/.test(tree[2][0])) {
+      tree[2].shift()
+    }
+
+    if (tree[2].length > 2
+    || (tree[2].length === 2 && /\S/.test(tree[2][1]))) {
+      if (opts.createFragment) return opts.createFragment(tree[2])
+      throw new Error(
+        'multiple root elements must be wrapped in an enclosing tag'
+      )
+    }
+    if (Array.isArray(tree[2][0]) && typeof tree[2][0][0] === 'string'
+    && Array.isArray(tree[2][0][2])) {
+      tree[2][0] = h(tree[2][0][0], tree[2][0][1], tree[2][0][2])
+    }
+    return tree[2][0]
+
+    function parse (str) {
+      var res = []
+      if (state === ATTR_VALUE_W) state = ATTR
+      for (var i = 0; i < str.length; i++) {
+        var c = str.charAt(i)
+        if (state === TEXT && c === '<') {
+          if (reg.length) res.push([TEXT, reg])
+          reg = ''
+          state = OPEN
+        } else if (c === '>' && !quot(state) && state !== COMMENT) {
+          if (state === OPEN && reg.length) {
+            res.push([OPEN,reg])
+          } else if (state === ATTR_KEY) {
+            res.push([ATTR_KEY,reg])
+          } else if (state === ATTR_VALUE && reg.length) {
+            res.push([ATTR_VALUE,reg])
+          }
+          res.push([CLOSE])
+          reg = ''
+          state = TEXT
+        } else if (state === COMMENT && /-$/.test(reg) && c === '-') {
+          if (opts.comments) {
+            res.push([ATTR_VALUE,reg.substr(0, reg.length - 1)])
+          }
+          reg = ''
+          state = TEXT
+        } else if (state === OPEN && /^!--$/.test(reg)) {
+          if (opts.comments) {
+            res.push([OPEN, reg],[ATTR_KEY,'comment'],[ATTR_EQ])
+          }
+          reg = c
+          state = COMMENT
+        } else if (state === TEXT || state === COMMENT) {
+          reg += c
+        } else if (state === OPEN && c === '/' && reg.length) {
+          // no-op, self closing tag without a space <br/>
+        } else if (state === OPEN && /\s/.test(c)) {
+          if (reg.length) {
+            res.push([OPEN, reg])
+          }
+          reg = ''
+          state = ATTR
+        } else if (state === OPEN) {
+          reg += c
+        } else if (state === ATTR && /[^\s"'=/]/.test(c)) {
+          state = ATTR_KEY
+          reg = c
+        } else if (state === ATTR && /\s/.test(c)) {
+          if (reg.length) res.push([ATTR_KEY,reg])
+          res.push([ATTR_BREAK])
+        } else if (state === ATTR_KEY && /\s/.test(c)) {
+          res.push([ATTR_KEY,reg])
+          reg = ''
+          state = ATTR_KEY_W
+        } else if (state === ATTR_KEY && c === '=') {
+          res.push([ATTR_KEY,reg],[ATTR_EQ])
+          reg = ''
+          state = ATTR_VALUE_W
+        } else if (state === ATTR_KEY) {
+          reg += c
+        } else if ((state === ATTR_KEY_W || state === ATTR) && c === '=') {
+          res.push([ATTR_EQ])
+          state = ATTR_VALUE_W
+        } else if ((state === ATTR_KEY_W || state === ATTR) && !/\s/.test(c)) {
+          res.push([ATTR_BREAK])
+          if (/[\w-]/.test(c)) {
+            reg += c
+            state = ATTR_KEY
+          } else state = ATTR
+        } else if (state === ATTR_VALUE_W && c === '"') {
+          state = ATTR_VALUE_DQ
+        } else if (state === ATTR_VALUE_W && c === "'") {
+          state = ATTR_VALUE_SQ
+        } else if (state === ATTR_VALUE_DQ && c === '"') {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE_SQ && c === "'") {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE_W && !/\s/.test(c)) {
+          state = ATTR_VALUE
+          i--
+        } else if (state === ATTR_VALUE && /\s/.test(c)) {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE || state === ATTR_VALUE_SQ
+        || state === ATTR_VALUE_DQ) {
+          reg += c
+        }
+      }
+      if (state === TEXT && reg.length) {
+        res.push([TEXT,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE_DQ && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE_SQ && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_KEY) {
+        res.push([ATTR_KEY,reg])
+        reg = ''
+      }
+      return res
+    }
+  }
+
+  function strfn (x) {
+    if (typeof x === 'function') return x
+    else if (typeof x === 'string') return x
+    else if (x && typeof x === 'object') return x
+    else if (x === null || x === undefined) return x
+    else return concat('', x)
+  }
+}
+
+function quot (state) {
+  return state === ATTR_VALUE_SQ || state === ATTR_VALUE_DQ
+}
+
+var closeRE = RegExp('^(' + [
+  'area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed',
+  'frame', 'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param',
+  'source', 'track', 'wbr', '!--',
+  // SVG TAGS
+  'animate', 'animateTransform', 'circle', 'cursor', 'desc', 'ellipse',
+  'feBlend', 'feColorMatrix', 'feComposite',
+  'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
+  'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR',
+  'feGaussianBlur', 'feImage', 'feMergeNode', 'feMorphology',
+  'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile',
+  'feTurbulence', 'font-face-format', 'font-face-name', 'font-face-uri',
+  'glyph', 'glyphRef', 'hkern', 'image', 'line', 'missing-glyph', 'mpath',
+  'path', 'polygon', 'polyline', 'rect', 'set', 'stop', 'tref', 'use', 'view',
+  'vkern'
+].join('|') + ')(?:[\.#][a-zA-Z0-9\u007F-\uFFFF_:-]+)*$')
+function selfClosing (tag) { return closeRE.test(tag) }
+
+},{"hyperscript-attribute-to-property":45}],47:[function(require,module,exports){
+var inserted = {};
+
+module.exports = function (css, options) {
+    if (inserted[css]) return;
+    inserted[css] = true;
+    
+    var elem = document.createElement('style');
+    elem.setAttribute('type', 'text/css');
+
+    if ('textContent' in elem) {
+      elem.textContent = css;
+    } else {
+      elem.styleSheet.cssText = css;
+    }
+    
+    var head = document.getElementsByTagName('head')[0];
+    if (options && options.prepend) {
+        head.insertBefore(elem, head.childNodes[0]);
+    } else {
+        head.appendChild(elem);
+    }
+};
+
+},{}],48:[function(require,module,exports){
+(function (__filename){(function (){
+const style_sheet = require('support-style-sheet')
+const button = require('datdot-ui-button')
+const message_maker = require('message-maker')
+const make_grid = require('make-grid')
+module.exports = i_list
+
+var id = 0
+
+function i_list (opts = {}, parent_protocol) {
+// -----------------------------------
+    const myaddress = `${__filename}-${id++}`
+    const inbox = {}
+    const outbox = {}
+    const recipients = {}
+    const names = {}
+    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
+
+    const {notify, address} = parent_protocol(myaddress, listen)
+    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
+    notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
+
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+
+    function listen (msg) {
+        const { head, refs, type, data, meta } = msg // receive msg
+        inbox[head.join('/')] = msg                  // store msg
+        const [from, to] = head
+        console.log('New message', { from, name: names[from].name, msg })
+        // handle
+        if (from === 'menuitem') return handle_click_event(msg)
+        if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
+        if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
+    }
+// -----------------------------------
+    const {name, body = [], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
+    let is_hidden = hidden
+    let is_expanded = !is_hidden ? !is_hidden : expanded
+    const store_selected = []
+    const {grid} = theme
+
+    function widget () {
+        const list = document.createElement('i-list')
+        const shadow = list.attachShadow({mode: 'closed'})
+        list.ariaHidden = is_hidden
+        list.ariaLabel = name
+        list.tabIndex = -1
+        list.ariaExpanded = is_expanded
+        list.dataset.mode = mode
+        style_sheet(shadow, style)
+        const { make } = recipients['parent']
+        try {
+            if (mode.match(/single|multiple/)) {
+                list.setAttribute('role', 'listbox')
+                make_selector(body)
+            }   
+            if (mode.match(/dropdown/)) {
+                list.setAttribute('role', 'menubar')
+                make_list()
+            }
+            if (body.length === 0) notify(make({ to: address, type: 'error', data: { text: 'body no items', opts } }))
+        } catch(e) {
+            notify(make({ to: address, type: 'error', data: {text: 'something went wrong', opts }}))
+        }
+        
+        return list
+
+        function make_selector (args) {
+            args.forEach( (list, i) => {
+                const {list_name, address = undefined, text = undefined, role = 'option', icons = {}, cover, current = undefined, selected = false, disabled = false, theme = {}} = list
+                const {style = ``, props = {}} = theme
+                const {
+                    size = 'var(--primary-size)', 
+                    size_hover = 'var(--primary-size)',
+                    weight = '300', 
+                    color = 'var(--primary-color)', 
+                    color_hover = 'var(--primary-color-hover)', 
+                    color_focus = 'var(--color-white)',
+                    bg_color = 'var(--primary-bg-color)', 
+                    bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    bg_color_focus = 'var(--primary-bg-color-focus)',
+                    icon_size = 'var(--primary-icon-size)',
+                    icon_size_hover = 'var(--primary-icon-size_hover)',
+                    icon_fill = 'var(--primary-icon-fill)',
+                    icon_fill_hover = 'var(--primary-icon-fill-hover)',
+                    avatar_width = 'var(--primary-avatar-width)', 
+                    avatar_height = 'var(--primary-avatar-height)', 
+                    avatar_radius = 'var(--primary-avatar-radius)',
+                    current_size = 'var(--current-list-size)',
+                    current_color = 'var(--current-list-color)',
+                    current_weight = 'var(--current-list-weight)',
+                    current_icon_size = 'var(--current-icon-size)',
+                    current_icon_fill = 'var(--current-icon-fill)',
+                    current_list_selected_icon_size = 'var(--current-list-selected-icon-size)',
+                    current_list_selected_icon_fill = 'var(--current-list-selected-icon-fill)',
+                    list_selected_icon_size = 'var(--list-selected-icon-size)',
+                    list_selected_icon_fill = 'var(--list-selected-icon-fill)',
+                    list_selected_icon_fill_hover = 'var(--list-selected-icon-fill-hover)',
+                    disabled_color = 'var(--primary-disabled-color)',
+                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
+                    disabled_icon_fill = 'var(--primary-disabled-fill)',
+                    padding = '',
+                    opacity = '0'
+                } = props
+
+                const is_current = mode === 'single-select' ? current : false
+                const make_button = button({
+                    name: list_name, 
+                    body: text, 
+                    role, icons, cover, 
+                    current: is_current, 
+                    selected, 
+                    disabled,
+                    theme: {
+                        style,
+                        props: {
+                        size, size_hover, weight, 
+                        color, color_hover, color_focus,
+                        bg_color, bg_color_hover, bg_color_focus,
+                        icon_size, icon_size_hover, icon_fill, icon_fill_hover,
+                        avatar_width, avatar_height, avatar_radius,
+                        current_size, current_color, current_weight,
+                        current_icon_size, current_icon_fill,
+                        current_list_selected_icon_size, current_list_selected_icon_fill,
+                        list_selected_icon_size, list_selected_icon_fill, list_selected_icon_fill_hover,
+                        disabled_color, disabled_bg_color, disabled_icon_fill,
+                        padding,
+                        opacity
+                    }, 
+                    grid
+                }}, make_protocol(list_name))
+
+                const li = document.createElement('li')
+                if (address) li.dataset.address = address
+                li.dataset.option = text || list_name
+                li.setAttribute('aria-selected', is_current || selected)
+                if (is_current) li.setAttribute('aria-current', is_current)
+                if (disabled) li.setAttribute('disabled', disabled)
+                li.append(make_button)
+                shadow.append(li)
+                notify(make({ to: address, type: 'ready' }))
+            })
+        }
+
+        function make_list () {
+            body.map( (list, i) => {
+                const {list_name, text = undefined, role = 'option', url = '#', target, icons, cover, disabled = false, theme = {}} = list
+                const {style = ``, props = {}} = theme
+                const {
+                    size = `var(--primary-size)`, 
+                    size_hover = `var(--primary-size)`, 
+                    color = `var(--primary-color)`, 
+                    color_hover = `var(--primary-color-hover)`,     
+                    bg_color = 'var(--primary-bg-color)', 
+                    bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    icon_fill = 'var(--primary-color)', 
+                    icon_fill_hover = 'var(--primary-color-hover)', 
+                    icon_size = 'var(--primary-icon-size)',
+                    icon_size_hover = 'var(--primary-icon-size-hover)',
+                    current_icon_size = 'var(--current-icon-size)',
+                    avatar_width = 'var(--primary-avatar-width)', 
+                    avatar_height = 'var(--primary-avatar-height)', 
+                    avatar_radius = 'var(--primary-avatar-radius)',
+                    disabled_color = 'var(--primary-disabled-color)',
+                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
+                    disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
+                    padding = null
+                } = props
+                if (role === 'link' ) {
+                    var item = i_link({
+                        name: list_name,
+                        body: text,
+                        role: 'menuitem',
+                        link: {
+                            url,
+                            target
+                        },
+                        icons,
+                        cover,
+                        disabled,
+                        theme: {
+                            style,
+                            props,
+                            grid
+                        }
+                    }, make_protocol(list_name))
+                }
+
+                if (role === 'menuitem') {
+                    var item = i_button({
+                        name: list_name,
+                        body: text,
+                        role,
+                        icons,
+                        cover,
+                        disabled,
+                        theme: {
+                            style,
+                            props: {
+                                size, size_hover,
+                                color, color_hover,
+                                bg_color, bg_color_hover,
+                                icon_fill, icon_fill_hover,
+                                icon_size, icon_size_hover,
+                                current_icon_size,
+                                avatar_width, avatar_height, avatar_radius,
+                                disabled_color, disabled_bg_color, disabled_icon_fill,
+                                padding
+                            },
+                            grid
+                        }
+                    }, make_protocol(list_name))
+                }
+                const li = document.createElement('li')
+                li.setAttribute('role', 'none')
+                if (disabled) li.setAttribute('disabled', disabled)
+                li.append(item)
+                shadow.append(li)
+            })
+            
+        }
+        function handle_expanded_event (data) {
+            list.setAttribute('aria-hidden', data)
+            list.setAttribute('aria-expanded', !data)
+        }
+        function handle_mutiple_selected ({from, lists, selected}) {
+            const type = selected ? 'selected' : 'unselected'
+            const { notify, address, make } = names[from]
+            notify(make({ to: address, type, data: { selected } }))
+            lists.forEach( list => {
+                const label = list.firstChild.getAttribute('aria-label') 
+                if (label === from) list.setAttribute('aria-selected', selected)
+            })
+            notify(make({type: 'selected', data: {selected: from}}))
+        }
+
+        function handle_single_selected ({from, lists, selected}) {
+            lists.forEach( list => {
+                const label = list.firstChild.getAttribute('aria-label') 
+                const state = label === from
+                const type = state ? 'selected' : 'unselected'
+                const name = state ? from : label
+                const { notify, address, make } = recipients[name]
+                notify(make({ to: address, type, data: { state } }))
+                notify(make({ to: address, type: 'current', data: { state }}))
+                list.setAttribute('aria-current', state)
+                list.setAttribute('aria-selected', state)
+            })
+            notify(make({ to: address, type: 'selected', data: { selected: from } }))
+        }
+        function handle_select_event ({from, to, data}) {
+            const {selected} = data
+            // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
+            const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
+            if (mode === 'single-select')  handle_single_selected({from, lists, selected})
+            if (mode === 'multiple-select') handle_mutiple_selected({from, lists, selected})
+            
+        }
+        function handle_click_event(msg) {
+            const {head, type, data} = msg
+            const [from] = head
+            notify(make({to: address, type, data}))
+        }
+    }
+
+    // insert CSS style
+    const custom_style = theme ? theme.style : ''
+    // set CSS variables
+    if (theme && theme.props) {
+        var {
+            bg_color, bg_color_hover,
+            current_bg_color, current_bg_color_hover, disabled_bg_color,
+            width, height, border_width, border_style, border_opacity, border_color,
+            border_color_hover, border_radius, padding,  opacity,
+            shadow_color, offset_x, offset_y, blur, shadow_opacity,
+            shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
+        } = theme.props
+    }
+
+    const style = `
+    :host(i-list) {
+        ${width && 'width: var(--width);'};
+        ${height && 'height: var(--height);'};
+        display: grid;
+        ${make_grid(grid)}
+        max-width: 100%;
+    }
+    :host(i-list[aria-hidden="true"]) {
+        opacity: 0;
+        animation: close 0.3s;
+        pointer-events: none;
+    }
+    :host([aria-hidden="false"]) {
+        animation: open 0.3s;
+    }
+    li {
+        --bg-color: ${bg_color ? bg_color : 'var(--primary-bg-color)'};
+        --border-radius: ${border_radius ? border_radius : 'var(--primary-radius)'};
+        --border-width: ${border_width ? border_width : 'var(--primary-border-width)'};
+        --border-style: ${border_style ? border_style : 'var(--primary-border-style)'};
+        --border-color: ${border_color ? border_color : 'var(--primary-border-color)'};
+        --border-opacity: ${border_opacity ? border_opacity : 'var(--primary-border-opacity)'};
+        --border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity));
+        display: grid;
+        grid-template-columns: 1fr;
+        background-color: hsl(var(--bg-color));
+        border: var(--border);
+        margin-top: -1px;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+    }
+    li:hover {
+        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--primary-bg-color-hover)'};
+    }
+    :host(i-list) li:nth-of-type(1) {
+        border-top-left-radius: var(--border-radius);
+        border-top-right-radius: var(--border-radius);
+    }
+    li:last-child {
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+    }
+    [role="listitem"] {
+        display: grid;
+        grid-template-rows: 24px;
+        padding: 11px;
+        align-items: center;
+    }
+    [role="listitem"]:hover {
+        cursor: default;
+    }
+    li[disabled="true"], li[disabled="true"]:hover {
+        background-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
+        cursor: not-allowed;
+    }
+    [role="none"] {
+        --bg-color: var(--list-bg-color);
+        --opacity: 1;
+        background-color: hsla(var(--bg-color), var(--opacity));
+    }
+    [role="none"]:hover {
+        --bg-color: var(--list-bg-color-hover);
+        --opacity: 1;
+        background-color: hsla(var(--bg-color), var(--opacity));
+    }
+    [role="none"] i-link {
+        padding: 12px;
+    }
+    [role="option"] i-button.icon-right, [role="option"] i-button.text-left {
+        grid-template-columns: auto 1fr auto;
+    }
+    [aria-current="true"] {
+        --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
+    }
+    @keyframes close {
+        0% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+        }
+    }
+    @keyframes open {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    ${custom_style}
+    `
+
+    return widget()
+}
+}).call(this)}).call(this,"/src/index.js")
+},{"datdot-ui-button":29,"make-grid":49,"message-maker":44,"support-style-sheet":50}],49:[function(require,module,exports){
+arguments[4][27][0].apply(exports,arguments)
+},{"dup":27}],50:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"dup":28}]},{},[1]);
