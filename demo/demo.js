@@ -35,7 +35,7 @@ function demo () {
         const { notify: from_notify, make: from_make, address: from_address } = names[from]
         from_notify(from_make({ to: from_address, type: 'ack', refs: { 'cause': head } }))
         // handle
-        const { notify: logs_notify, make: logs_make, address: logs_address } = names[logs]
+        const { notify: logs_notify, make: logs_make, address: logs_address } = recipients['logs']
         logs_notify(logs_make({ to: logs_address, type, data }))
         if (type === 'click') return click_event (from, role, data)
         if (type.match(/selected/)) return change_event(data)
@@ -476,13 +476,16 @@ function demo () {
     }
     function switch_event (from, data) {
         const state = !data
-        recipients[from](make({type: 'switched', data: state}))
-        recipients['logs']( make({to: from, type: 'triggered', data: {checked: state}}) )
-        recipients['logs'](make({to: 'logs', type: 'layout-mode', data: {expanded: state}}))
+        const { address: from_address, notify: from_notify, make: from_make } = names[from]
+        from_notify(from_make({ to: from_address, type: 'switched', data: state}))
+        const { address: logs_address, notify: logs_notify, make: logs_make } = names['logs']
+        logs_notify(logs_make({to: logs_address, type: 'triggered', data: {checked: state}}) )
+        logs_notify(logs_make({to: logs_address, type: 'layout-mode', data: {expanded: state}}))
     }
     function click_event (from, role, data) {
+        const { address: logs_address, notify: logs_notify, make: logs_make } = names['logs']
         if (role === 'switch') return switch_event(from, data)
-        if (role === 'menuitem') return recipients['logs'](make({to: '*', type: 'triggered', data: {app: 'datdot', install: true}}))
+        if (role === 'menuitem') return logs_notify(logs_make({to: logs_address, type: 'triggered', data: {app: 'datdot', install: true}}))
     }
 }
 
