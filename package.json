@@ -4,7 +4,7 @@
   "description": "datdot ui widget",
   "main": "src/index.js",
   "scripts": {
-    "start": "budo demo/demo.js:bundle.js --open --live",
+    "start": "budo demo/demo.js:bundle.js --open --live --cors",
     "build": "browserify demo/demo.js -o bundle.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,13 +26,14 @@
   "homepage": "https://github.com/playproject-io/datdot-ui-list#readme",
   "devDependencies": {
     "browserify": "^17.0.0",
-    "budo": "^11.6.4"
+    "budo": "^11.6.4",
+    "datdot-terminal": "git+https://github.com/datdotorg/datdot-terminal.git"
   },
   "dependencies": {
     "bel": "^6.0.0",
     "csjs-inject": "^1.0.1",
-    "datdot-terminal": "git+https://github.com/datdotorg/datdot-terminal.git",
     "datdot-ui-button": "git+https://github.com/datdotorg/datdot-ui-button.git",
+    "datdot-ui-link": "git+https://github.com/datdotorg/datdot-ui-link.git",
     "datdot-ui-icon": "git+https://github.com/datdotorg/datdot-ui-icon.git",
     "message-maker": "github:datdotorg/message-maker"
   }
