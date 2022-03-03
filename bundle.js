@@ -39,67 +39,20 @@ function demo () {
         // handle
         const { notify: logs_notify, make: logs_make, address: logs_address } = recipients['logs']
         logs_notify(logs_make({ to: logs_address, type, data }))
-        if (type === 'click') return click_event (from, role, data)
+        if (type === 'click') return click_event (from, data)
         if (type.match(/selected/)) return change_event(data)
     }
 // ------------------------------------
     const logs = terminal({mode: 'compact'}, make_protocol('logs'))
-    const option = [
-        {
-            list_name: 'robot',
-            text: 'robot',
-            icons: {
-                icon: {name: 'star'}
-            },
-            current: true
-        },
-        {
-            list_name: 'edit',
-            icons: {
-                icon: {name: 'edit'}
-            },
-        }
+    
+    const option0 = [
+        { list_name: 'robot', text: 'robot', icons: { icon: {name: 'star'} }, current: true },
+        { list_name: 'edit', text: 'edit', icons: { icon: { name: 'edit' } } }
     ]
-    const options1 = [
-        {
-            list_name: 'robot',
-            // text: 'Robot',
-            icons: {
-                icon: {name: 'star'},
-            },
-            // cover: 'data:image/png;base64,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',
-            // disabled: true,
-            theme: {
-                props: {
-                    option_avatar_width: '50%'
-                }
-            }
-        },
-        {
-            list_name: 'marine',
-            // text: 'Marine',
-            icons: {
-                icon: {name: 'edit'},
-            },
-            // cover: 'data:image/png;base64,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',
-            list: {name: 'star'},
-            theme: {
-                props: {
-                    option_avatar_width: '50%'
-                }
-            }
-        },
-        {
-            list_name: 'server',
-            // text: 'Server',
-            icons: {
-                list: {name: 'plus'},
-                icon: {name: 'edit'},
-            },
-            // cover: 'data:image/png;base64,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',
-            current: true,
-            selected: true,
-            // can define each icon size by indiviual
+    const option1 = [
+        { list_name: 'robot', text: 'Robot', icons: { icon: {name: 'star'} }, theme: { props: { option_avatar_width: '50%' } } },
+        { list_name: 'marine', text: 'Marine', icons: { icon: {name: 'edit'} }, list: {name: 'star'}, theme: { props: { option_avatar_width: '50%' } } },
+        { list_name: 'server', text: 'Server', icons: { list: {name: 'plus'}, icon: {name: 'edit'} }, current: true, selected: true, 
             theme: {
                 props: {
                     // icon_size: '75px',
@@ -116,16 +69,9 @@ function demo () {
             }
         }
     ]
-    const options2 = [
-        {
-            list_name: 'landscape1',
-            text: `Landscape1`,
-            icons: {
-                icon: {name: 'star'},
-                // list: {name: 'plus'},
-            },
+    const option2 = [
+        { list_name: 'landscape1', text: `Landscape1`, icons: { icon: {name: 'star'}, list: {name: 'plus'} }, selected: true,
             cover: 'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_960_720.jpg',
-            selected: true,
             theme: {
                 props: {
                     // inside icon
@@ -142,99 +88,33 @@ function demo () {
                 }
             }
         },
-        {
-            list_name: 'landscape2',
-            text: 'Landscape2',
-            icons: {
-                icon: {name: 'edit'},
-            },
-            cover: 'https://cdn.pixabay.com/photo/2016/02/27/06/43/cherry-blossom-tree-1225186_960_720.jpg',
-            // selected: true,
-            disabled: true,
+        { list_name: 'landscape2', text: 'Landscape2', icons: { icon: {name: 'edit'} }, disabled: true,
+            cover: 'https://cdn.pixabay.com/photo/2016/02/27/06/43/cherry-blossom-tree-1225186_960_720.jpg',            
             theme: {
                 props: {
                     avatar_width: '100%'
                 }
             }
         },
-        {
-            list_name: 'landscape3',
-            text: 'Landscape3',
-            icons: {
-                icon: {name: 'activity'},
-                // list: {name: 'plus'},
-            },
+        { list_name: 'landscape3', text: 'Landscape3', icons: { icon: {name: 'activity'}, list: {name: 'plus'} }, selected: true,
             cover: 'https://cdn.pixabay.com/photo/2015/06/19/20/13/sunset-815270__340.jpg',
-            selected: true,
-            theme: {
-                props: {
-                    avatar_width: '100%'
-                }
-            }
+            theme: { props: { avatar_width: '100%' } }
         }
     ]
-    const options3 = [
-        {
-            list_name: 'datdot1',
-            text: 'DatDot1',
-            role: 'link',
-            url: 'https://datdot.org/',
-            target: '_blank',
-            icons: {
-                icon: {name: 'star'},
-            },
+    const option3 = [
+        { list_name: 'datdot1', text: 'DatDot1', role: 'link', url: 'https://datdot.org/', target: '_blank', icons: { icon: {name: 'star'} },
             cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
-            theme: {
-                props: {
-                    avatar_width: '24px',
-                    avatar_radius: '50%'
-                }
-            }
+            theme: { props: { avatar_width: '24px', avatar_radius: '50%' } }
         },
-        {
-            list_name: 'text',
-            text: 'Twitter',
-            role: 'link',
-            url: 'https://twitter.com/',
-            icons: {
-                icon: {name: 'icon-svg.168b89d5', path: 'https://abs.twimg.com/responsive-web/client-web'},
-            },
-            // disabled: true,
+        { list_name: 'text', text: 'Twitter',  role: 'link', url: 'https://twitter.com/', icons: { icon: { name: 'transfer', path: 'https://datdotorg.github.io/datdot-ui-icon/svg'} },
             target: '_new',
-            theme: {
-                props: {
-                    color: 'var(--color-blue)',
-                    icon_fill: 'var(--color-blue)',
-                    icon_size: '26px',
-                }
-            }
+            theme: {  props: { color: 'var(--color-blue)', icon_fill: 'var(--color-blue)',  icon_size: '26px' } }
         },
-        {
-            list_name: 'github',
-            text: 'GitHub',
-            role: 'link',
-            url: 'https://github.com/',
-            icons: {
-                icon: {name: 'star'},
-            },
+        { list_name: 'github', text: 'GitHub', role: 'link', url: 'https://github.com/', icons: { icon: {name: 'star'} }, target: '_new',
             cover: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-            target: '_new',
-            theme: {
-                props: {
-                    avatar_width: '26px',
-                    avatar_radius: '50%'
-                }
-            }
+            theme: { props: { avatar_width: '26px', avatar_radius: '50%' } }
         },
-        {
-            list_name: 'datdot-app',
-            text: 'DatDot app',
-            // default is menuitem
-            role: 'menuitem',
-            icons: {
-                icon: {name: 'datdot-black'},
-            },
-            // disabled: true,
+        { list_name: 'datdot-app', text: 'DatDot app', role: 'menuitem', icons: { icon: {name: 'datdot-black'} }, 
             theme: {
                 props: {
                     color: 'var(--color-purple)',
@@ -243,22 +123,11 @@ function demo () {
             }
         }
     ]
-    const terminal_list = list(
-    {
-        name: 'terminal-select-list',
-        body: [
-            {
-                list_name: 'compact',
-                text: 'Compact messages',
-            },
-            {
-                list_name: 'comfortable',
-                text: 'Comfortable messages',
-                current: true
-            }
-        ],
-        mode: 'single-select',
-        hidden: false,
+
+    // required module instances
+    
+    const terminal_list = list({ name: 'terminal-select-list', mode: 'listbox-single', hidden: false,
+        body: [ { list_name: 'compact', text: 'Compact messages', }, { list_name: 'comfortable', text: 'Comfortable messages', current: true }],
         theme: {
             grid: {
                 button: {
@@ -271,12 +140,8 @@ function demo () {
             }
         }
     }, make_protocol('terminal-select-list'))
-    const single_select_list = list(
-    {
-        name: 'single-select-list', 
-        body: option, 
-        mode: 'single-select', 
-        hidden: false,
+
+    const listbox_single = list({ name: 'listbox-single', body: option0, mode: 'listbox-single', hidden: false,
         theme: {
             grid: {
                 list: {
@@ -322,12 +187,9 @@ function demo () {
                 }
             }
         }
-    }, make_protocol('single-select-list'))
-    const multiple_select_list = list(
-    {
-        name: 'multiple-select-list', 
-        body: options2, 
-        hidden: false,
+    }, make_protocol('listbox-single'))
+
+    const listbox_multi = list({ name: 'listbox-multi', body: option2, hidden: false, 
         theme: {
             grid: {
                 button: {
@@ -361,13 +223,9 @@ function demo () {
                 }
             }
         }
-    }, make_protocol('multiple-select-list'))
-    const dropdown_list = list(
-    {
-        name: 'dropdown-list',
-        body: options3,
-        mode: 'dropdown',
-        hidden: false,
+    }, make_protocol('listbox-multi'))
+
+    const menubar = list({ name: 'menubar', body: option3, mode: 'menubar', hidden: false, 
         theme: {
             grid: {
                 link: {
@@ -397,19 +255,13 @@ function demo () {
             }
         }
     }, make_protocol('dropdown-list'))
-    const expanded = button(
-    {
-        name: 'expanded', 
-        body: 'Expanded', 
-        role: 'switch',
-        theme: {
-            props: {
-                width: '120px',
-            }
-        }
-    }, make_protocol('expanded'))
-    const current_single_selected = options1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
-    const current_multiple_selected = options2.filter( option => option.selected)
+    console.log({menubar, listbox_multi})
+
+    const expanded = button({ name: 'expanded', body: 'Expanded', role: 'switch', theme: { props: { width: '120px', } } }, make_protocol('expanded'))
+
+    // elements
+    const current_single_selected = option1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
+    const current_multiple_selected = option2.filter( option => option.selected)
     const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
     let select_items = bel`<span>${selected_length} ${current_multiple_selected.length > 1 ? `items` : `item`}</span>`
     const total_selected = bel`<span class="${css.total}">Total selected:</span>`
@@ -421,29 +273,28 @@ function demo () {
     selects.map( select => selects_result.append(select))
     const content = bel`
     <div class="${css.content}">
-        <h1>List</h1>
         <section>
-            <h2>Single select</h2>
+            <h1>Single select</h1>
             ${select_result}
-            ${single_select_list}
+            ${listbox_single}
         </section>
         <section>
-            <h2>Terminal messages selector</h2>
+            <h1>Terminal messages selector</h1>
             ${expanded}
             ${terminal_list}
         </section>
         <section>
-            <h2>Multple select</h2>
+            <h1>Multple select</h1>
             <div>
                 ${total_selected}
                 ${selects_result}
             </div>
-            ${multiple_select_list}
+            ${listbox_multi}
         </section>
         
         <section>
-            <h2>Dropdown</h2>
-            ${dropdown_list}
+            <h1>Dropdown</h1>
+            ${menubar}
         </section>
     </div>`
     const container = bel`<div class="${css.container}">${content}</div>`
@@ -457,14 +308,14 @@ function demo () {
     }
 
     function change_event (data) {
-        const {mode, selected} = data
-        if (mode === 'single-select') {
+        const { mode, selected } = data
+        if (mode === 'listbox-single') {
             selected.forEach( item => {
                 if (item.current && item.text.match(/Compact|Comfortable/)) return terminal_change_event(item.text.toLowerCase())
                 if (item.current) return select.textContent = item.text 
             })
         }
-        if (mode === 'multiple-select') {
+        if (mode === 'listbox-multi') {
             const items = selected.filter( item => item.selected)
             const total = items.length
             const selected_length = bel`<span class="${css.count}">${total}</span>`
@@ -480,14 +331,16 @@ function demo () {
         const state = !data
         const { address: from_address, notify: from_notify, make: from_make } = names[from]
         from_notify(from_make({ to: from_address, type: 'switched', data: state}))
-        const { address: logs_address, notify: logs_notify, make: logs_make } = names['logs']
+        // const { address, notify, make } = recipients['parent']
+        // notify(make({ to: address, type: 'switched', data }))
+        const { address: logs_address, notify: logs_notify, make: logs_make } = recipients['logs']
         logs_notify(logs_make({to: logs_address, type: 'triggered', data: {checked: state}}) )
         logs_notify(logs_make({to: logs_address, type: 'layout-mode', data: {expanded: state}}))
     }
-    function click_event (from, role, data) {
-        const { address: logs_address, notify: logs_notify, make: logs_make } = names['logs']
-        if (role === 'switch') return switch_event(from, data)
-        if (role === 'menuitem') return logs_notify(logs_make({to: logs_address, type: 'triggered', data: {app: 'datdot', install: true}}))
+    function click_event (from, data) {
+        const { address: logs_address, notify: logs_notify, make: logs_make } = recipients['logs']
+        if (from === 'switch') return switch_event(from, data)
+        if (from === 'menuitem') return logs_notify(logs_make({to: logs_address, type: 'triggered', data: {app: 'datdot', install: true}}))
     }
 }
 
@@ -810,7 +663,7 @@ section {
 
 document.body.append(demo())
 }).call(this)}).call(this,"/demo/demo.js")
-},{"..":48,"../src/node_modules/make-grid":49,"bel":4,"csjs-inject":7,"datdot-terminal":24,"datdot-ui-button":29,"head":2,"message-maker":44}],2:[function(require,module,exports){
+},{"..":52,"../src/node_modules/make-grid":53,"bel":4,"csjs-inject":7,"datdot-terminal":24,"datdot-ui-button":29,"head":2,"message-maker":48}],2:[function(require,module,exports){
 module.exports = head
 
 function head (lang = 'UTF-8', title = 'List - DatDot UI') {
@@ -1060,7 +913,7 @@ module.exports = hyperx(belCreateElement, {comments: true})
 module.exports.default = module.exports
 module.exports.createElement = belCreateElement
 
-},{"./appendChild":3,"hyperx":46}],5:[function(require,module,exports){
+},{"./appendChild":3,"hyperx":50}],5:[function(require,module,exports){
 (function (global){(function (){
 'use strict';
 
@@ -1079,7 +932,7 @@ function csjsInserter() {
 module.exports = csjsInserter;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"csjs":10,"insert-css":47}],6:[function(require,module,exports){
+},{"csjs":10,"insert-css":51}],6:[function(require,module,exports){
 'use strict';
 
 module.exports = require('csjs/get-css');
@@ -2051,7 +1904,7 @@ mark.current {
 }
 `
 }).call(this)}).call(this,"/node_modules/datdot-terminal/src/index.js")
-},{"bel":4,"datdot-ui-button":29,"footer":25,"generator-color":26,"make-grid":27,"message-maker":44,"support-style-sheet":28}],25:[function(require,module,exports){
+},{"bel":4,"datdot-ui-button":29,"footer":25,"generator-color":26,"make-grid":27,"message-maker":48,"support-style-sheet":28}],25:[function(require,module,exports){
 (function (__filename){(function (){
 const bel = require('bel')
 const style_sheet = require('support-style-sheet')
@@ -2320,8 +2173,8 @@ function footer (opts = {}, parent_protocol) {
     `
     return widget()
 }
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-terminal@1d03cc5ee47906a79726a4884cd75cf8ff8c6c4c/node_modules/datdot-terminal/src/node_modules/footer.js")
-},{"./make-grid":27,"bel":4,"datdot-ui-button":29,"datdot-ui-dropdown":35,"message-maker":44,"support-style-sheet":28}],26:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-terminal@f56dd2c9186f014f235631e7ebe7c89c2606416c/node_modules/datdot-terminal/src/node_modules/footer.js")
+},{"./make-grid":27,"bel":4,"datdot-ui-button":29,"datdot-ui-dropdown":34,"message-maker":48,"support-style-sheet":28}],26:[function(require,module,exports){
  module.exports = {int2hsla, str2hashint}
  function int2hsla (i) { return `hsla(${i % 360}, 100%, 70%, 1)` }
  function str2hashint (str) {
@@ -2440,6 +2293,8 @@ var icon_count = 0
 module.exports = i_button
 
 function i_button (opts, parent_protocol) {
+    const {name, role = 'button', controls, body = '', icons = {}, cover, classlist = null, mode = '', state, expanded = undefined, current = undefined, selected = false, checked = false, disabled = false, theme = {}} = opts
+    const el = make_element({name: 'i-button', classlist, role })
 //-------------------------------------------------
     const myaddress = `${__filename}-${id++}`
     const inbox = {}
@@ -2480,9 +2335,9 @@ function i_button (opts, parent_protocol) {
         }
     }
 //-------------------------------------------------
-    const {name, role = 'button', controls, body = '', icons = {}, cover, classlist = null, mode = '', state, expanded = undefined, current = undefined, selected = false, checked = false, disabled = false, theme = {}} = opts
-    const {icon} = icons
-    const main_icon = i_icon({ name: icon?.name, path: icon?.path}, make_protocol(`${icon?.name}-${icon_count++}`))
+
+    const {icon = {}, select = { name: 'check' }, list = { name: 'arrow-down'} } = icons
+    if (icon.name) var main_icon = i_icon({ name: icon.name, path: icon.path}, make_protocol(`${icon.name}-${icon_count++}`))
     let is_current = current
     let is_checked = checked
     let is_disabled = disabled
@@ -2493,7 +2348,6 @@ function i_button (opts, parent_protocol) {
         const { notify, address, make } = recipients['parent']
         const data = role === 'tab' ?  {selected: is_current ? 'true' : is_selected, current: is_current} : role === 'switch' ? {checked: is_checked} : role === 'listbox' ? {expanded: is_expanded} : disabled ? {disabled} : role === 'option' ? {selected: is_selected, current: is_current} : null
         notify(make({ to: address, type: 'ready', data }))
-        const el = make_element({name: 'i-button', classlist, role })
         const shadow = el.attachShadow({mode: 'closed'})
         const text = make_element({name: 'span', classlist: 'text'})
         const avatar = make_element({name: 'span', classlist: 'avatar'})
@@ -2509,170 +2363,173 @@ function i_button (opts, parent_protocol) {
         el.setAttribute('aria-label', name)
         text.append(body)
         style_sheet(shadow, style)
-        append_items()
-        init_attr()
+        const items = [main_icon, add_cover, add_text]
+        append_items(items, shadow, option, listbox)
+        init_attr(el)
         return el
+    }
 
-        function init_attr () {
-            // define conditions
-            if (state) set_attr({aria: 'aria-live', prop: 'assertive'})
-            if (role === 'tab') {
-                set_attr({aria: 'selected', prop: is_selected})
-                set_attr({aria: 'controls', prop: controls})
-                el.setAttribute('tabindex', is_current ? 0 : -1)
-            }
-            if (role === 'switch') {
-                set_attr({aria: 'checked', prop: is_checked})
-            }
-            if (role === 'listbox') set_attr({aria: 'haspopup', prop: role})
-            if (disabled) {
-                set_attr({aria: 'disabled', prop: is_disabled})
-                el.setAttribute('disabled', is_disabled)
-            } 
-            if (is_checked) set_attr({aria: 'checked', prop: is_checked})
-            if (role.match(/option/)) {
-                is_selected = is_current ? is_current : is_selected
-                set_attr({aria: 'selected', prop: is_selected})
-            }
-            if (expanded !== undefined) {
-                set_attr({aria: 'expanded', prop: is_expanded})
-            }
-            // make current status
-            if (current !== undefined) set_attr({aria: 'current', prop: is_current})
-        }
-
-        function set_attr ({aria, prop}) {
-            el.setAttribute(`aria-${aria}`, prop)
-        }
-
-        // make element to append into shadowDOM
-        function append_items() {           
-            const items = [main_icon, add_cover, add_text]
-            const target = role === 'listbox' ? listbox : role === 'option' ?  option : shadow
-            // list of listbox or dropdown menu
-            if (role.match(/option/)) shadow.append(i_icon({ name: 'check'},  make_protocol(`check-${icon_count++}`)), option)
-            // listbox or dropdown button
-            if (role.match(/listbox/)) shadow.append(i_icon({ name: 'arrow-down' }, make_protocol(`arrow-down-${icon_count++}`)), listbox)
-            items.forEach( item => {
-                if (item === undefined) return
-                target.append(item)
-            })
-        }
-
-        // toggle
-        function switched_event (data) {
-            const {checked} = data
-            is_checked = checked
-            if (is_checked) return set_attr({aria: 'checked', prop: is_checked})
-            else el.removeAttribute('aria-checked')
-        }
-        function expanded_event (data) {
-            is_expanded = data
-            set_attr({aria: 'expanded', prop: is_expanded})
-        }
-        function collapsed_event (data) {
-            is_expanded = data
-            set_attr({aria: 'expanded', prop: is_expanded})
-        }
-        // tab selected
-        function tab_selected_event ({selected}) {
-            is_selected = selected
+    function init_attr (el) {
+        // define conditions
+        if (state) set_attr({aria: 'aria-live', prop: 'assertive'})
+        if (role === 'tab') {
             set_attr({aria: 'selected', prop: is_selected})
+            set_attr({aria: 'controls', prop: controls})
             el.setAttribute('tabindex', is_current ? 0 : -1)
         }
-        function list_selected_event (state) {
-            is_selected = state
+        if (role === 'switch') {
+            set_attr({aria: 'checked', prop: is_checked})
+        }
+        if (role === 'listbox') set_attr({aria: 'haspopup', prop: role})
+        if (disabled) {
+            set_attr({aria: 'disabled', prop: is_disabled})
+            el.setAttribute('disabled', is_disabled)
+        } 
+        if (is_checked) set_attr({aria: 'checked', prop: is_checked})
+        if (role.match(/option/)) {
+            is_selected = is_current ? is_current : is_selected
             set_attr({aria: 'selected', prop: is_selected})
-            if (mode === 'single-select') {
-                is_current = is_selected
-                set_attr({aria: 'current', prop: is_current})
-            }
-            // option is selected then send selected items to listbox button
-            if (is_selected) notify(make({ to: address, type: 'changed', data: {text: body, cover, icon } }))
         }
-        function changed_event (data) {
-            const {text, cover, icon, title} = data
-            // new element
-            const new_text = make_element({name: 'span', classlist: 'text'})
-            const new_avatar = make_element({name: 'span', classlist: 'avatar'})
-            // old element
-            const old_icon = shadow.querySelector('.icon')
-            const old_avatar = shadow.querySelector('.avatar')
-            const old_text = shadow.querySelector('.text')
-            // change content for button or switch or tab
-            if (role.match(/button|switch|tab/)) {
-                el.setAttribute('aria-label', text || title)
-                if (text) {
-                    if (old_text) old_text.textContent = text
-                } else {
-                    if (old_text) old_text.remove()
-                }
-                if (cover) {
-                    if (old_avatar) {
-                        const img = old_avatar.querySelector('img')
-                        img.alt = text || title
-                        img.src = cover
-                    } else {
-                        new_avatar.append(make_img({src: cover, alt: text || title}))
-                        shadow.insertBefore(new_avatar, shadow.firstChild)
-                    }
-                } else {
-                    if (old_avatar) old_avatar.remove()
-                }
-                if (icon) {
-                    const new_icon = i_icon({ name: icon.name, path: icon.path}, make_protocol(`${icon.name}-${icon_count++}`))
-                    if (old_icon) old_icon.parentNode.replaceChild(new_icon, old_icon)
-                    else shadow.insertBefore(new_icon, shadow.firstChild)
-                } else {
-                    if (old_icon) old_icon.remove()
-                }
-            }
-            // change content for listbox
-            if (role.match(/listbox/)) {
-                listbox.innerHTML = ''
-                if (icon) {
-                    const new_icon = i_icon({ name: icon.name, path: icon.path}, make_protocol(`${icon.name}-${icon_count++}`))
-                    if (role.match(/listbox/)) listbox.append(new_icon)
-                }
-                if (cover) {
-                    new_avatar.append(make_img({src: cover, alt: text}))
-                    if (role.match(/listbox/)) listbox.append(new_avatar)
-                }
-                if (text) {
-                    new_text.append(text)
-                    if (role.match(/listbox/)) listbox.append(new_text)
-                }
-            } 
+        if (expanded !== undefined) {
+            set_attr({aria: 'expanded', prop: is_expanded})
         }
-        // button click
-        function handle_click () {
-            const type = 'click'
-            if ('current' in opts) {
-                notify(make({ to: address, type: 'current', data: {name, current: is_current } }) )
+        // make current status
+        if (current !== undefined) set_attr({aria: 'current', prop: is_current})
+    }
+
+    // make element to append into shadowDOM
+    function append_items(items, shadow, option, listbox) {         
+        const [main_icon, add_cover, add_text] = items
+        const target = role === 'listbox' ? listbox : role === 'option' ?  option : shadow
+        // list of listbox or dropdown menu
+        if (role.match(/option/)) shadow.append(i_icon(list,  make_protocol(`${list.name}-${icon_count++}`)), option)
+        // listbox or dropdown button
+        if (role.match(/listbox/)) shadow.append(i_icon(select, make_protocol(`${select.name}-${icon_count++}`)), listbox)
+        items.forEach( item => {
+            if (item === undefined) return
+            target.append(item)
+        })
+    }
+
+    function set_attr ({aria, prop}) {
+        el.setAttribute(`aria-${aria}`, prop)
+    }
+
+    // toggle
+    function switched_event (data) {
+        const {checked} = data
+        is_checked = checked
+        if (is_checked) return set_attr({aria: 'checked', prop: is_checked})
+        else el.removeAttribute('aria-checked')
+    }
+    function expanded_event (data) {
+        is_expanded = data
+        set_attr({aria: 'expanded', prop: is_expanded})
+    }
+    function collapsed_event (data) {
+        is_expanded = data
+        set_attr({aria: 'expanded', prop: is_expanded})
+    }
+    // tab selected
+    function tab_selected_event ({selected}) {
+        is_selected = selected
+        set_attr({aria: 'selected', prop: is_selected})
+        el.setAttribute('tabindex', is_current ? 0 : -1)
+    }
+    function list_selected_event (state) {
+        is_selected = state
+        set_attr({aria: 'selected', prop: is_selected})
+        if (mode === 'single-select') {
+            is_current = is_selected
+            set_attr({aria: 'current', prop: is_current})
+        }
+        // option is selected then send selected items to listbox button
+        const { make } = recipients['parent']
+        if (is_selected) notify(make({ to: address, type: 'changed', data: {text: body, cover, icon } }))
+    }
+    function changed_event (data) {
+        const {text, cover, icon, title} = data
+        // new element
+        const new_text = make_element({name: 'span', classlist: 'text'})
+        const new_avatar = make_element({name: 'span', classlist: 'avatar'})
+        // old element
+        const old_icon = shadow.querySelector('.icon')
+        const old_avatar = shadow.querySelector('.avatar')
+        const old_text = shadow.querySelector('.text')
+        // change content for button or switch or tab
+        if (role.match(/button|switch|tab/)) {
+            el.setAttribute('aria-label', text || title)
+            if (text) {
+                if (old_text) old_text.textContent = text
+            } else {
+                if (old_text) old_text.remove()
             }
-            if (expanded !== undefined) {
-                const type = !is_expanded ? 'expanded' : 'collapsed'
-                notify(make({ to: address, type, data: {name, expanded: is_expanded } }))
+            if (cover) {
+                if (old_avatar) {
+                    const img = old_avatar.querySelector('img')
+                    img.alt = text || title
+                    img.src = cover
+                } else {
+                    new_avatar.append(make_img({src: cover, alt: text || title}))
+                    shadow.insertBefore(new_avatar, shadow.firstChild)
+                }
+            } else {
+                if (old_avatar) old_avatar.remove()
             }
-            if (role === 'button') {
-                return notify( make({type, to: controls} ))
+            if (icon) {
+                const new_icon = i_icon({ name: icon.name, path: icon.path}, make_protocol(`${icon.name}-${icon_count++}`))
+                if (old_icon) old_icon.parentNode.replaceChild(new_icon, old_icon)
+                else shadow.insertBefore(new_icon, shadow.firstChild)
+            } else {
+                if (old_icon) old_icon.remove()
             }
-            if (role === 'tab') {
-                if (is_current) return
-                is_selected = !is_selected
-                return notify(make({ to: address, type, data: {name, selected: is_selected } }) )
+        }
+        // change content for listbox
+        if (role.match(/listbox/)) {
+            listbox.innerHTML = ''
+            if (icon) {
+                const new_icon = i_icon({ name: icon.name, path: icon.path}, make_protocol(`${icon.name}-${icon_count++}`))
+                if (role.match(/listbox/)) listbox.append(new_icon)
             }
-            if (role === 'switch') {
-                return notify(make({ to: address, type, data: {name, checked: is_checked } }) )
+            if (cover) {
+                new_avatar.append(make_img({src: cover, alt: text}))
+                if (role.match(/listbox/)) listbox.append(new_avatar)
             }
-            if (role === 'listbox') {
-                is_expanded = !is_expanded
-                return notify(make({ to: address, type, data: {name, expanded: is_expanded } }))
+            if (text) {
+                new_text.append(text)
+                if (role.match(/listbox/)) listbox.append(new_text)
             }
-            if (role === 'option') {
-                is_selected = !is_selected
-                return notify(make({ to: address, type, data: {name, selected: is_selected, content: is_selected ? {text: body, cover, icon} : '' } }) )
-            }
+        } 
+    }
+    // button click
+    function handle_click () {
+        const { make } = recipients['parent']
+        const type = 'click'
+        if ('current' in opts) {
+            notify(make({ to: address, type: 'current', data: {name, current: is_current } }) )
+        }
+        if (expanded !== undefined) {
+            const type = !is_expanded ? 'expanded' : 'collapsed'
+            notify(make({ to: address, type, data: {name, expanded: is_expanded } }))
+        }
+        if (role === 'button') {
+            return notify( make({type, to: controls} ))
+        }
+        if (role === 'tab') {
+            if (is_current) return
+            is_selected = !is_selected
+            return notify(make({ to: address, type, data: {name, selected: is_selected } }) )
+        }
+        if (role === 'switch') {
+            return notify(make({ to: address, type, data: {name, checked: is_checked } }) )
+        }
+        if (role === 'listbox') {
+            is_expanded = !is_expanded
+            return notify(make({ to: address, type, data: {name, expanded: is_expanded } }))
+        }
+        if (role === 'option') {
+            is_selected = !is_selected
+            return notify(make({ to: address, type, data: {name, selected: is_selected, content: is_selected ? {text: body, cover, icon} : '' } }) )
         }
     }
    
@@ -3128,16 +2985,16 @@ function i_button (opts, parent_protocol) {
     return widget()
 }
 }).call(this)}).call(this,"/node_modules/datdot-ui-button/src/index.js")
-},{"datdot-ui-icon":38,"make-element":30,"make-grid":31,"make-image":32,"message-maker":33,"support-style-sheet":34}],30:[function(require,module,exports){
+},{"datdot-ui-icon":37,"make-element":30,"make-grid":31,"make-image":32,"message-maker":48,"support-style-sheet":33}],30:[function(require,module,exports){
 module.exports = make_element
 
 function make_element({name = '', classlist = null, role }) {
     const el = document.createElement(name)
-    if (classlist) ste_class()
+    if (classlist) set_class()
     if (role) set_role()
     return el
 
-    function ste_class () {
+    function set_class () {
         el.className = classlist
     }
     
@@ -3161,17 +3018,8 @@ function img ({src, alt}) {
     return img
 }
 },{}],33:[function(require,module,exports){
-module.exports = function message_maker (from) {
-    let msg_id = 0
-    return function make ({to, type, data = null, refs = []}) {
-        const stack = (new Error().stack.split('\n').slice(2).filter(x => x.trim()))
-        const message = { head: [from, to, ++msg_id], refs, type, data, meta: { stack }}
-        return message
-    }
-}
-},{}],34:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],35:[function(require,module,exports){
+},{"dup":28}],34:[function(require,module,exports){
 (function (__filename){(function (){
 const style_sheet = require('support-style-sheet')
 const message_maker = require('message-maker')
@@ -3419,8 +3267,8 @@ function i_dropdown (opts, parent_protocol) {
 }
 
 
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-terminal@1d03cc5ee47906a79726a4884cd75cf8ff8c6c4c/node_modules/datdot-ui-dropdown/src/index.js")
-},{"datdot-ui-button":29,"make-list":36,"message-maker":44,"support-style-sheet":37}],36:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-terminal@f56dd2c9186f014f235631e7ebe7c89c2606416c/node_modules/datdot-ui-dropdown/src/index.js")
+},{"datdot-ui-button":29,"make-list":35,"message-maker":48,"support-style-sheet":36}],35:[function(require,module,exports){
 (function (__filename){(function (){
 const i_list = require('datdot-ui-list')
 const message_maker = require('message-maker')
@@ -3511,9 +3359,9 @@ function make_list ({page, name, option = {}, mode, hidden}, parent_protocol) {
     }
 }
 }).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-dropdown@33f8bcb041c9061a14232822825fa7bcf170aebb/node_modules/datdot-ui-dropdown/src/node_modules/make-list.js")
-},{"datdot-ui-list":41,"message-maker":44}],37:[function(require,module,exports){
+},{"datdot-ui-list":45,"message-maker":48}],36:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],38:[function(require,module,exports){
+},{"dup":28}],37:[function(require,module,exports){
 (function (__filename){(function (){
 const style_sheet = require('support-style-sheet')
 const svg = require('svg')
@@ -3600,10 +3448,10 @@ module.exports = ({name, path, is_shadow = false, theme}, parent_protocol) => {
     return symbol
 }
 
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-button@e81cbd843fcfa8a5452a7d591a9e6f367d5317ea/node_modules/datdot-ui-icon/src/index.js")
-},{"message-maker":44,"support-style-sheet":39,"svg":40}],39:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-button@41f1e77663047629275b843d458a22e2064e9a71/node_modules/datdot-ui-icon/src/index.js")
+},{"message-maker":48,"support-style-sheet":38,"svg":39}],38:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],40:[function(require,module,exports){
+},{"dup":28}],39:[function(require,module,exports){
 module.exports = svg
 function svg (path) {
     const span = document.createElement('span')
@@ -3617,18 +3465,25 @@ function svg (path) {
     }
     return span
 }   
-},{}],41:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 (function (__filename){(function (){
 const style_sheet = require('support-style-sheet')
-const button = require('datdot-ui-button')
 const message_maker = require('message-maker')
+const make_img = require('make-image')
+const make_element = require('make-element')
 const make_grid = require('make-grid')
-module.exports = i_list
+const i_icon = require('datdot-ui-icon')
+
 
 var id = 0
+var icon_count = 0
 
-function i_list (opts = {}, parent_protocol) {
-// -----------------------------------
+module.exports = i_link
+
+// TODO separate button and link into 2 modules
+
+function i_link (opts, parent_protocol) {
+//-------------------------------------------------
     const myaddress = `${__filename}-${id++}`
     const inbox = {}
     const outbox = {}
@@ -3651,709 +3506,275 @@ function i_list (opts = {}, parent_protocol) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
         const [from, to] = head
-        console.log('New message', { from, name: recipients[from].name, msg })
-        // handle
-        if (from === 'menuitem') return handle_click_event(msg)
-        if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
-        if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
+        console.log('New message', { from, name: names[from].name, msg })
+        // toggle
+        if (type.match(/switched/)) return switched_event(data)
+        // dropdown
+        if (type.match(/expanded/)) return expanded_event(data)
+        if (type.match(/collapsed/)) return collapsed_event(data)
+        // tab, checkbox
+        if (type.match(/tab-selected/)) return tab_selected_event(data)
+        // option
+        if (type.match(/selected|unselected/)) return list_selected_event(data)
+        if (type.match(/changed/)) return changed_event(data)
+        if (type.match(/current/)) {
+            is_current = data
+            return set_attr({aria: 'current', prop: is_current})
+        }
     }
-// -----------------------------------
-    const {name, body = [], mode = 'multiple-select', expanded = false, hidden = true, theme = {} } = opts
-    let is_hidden = hidden
-    let is_expanded = !is_hidden ? !is_hidden : expanded
-    const store_selected = []
-    const {grid} = theme
+    
+//-------------------------------------------------
+    const { name, role='link', body, link = {}, icons = {}, classlist, cover, disabled = false, theme = {}} = opts
+    const { icon } = icons
+    const main_icon = i_icon({ name: icon?.name, path: icon?.path}, make_protocol(`${icon?.name}-${icon_count++}`))
+    let {url = '#', target = '_self'} = link
+    let is_disabled = disabled
 
     function widget () {
-        const list = document.createElement('i-list')
-        const shadow = list.attachShadow({mode: 'closed'})
-        list.ariaHidden = is_hidden
-        list.ariaLabel = name
-        list.tabIndex = -1
-        list.ariaExpanded = is_expanded
-        list.dataset.mode = mode
+        const el = make_element({name: 'i-link', role})
+        const shadow = el.attachShadow({mode: 'closed'})
+        const text = make_element({name: 'span', classlist: 'text'})
+        const avatar = make_element({name: 'span', classlist: 'avatar'})
+        const { notify, address, make } = recipients['parent']
+        text.append(body)
+        el.setAttribute('aria-label', body)
+        el.setAttribute('href', url)
+        if (is_disabled) set_attr ({aria: 'disabled', prop: is_disabled})
+        if (!target.match(/self/)) el.setAttribute('target', target)
+        if (classlist) el.classList.add(classlist)
         style_sheet(shadow, style)
-        const { make } = recipients['parent']
-        try {
-            if (mode.match(/single|multiple/)) {
-                list.setAttribute('role', 'listbox')
-                make_selector(body)
-            }   
-            if (mode.match(/dropdown/)) {
-                list.setAttribute('role', 'menubar')
-                make_list()
+        // check icon, cover and body if has value
+        const add_cover = typeof cover === 'string' ? avatar : undefined
+        const add_icon = icon ? main_icon : undefined
+        const add_text = body ? typeof body === 'string' && (add_icon || add_cover ) ? text : body : typeof body === 'object' && body.localName === 'div' ? body : undefined
+        if (typeof cover === 'string') avatar.append(make_img({src: cover, alt: name}))
+        if (typeof cover === 'object') notify(make({ to: address, type: 'error', data: `cover[${typeof cover}] must to be a string` }))
+        if (add_icon) shadow.append(main_icon)
+        if (add_cover) shadow.append(add_cover)
+        if (add_text) shadow.append(add_text)
+        notify(make({to: address, type: 'ready'}))
+        if (!is_disabled) el.onclick = handle_open_link
+        return el
+
+        function set_attr ({aria, prop}) {
+            el.setAttribute(`aria-${aria}`, prop)
+        }
+    
+        function handle_open_link () {
+            if (target.match(/_/)) {
+                window.open(url, target)
             }
-            if (body.length === 0) notify(make({ to: address, type: 'error', data: { text: 'body no items', opts } }))
-        } catch(e) {
-            notify(make({ to: address, type: 'error', data: {text: 'something went wrong', opts }}))
-        }
-        
-        return list
-
-        function make_selector (args) {
-            args.forEach( (list, i) => {
-                const {list_name, address = undefined, text = undefined, role = 'option', icons = {}, cover, current = undefined, selected = false, disabled = false, theme = {}} = list
-                const {style = ``, props = {}} = theme
-                const {
-                    size = 'var(--primary-size)', 
-                    size_hover = 'var(--primary-size)',
-                    weight = '300', 
-                    color = 'var(--primary-color)', 
-                    color_hover = 'var(--primary-color-hover)', 
-                    color_focus = 'var(--color-white)',
-                    bg_color = 'var(--primary-bg-color)', 
-                    bg_color_hover = 'var(--primary-bg-color-hover)', 
-                    bg_color_focus = 'var(--primary-bg-color-focus)',
-                    icon_size = 'var(--primary-icon-size)',
-                    icon_size_hover = 'var(--primary-icon-size_hover)',
-                    icon_fill = 'var(--primary-icon-fill)',
-                    icon_fill_hover = 'var(--primary-icon-fill-hover)',
-                    avatar_width = 'var(--primary-avatar-width)', 
-                    avatar_height = 'var(--primary-avatar-height)', 
-                    avatar_radius = 'var(--primary-avatar-radius)',
-                    current_size = 'var(--current-list-size)',
-                    current_color = 'var(--current-list-color)',
-                    current_weight = 'var(--current-list-weight)',
-                    current_icon_size = 'var(--current-icon-size)',
-                    current_icon_fill = 'var(--current-icon-fill)',
-                    current_list_selected_icon_size = 'var(--current-list-selected-icon-size)',
-                    current_list_selected_icon_fill = 'var(--current-list-selected-icon-fill)',
-                    list_selected_icon_size = 'var(--list-selected-icon-size)',
-                    list_selected_icon_fill = 'var(--list-selected-icon-fill)',
-                    list_selected_icon_fill_hover = 'var(--list-selected-icon-fill-hover)',
-                    disabled_color = 'var(--primary-disabled-color)',
-                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
-                    disabled_icon_fill = 'var(--primary-disabled-fill)',
-                    padding = '',
-                    opacity = '0'
-                } = props
-
-                const is_current = mode === 'single-select' ? current : false
-                const make_button = button({
-                    name: list_name, 
-                    body: text, 
-                    role, icons, cover, 
-                    current: is_current, 
-                    selected, 
-                    disabled,
-                    theme: {
-                        style,
-                        props: {
-                        size, size_hover, weight, 
-                        color, color_hover, color_focus,
-                        bg_color, bg_color_hover, bg_color_focus,
-                        icon_size, icon_size_hover, icon_fill, icon_fill_hover,
-                        avatar_width, avatar_height, avatar_radius,
-                        current_size, current_color, current_weight,
-                        current_icon_size, current_icon_fill,
-                        current_list_selected_icon_size, current_list_selected_icon_fill,
-                        list_selected_icon_size, list_selected_icon_fill, list_selected_icon_fill_hover,
-                        disabled_color, disabled_bg_color, disabled_icon_fill,
-                        padding,
-                        opacity
-                    }, 
-                    grid
-                }}, make_protocol(list_name))
-
-                const li = document.createElement('li')
-                if (address) li.dataset.address = address
-                li.dataset.option = text || list_name
-                li.setAttribute('aria-selected', is_current || selected)
-                if (is_current) li.setAttribute('aria-current', is_current)
-                if (disabled) li.setAttribute('disabled', disabled)
-                li.append(make_button)
-                shadow.append(li)
-                notify(make({ to: address, type: 'ready' }))
-            })
-        }
-
-        function make_list () {
-            body.map( (list, i) => {
-                const {list_name, text = undefined, role = 'option', url = '#', target, icons, cover, disabled = false, theme = {}} = list
-                const {style = ``, props = {}} = theme
-                const {
-                    size = `var(--primary-size)`, 
-                    size_hover = `var(--primary-size)`, 
-                    color = `var(--primary-color)`, 
-                    color_hover = `var(--primary-color-hover)`,     
-                    bg_color = 'var(--primary-bg-color)', 
-                    bg_color_hover = 'var(--primary-bg-color-hover)', 
-                    icon_fill = 'var(--primary-color)', 
-                    icon_fill_hover = 'var(--primary-color-hover)', 
-                    icon_size = 'var(--primary-icon-size)',
-                    icon_size_hover = 'var(--primary-icon-size-hover)',
-                    current_icon_size = 'var(--current-icon-size)',
-                    avatar_width = 'var(--primary-avatar-width)', 
-                    avatar_height = 'var(--primary-avatar-height)', 
-                    avatar_radius = 'var(--primary-avatar-radius)',
-                    disabled_color = 'var(--primary-disabled-color)',
-                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
-                    disabled_icon_fill = 'var(--primary-disabled-icon-fill)',
-                    padding = null
-                } = props
-                if (role === 'link' ) {
-                    var item = i_link({
-                        name: list_name,
-                        body: text,
-                        role: 'menuitem',
-                        link: {
-                            url,
-                            target
-                        },
-                        icons,
-                        cover,
-                        disabled,
-                        theme: {
-                            style,
-                            props,
-                            grid
-                        }
-                    }, make_protocol(list_name))
-                }
-
-                if (role === 'menuitem') {
-                    var item = i_button({
-                        name: list_name,
-                        body: text,
-                        role,
-                        icons,
-                        cover,
-                        disabled,
-                        theme: {
-                            style,
-                            props: {
-                                size, size_hover,
-                                color, color_hover,
-                                bg_color, bg_color_hover,
-                                icon_fill, icon_fill_hover,
-                                icon_size, icon_size_hover,
-                                current_icon_size,
-                                avatar_width, avatar_height, avatar_radius,
-                                disabled_color, disabled_bg_color, disabled_icon_fill,
-                                padding
-                            },
-                            grid
-                        }
-                    }, make_protocol(list_name))
-                }
-                const li = document.createElement('li')
-                li.setAttribute('role', 'none')
-                if (disabled) li.setAttribute('disabled', disabled)
-                li.append(item)
-                shadow.append(li)
-            })
-            
-        }
-        function handle_expanded_event (data) {
-            list.setAttribute('aria-hidden', data)
-            list.setAttribute('aria-expanded', !data)
-        }
-        function handle_mutiple_selected ({from, lists, selected}) {
-            const type = selected ? 'selected' : 'unselected'
-            const { notify, address, make } = recipients[from]
-            notify(make({ to: address, type, data: { selected } }))
-            lists.forEach( list => {
-                const label = list.firstChild.getAttribute('aria-label') 
-                if (label === from) list.setAttribute('aria-selected', selected)
-            })
-            notify(make({type: 'selected', data: {selected: from}}))
-        }
-
-        function handle_single_selected ({from, lists, selected}) {
-            lists.forEach( list => {
-                const label = list.firstChild.getAttribute('aria-label') 
-                const state = label === from
-                const type = state ? 'selected' : 'unselected'
-                const name = state ? from : label
-                const { notify, address, make } = recipients[name]
-                notify(make({ to: address, type, data: { state } }))
-                notify(make({ to: address, type: 'current', data: { state }}))
-                list.setAttribute('aria-current', state)
-                list.setAttribute('aria-selected', state)
-            })
-            notify(make({ to: address, type: 'selected', data: { selected: from } }))
-        }
-        function handle_select_event ({from, to, data}) {
-            const {selected} = data
-            // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
-            const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
-            if (mode === 'single-select')  handle_single_selected({from, lists, selected})
-            if (mode === 'multiple-select') handle_mutiple_selected({from, lists, selected})
-            
-        }
-        function handle_click_event(msg) {
-            const {head, type, data} = msg
-            const [from] = head
-            notify(make({to: address, type, data}))
+            if (target.match(/#/) && target.length > 1) {
+                const el = document.querySelector(target)
+                el.src = url
+            }
+            notify(make({ to: address, type: 'go to', data: { url, window: target } }))
         }
     }
 
     // insert CSS style
     const custom_style = theme ? theme.style : ''
     // set CSS variables
-    if (theme && theme.props) {
-        var {
-            bg_color, bg_color_hover,
-            current_bg_color, current_bg_color_hover, disabled_bg_color,
-            width, height, border_width, border_style, border_opacity, border_color,
-            border_color_hover, border_radius, padding,  opacity,
-            shadow_color, offset_x, offset_y, blur, shadow_opacity,
-            shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
-        } = theme.props
-    }
+    const {props = {}, grid = {}} = theme
+    const {
+        // default        
+        padding, margin, width, height, opacity,
+        // size
+        size, size_hover, disabled_size,
+        // weight
+        weight, weight_hover, disabled_weight,
+        // color
+        color, color_hover, color_focus, disabled_color,
+        // background-color    
+        bg_color, bg_color_hover, disabled_bg_color,
+        // deco
+        deco, deco_hover, disabled_deco,
+        // border
+        border_width, border_style, border_opacity, 
+        border_color, border_color_hover, border_radius,
+        // shadowbox
+        shadow_color, shadow_color_hover,
+        offset_x, offset_y, offset_x_hover, offset_y_hover, 
+        blur, blur_hover, shadow_opacity, shadow_opacity_hover,
+        // icon
+        icon_size, icon_size_hover, disabled_icon_size,
+        icon_fill, icon_fill_hover, disabled_icon_fill,
+        // avatar
+        avatar_width, avatar_height, avatar_radius, 
+        avatar_width_hover, avatar_height_hover,
+        scale, scale_hover
+    } = props
 
+    const grid_link = grid.link ? grid.link : {auto: {auto_flow: 'column'}, align: 'items-center', gap: '4px'}
     const style = `
-    :host(i-list) {
-        ${width && 'width: var(--width);'};
-        ${height && 'height: var(--height);'};
-        display: grid;
-        ${make_grid(grid)}
-        max-width: 100%;
-    }
-    :host(i-list[aria-hidden="true"]) {
-        opacity: 0;
-        animation: close 0.3s;
-        pointer-events: none;
-    }
-    :host([aria-hidden="false"]) {
-        animation: open 0.3s;
-    }
-    li {
-        --bg-color: ${bg_color ? bg_color : 'var(--primary-bg-color)'};
-        --border-radius: ${border_radius ? border_radius : 'var(--primary-radius)'};
-        --border-width: ${border_width ? border_width : 'var(--primary-border-width)'};
-        --border-style: ${border_style ? border_style : 'var(--primary-border-style)'};
-        --border-color: ${border_color ? border_color : 'var(--primary-border-color)'};
-        --border-opacity: ${border_opacity ? border_opacity : 'var(--primary-border-opacity)'};
-        --border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity));
-        display: grid;
-        grid-template-columns: 1fr;
-        background-color: hsl(var(--bg-color));
-        border: var(--border);
-        margin-top: -1px;
+    :host(i-link) {
+        --size: ${size ? size : 'var(--link-size)'};
+        --weight: ${weight ? weight : 'var(--weight300)'};
+        --color: ${color ? color : 'var(--link-color)'};
+        --color-focus: ${color_focus ? color_focus : 'var(--link-color-focus)'};
+        --bg-color: ${bg_color ? bg_color : 'var(--link-bg-color)'};
+        --opacity: ${opacity ? opacity : '0'};
+        --deco: ${deco ? deco : 'none'};
+        --padding: ${padding ? padding : '0'};
+        --margin: ${margin ? margin : '0'};
+        --icon-size: ${icon_size ? icon_size : 'var(--link-icon-size)'};
+        display: inline-grid;
+        font-size: var(--size);
+        font-weight: var(--weight);
+        color: hsl(var(--color));
+        background-color: hsla(var(--bg-color), var(--opacity));
+        text-decoration: var(--deco);
+        padding: var(--padding);
+        margin: var(--margin);
+        transition: color .5s, background-color .5s, font-size .5s, font-weight .5s, opacity .5s ease-in-out;
         cursor: pointer;
-        transition: background-color 0.3s ease-in-out;
+        ${make_grid(grid_link)}
     }
-    li:hover {
-        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--primary-bg-color-hover)'};
+    :host(i-link:hover) {
+        --color: ${color_hover ? color_hover : 'var(--link-color-hover)'};
+        --size: ${size_hover ? size_hover : 'var(--link-size-hover)'};
+        --deco: ${deco_hover ? deco_hover : 'underline'};
+        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--color-white)'};
+        --opacity: ${opacity ? opacity : '0'};
+        text-decoration: var(--deco);
     }
-    :host(i-list) li:nth-of-type(1) {
-        border-top-left-radius: var(--border-radius);
-        border-top-right-radius: var(--border-radius);
+    :host(i-link:focus) {
+        --color: ${color_focus ? color_focus : 'var(--link-color-focus)'};
     }
-    li:last-child {
-        border-bottom-left-radius: var(--border-radius);
-        border-bottom-right-radius: var(--border-radius);
+    :host(i-link) img {
+        --scale: ${scale ? scale : '1'};
+        width: 100%;
+        height: 100%;
+        transform: scale(var(--scale));
+        transition: transform 0.3s linear;
+        object-fit: cover;
+        border-radius: var(--avatar-radius);
     }
-    [role="listitem"] {
-        display: grid;
-        grid-template-rows: 24px;
-        padding: 11px;
-        align-items: center;
+    :host(i-link:hover) img {
+        --scale: ${scale_hover ? scale_hover : '1.2'};
     }
-    [role="listitem"]:hover {
-        cursor: default;
+    :host(i-link) svg {
+        width: 100%;
+        height: auto;
     }
-    li[disabled="true"], li[disabled="true"]:hover {
-        background-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
+    :host(i-link) g {
+        --icon-fill: ${icon_fill ? icon_fill : 'var(--link-icon-fill)'};
+        fill: hsl(var(--icon-fill));
+        transition: fill 0.05s ease-in-out;
+    }
+    :host(i-link:hover) g, :host(i-link:hover) path{
+        --icon-fill: ${icon_fill_hover ? icon_fill_hover : 'var(--link-icon-fill-hover)'};
+    }
+    :host(i-link) .text {
+        ${make_grid(grid.text)}
+    }
+    :host(i-link) .icon {
+        width: var(--icon-size);
+        max-width: 100%;
+        ${make_grid(grid.icon)}
+    }
+    :host(i-link:hover) .icon {
+        --icon-size: ${icon_size_hover ? icon_size_hover : 'var(--link-icon-size)'};
+    }
+    :host(i-link) .avatar {
+        --avatar-width: ${avatar_width ? avatar_width : 'var(--link-avatar-width)'};
+        --avatar-height: ${avatar_height ? avatar_height : 'var(--link-avatar-height)'};
+        --avatar-radius: ${avatar_radius ? avatar_radius : 'var(--link-avatar-radius)'};
+        display: block;
+        width: var(--avatar-width);
+        height: var(--avatar-height);
+        border-radius: var(--avatar-radius);
+        -webkit-mask-image: -webkit-radial-gradient(center, white, black);
+        max-width: 100%;
+        max-height: 100%;
+        ${make_grid(grid.avatar)}
+        transition: width 0.2s, height 0.2s linear;
+    }
+    :host(i-link:hover) .avatar {
+        --avatar-width: ${avatar_width_hover ? avatar_width_hover : 'var(--link-avatar-width-hover)'};
+        --avatar-height: ${avatar_height_hover ? avatar_height_hover : 'var(--link-avatar-height-hover)'};
+    }
+    :host(i-link[role="menuitem"]) {
+        --size: ${size ? size : 'var(--menu-size)'};
+        --color: ${color ? color : 'var(--menu-color)'};
+        --weight: ${weight ? weight : 'var(--menu-weight)'};
+        background-color: transparent;
+    }
+    :host(i-link[role="menuitem"]:hover) {
+        --size: ${size ? size : 'var(--menu-size-hover)'};
+        --color: ${color_hover ? color_hover : 'var(--menu-color-hover)'};
+        --weight: ${weight ? weight : 'var(--menu-weight-hover)'};
+        text-decoration: none;
+        background-color: transparent;
+    }
+    :host(i-link[role="menuitem"]:focus) {
+        --color: var(--color-focus);
+    }
+    :host(i-link[role="menuitem"]) .icon {
+        --icon-size: ${icon_size ? icon_size : 'var(--menu-icon-size)'};
+    }
+    :host(i-link[role="menuitem"]) g {
+        --icon-fill: ${icon_fill ? icon_fill : 'var(--menu-icon-fill)'};
+    }
+    :host(i-link[role="menuitem"]:hover) g {
+        --icon-fill: ${icon_fill_hover ? icon_fill_hover : 'var(--menu-icon-fill-hover)'};
+    }
+    :host(i-link[aria-disabled="true"]), :host(i-link[aria-disabled="true"]:hover) {
+        --size: ${disabled_size ? disabled_size : 'var(--link-disabled-size)'};
+        --color: ${disabled_color ? disabled_color : 'var(--link-disabled-color)'};
+        text-decoration: none;
         cursor: not-allowed;
     }
-    [role="none"] {
-        --bg-color: var(--list-bg-color);
-        --opacity: 1;
-        background-color: hsla(var(--bg-color), var(--opacity));
+    :host(i-link[disabled]) g,
+    :host(i-link[disabled]) path,
+    :host(i-link[disabled]:hover) g,
+    :host(i-link[disabled]:hover) path,
+    :host(i-link[role][disabled]) g,
+    :host(i-link[role][disabled]) path,
+    :host(i-link[role][disabled]:hover) g,
+    :host(i-link[role][disabled]:hover) path
+    {
+        --icon-fill: ${disabled_icon_fill ? disabled_icon_fill : 'var(--link-disabled-icon-fill)'};
     }
-    [role="none"]:hover {
-        --bg-color: var(--list-bg-color-hover);
-        --opacity: 1;
-        background-color: hsla(var(--bg-color), var(--opacity));
+    :host(i-link[disabled]) .avatar {
+        opacity: 0.6;
     }
-    [role="none"] i-link {
-        padding: 12px;
-    }
-    [role="option"] i-button.icon-right, [role="option"] i-button.text-left {
-        grid-template-columns: auto 1fr auto;
-    }
-    [aria-current="true"] {
-        --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
-    }
-    @keyframes close {
-        0% {
-            opacity: 1;
-        }
-        100% {
-            opacity: 0;
-        }
-    }
-    @keyframes open {
-        0% {
-            opacity: 0;
-        }
-        100% {
-            opacity: 1;
-        }
+    :host(i-link.right) {
+        flex-direction: row-reverse;
     }
     ${custom_style}
     `
-
     return widget()
 }
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-dropdown@33f8bcb041c9061a14232822825fa7bcf170aebb/node_modules/datdot-ui-list/src/index.js")
-},{"datdot-ui-button":29,"make-grid":42,"message-maker":44,"support-style-sheet":43}],42:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/datdot-ui-link/src/index.js")
+},{"datdot-ui-icon":37,"make-element":41,"make-grid":42,"make-image":43,"message-maker":48,"support-style-sheet":44}],41:[function(require,module,exports){
+module.exports = make_element
+
+function make_element({name = '', classlist = null, role }) {
+    const el = document.createElement(name)
+    if (classlist) ste_class()
+    if (role) set_role()
+    return el
+
+    function ste_class () {
+        el.className = classlist
+    }
+    
+    function set_role () {
+        const tabindex = role.match(/button|switch/) ? 0 : -1
+        el.setAttribute('role', role)
+        el.setAttribute('tabindex',  tabindex)
+    }
+}
+
+
+},{}],42:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
 },{"dup":27}],43:[function(require,module,exports){
+arguments[4][32][0].apply(exports,arguments)
+},{"dup":32}],44:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],44:[function(require,module,exports){
-module.exports = function message_maker (from) {
-  let msg_id = 0
-  return function make ({to, type, data = null, refs = {} }) {
-      const stack = (new Error().stack.split('\n').slice(2).filter(x => x.trim()))
-      return { head: [from, to, msg_id++], refs, type, data, meta: { stack }}
-  }
-}
-},{}],45:[function(require,module,exports){
-module.exports = attributeToProperty
-
-var transform = {
-  'class': 'className',
-  'for': 'htmlFor',
-  'http-equiv': 'httpEquiv'
-}
-
-function attributeToProperty (h) {
-  return function (tagName, attrs, children) {
-    for (var attr in attrs) {
-      if (attr in transform) {
-        attrs[transform[attr]] = attrs[attr]
-        delete attrs[attr]
-      }
-    }
-    return h(tagName, attrs, children)
-  }
-}
-
-},{}],46:[function(require,module,exports){
-var attrToProp = require('hyperscript-attribute-to-property')
-
-var VAR = 0, TEXT = 1, OPEN = 2, CLOSE = 3, ATTR = 4
-var ATTR_KEY = 5, ATTR_KEY_W = 6
-var ATTR_VALUE_W = 7, ATTR_VALUE = 8
-var ATTR_VALUE_SQ = 9, ATTR_VALUE_DQ = 10
-var ATTR_EQ = 11, ATTR_BREAK = 12
-var COMMENT = 13
-
-module.exports = function (h, opts) {
-  if (!opts) opts = {}
-  var concat = opts.concat || function (a, b) {
-    return String(a) + String(b)
-  }
-  if (opts.attrToProp !== false) {
-    h = attrToProp(h)
-  }
-
-  return function (strings) {
-    var state = TEXT, reg = ''
-    var arglen = arguments.length
-    var parts = []
-
-    for (var i = 0; i < strings.length; i++) {
-      if (i < arglen - 1) {
-        var arg = arguments[i+1]
-        var p = parse(strings[i])
-        var xstate = state
-        if (xstate === ATTR_VALUE_DQ) xstate = ATTR_VALUE
-        if (xstate === ATTR_VALUE_SQ) xstate = ATTR_VALUE
-        if (xstate === ATTR_VALUE_W) xstate = ATTR_VALUE
-        if (xstate === ATTR) xstate = ATTR_KEY
-        if (xstate === OPEN) {
-          if (reg === '/') {
-            p.push([ OPEN, '/', arg ])
-            reg = ''
-          } else {
-            p.push([ OPEN, arg ])
-          }
-        } else if (xstate === COMMENT && opts.comments) {
-          reg += String(arg)
-        } else if (xstate !== COMMENT) {
-          p.push([ VAR, xstate, arg ])
-        }
-        parts.push.apply(parts, p)
-      } else parts.push.apply(parts, parse(strings[i]))
-    }
-
-    var tree = [null,{},[]]
-    var stack = [[tree,-1]]
-    for (var i = 0; i < parts.length; i++) {
-      var cur = stack[stack.length-1][0]
-      var p = parts[i], s = p[0]
-      if (s === OPEN && /^\//.test(p[1])) {
-        var ix = stack[stack.length-1][1]
-        if (stack.length > 1) {
-          stack.pop()
-          stack[stack.length-1][0][2][ix] = h(
-            cur[0], cur[1], cur[2].length ? cur[2] : undefined
-          )
-        }
-      } else if (s === OPEN) {
-        var c = [p[1],{},[]]
-        cur[2].push(c)
-        stack.push([c,cur[2].length-1])
-      } else if (s === ATTR_KEY || (s === VAR && p[1] === ATTR_KEY)) {
-        var key = ''
-        var copyKey
-        for (; i < parts.length; i++) {
-          if (parts[i][0] === ATTR_KEY) {
-            key = concat(key, parts[i][1])
-          } else if (parts[i][0] === VAR && parts[i][1] === ATTR_KEY) {
-            if (typeof parts[i][2] === 'object' && !key) {
-              for (copyKey in parts[i][2]) {
-                if (parts[i][2].hasOwnProperty(copyKey) && !cur[1][copyKey]) {
-                  cur[1][copyKey] = parts[i][2][copyKey]
-                }
-              }
-            } else {
-              key = concat(key, parts[i][2])
-            }
-          } else break
-        }
-        if (parts[i][0] === ATTR_EQ) i++
-        var j = i
-        for (; i < parts.length; i++) {
-          if (parts[i][0] === ATTR_VALUE || parts[i][0] === ATTR_KEY) {
-            if (!cur[1][key]) cur[1][key] = strfn(parts[i][1])
-            else parts[i][1]==="" || (cur[1][key] = concat(cur[1][key], parts[i][1]));
-          } else if (parts[i][0] === VAR
-          && (parts[i][1] === ATTR_VALUE || parts[i][1] === ATTR_KEY)) {
-            if (!cur[1][key]) cur[1][key] = strfn(parts[i][2])
-            else parts[i][2]==="" || (cur[1][key] = concat(cur[1][key], parts[i][2]));
-          } else {
-            if (key.length && !cur[1][key] && i === j
-            && (parts[i][0] === CLOSE || parts[i][0] === ATTR_BREAK)) {
-              // https://html.spec.whatwg.org/multipage/infrastructure.html#boolean-attributes
-              // empty string is falsy, not well behaved value in browser
-              cur[1][key] = key.toLowerCase()
-            }
-            if (parts[i][0] === CLOSE) {
-              i--
-            }
-            break
-          }
-        }
-      } else if (s === ATTR_KEY) {
-        cur[1][p[1]] = true
-      } else if (s === VAR && p[1] === ATTR_KEY) {
-        cur[1][p[2]] = true
-      } else if (s === CLOSE) {
-        if (selfClosing(cur[0]) && stack.length) {
-          var ix = stack[stack.length-1][1]
-          stack.pop()
-          stack[stack.length-1][0][2][ix] = h(
-            cur[0], cur[1], cur[2].length ? cur[2] : undefined
-          )
-        }
-      } else if (s === VAR && p[1] === TEXT) {
-        if (p[2] === undefined || p[2] === null) p[2] = ''
-        else if (!p[2]) p[2] = concat('', p[2])
-        if (Array.isArray(p[2][0])) {
-          cur[2].push.apply(cur[2], p[2])
-        } else {
-          cur[2].push(p[2])
-        }
-      } else if (s === TEXT) {
-        cur[2].push(p[1])
-      } else if (s === ATTR_EQ || s === ATTR_BREAK) {
-        // no-op
-      } else {
-        throw new Error('unhandled: ' + s)
-      }
-    }
-
-    if (tree[2].length > 1 && /^\s*$/.test(tree[2][0])) {
-      tree[2].shift()
-    }
-
-    if (tree[2].length > 2
-    || (tree[2].length === 2 && /\S/.test(tree[2][1]))) {
-      if (opts.createFragment) return opts.createFragment(tree[2])
-      throw new Error(
-        'multiple root elements must be wrapped in an enclosing tag'
-      )
-    }
-    if (Array.isArray(tree[2][0]) && typeof tree[2][0][0] === 'string'
-    && Array.isArray(tree[2][0][2])) {
-      tree[2][0] = h(tree[2][0][0], tree[2][0][1], tree[2][0][2])
-    }
-    return tree[2][0]
-
-    function parse (str) {
-      var res = []
-      if (state === ATTR_VALUE_W) state = ATTR
-      for (var i = 0; i < str.length; i++) {
-        var c = str.charAt(i)
-        if (state === TEXT && c === '<') {
-          if (reg.length) res.push([TEXT, reg])
-          reg = ''
-          state = OPEN
-        } else if (c === '>' && !quot(state) && state !== COMMENT) {
-          if (state === OPEN && reg.length) {
-            res.push([OPEN,reg])
-          } else if (state === ATTR_KEY) {
-            res.push([ATTR_KEY,reg])
-          } else if (state === ATTR_VALUE && reg.length) {
-            res.push([ATTR_VALUE,reg])
-          }
-          res.push([CLOSE])
-          reg = ''
-          state = TEXT
-        } else if (state === COMMENT && /-$/.test(reg) && c === '-') {
-          if (opts.comments) {
-            res.push([ATTR_VALUE,reg.substr(0, reg.length - 1)])
-          }
-          reg = ''
-          state = TEXT
-        } else if (state === OPEN && /^!--$/.test(reg)) {
-          if (opts.comments) {
-            res.push([OPEN, reg],[ATTR_KEY,'comment'],[ATTR_EQ])
-          }
-          reg = c
-          state = COMMENT
-        } else if (state === TEXT || state === COMMENT) {
-          reg += c
-        } else if (state === OPEN && c === '/' && reg.length) {
-          // no-op, self closing tag without a space <br/>
-        } else if (state === OPEN && /\s/.test(c)) {
-          if (reg.length) {
-            res.push([OPEN, reg])
-          }
-          reg = ''
-          state = ATTR
-        } else if (state === OPEN) {
-          reg += c
-        } else if (state === ATTR && /[^\s"'=/]/.test(c)) {
-          state = ATTR_KEY
-          reg = c
-        } else if (state === ATTR && /\s/.test(c)) {
-          if (reg.length) res.push([ATTR_KEY,reg])
-          res.push([ATTR_BREAK])
-        } else if (state === ATTR_KEY && /\s/.test(c)) {
-          res.push([ATTR_KEY,reg])
-          reg = ''
-          state = ATTR_KEY_W
-        } else if (state === ATTR_KEY && c === '=') {
-          res.push([ATTR_KEY,reg],[ATTR_EQ])
-          reg = ''
-          state = ATTR_VALUE_W
-        } else if (state === ATTR_KEY) {
-          reg += c
-        } else if ((state === ATTR_KEY_W || state === ATTR) && c === '=') {
-          res.push([ATTR_EQ])
-          state = ATTR_VALUE_W
-        } else if ((state === ATTR_KEY_W || state === ATTR) && !/\s/.test(c)) {
-          res.push([ATTR_BREAK])
-          if (/[\w-]/.test(c)) {
-            reg += c
-            state = ATTR_KEY
-          } else state = ATTR
-        } else if (state === ATTR_VALUE_W && c === '"') {
-          state = ATTR_VALUE_DQ
-        } else if (state === ATTR_VALUE_W && c === "'") {
-          state = ATTR_VALUE_SQ
-        } else if (state === ATTR_VALUE_DQ && c === '"') {
-          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
-          reg = ''
-          state = ATTR
-        } else if (state === ATTR_VALUE_SQ && c === "'") {
-          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
-          reg = ''
-          state = ATTR
-        } else if (state === ATTR_VALUE_W && !/\s/.test(c)) {
-          state = ATTR_VALUE
-          i--
-        } else if (state === ATTR_VALUE && /\s/.test(c)) {
-          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
-          reg = ''
-          state = ATTR
-        } else if (state === ATTR_VALUE || state === ATTR_VALUE_SQ
-        || state === ATTR_VALUE_DQ) {
-          reg += c
-        }
-      }
-      if (state === TEXT && reg.length) {
-        res.push([TEXT,reg])
-        reg = ''
-      } else if (state === ATTR_VALUE && reg.length) {
-        res.push([ATTR_VALUE,reg])
-        reg = ''
-      } else if (state === ATTR_VALUE_DQ && reg.length) {
-        res.push([ATTR_VALUE,reg])
-        reg = ''
-      } else if (state === ATTR_VALUE_SQ && reg.length) {
-        res.push([ATTR_VALUE,reg])
-        reg = ''
-      } else if (state === ATTR_KEY) {
-        res.push([ATTR_KEY,reg])
-        reg = ''
-      }
-      return res
-    }
-  }
-
-  function strfn (x) {
-    if (typeof x === 'function') return x
-    else if (typeof x === 'string') return x
-    else if (x && typeof x === 'object') return x
-    else if (x === null || x === undefined) return x
-    else return concat('', x)
-  }
-}
-
-function quot (state) {
-  return state === ATTR_VALUE_SQ || state === ATTR_VALUE_DQ
-}
-
-var closeRE = RegExp('^(' + [
-  'area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed',
-  'frame', 'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param',
-  'source', 'track', 'wbr', '!--',
-  // SVG TAGS
-  'animate', 'animateTransform', 'circle', 'cursor', 'desc', 'ellipse',
-  'feBlend', 'feColorMatrix', 'feComposite',
-  'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
-  'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR',
-  'feGaussianBlur', 'feImage', 'feMergeNode', 'feMorphology',
-  'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile',
-  'feTurbulence', 'font-face-format', 'font-face-name', 'font-face-uri',
-  'glyph', 'glyphRef', 'hkern', 'image', 'line', 'missing-glyph', 'mpath',
-  'path', 'polygon', 'polyline', 'rect', 'set', 'stop', 'tref', 'use', 'view',
-  'vkern'
-].join('|') + ')(?:[\.#][a-zA-Z0-9\u007F-\uFFFF_:-]+)*$')
-function selfClosing (tag) { return closeRE.test(tag) }
-
-},{"hyperscript-attribute-to-property":45}],47:[function(require,module,exports){
-var inserted = {};
-
-module.exports = function (css, options) {
-    if (inserted[css]) return;
-    inserted[css] = true;
-    
-    var elem = document.createElement('style');
-    elem.setAttribute('type', 'text/css');
-
-    if ('textContent' in elem) {
-      elem.textContent = css;
-    } else {
-      elem.styleSheet.cssText = css;
-    }
-    
-    var head = document.getElementsByTagName('head')[0];
-    if (options && options.prepend) {
-        head.insertBefore(elem, head.childNodes[0]);
-    } else {
-        head.appendChild(elem);
-    }
-};
-
-},{}],48:[function(require,module,exports){
+},{"dup":28}],45:[function(require,module,exports){
 (function (__filename){(function (){
 const style_sheet = require('support-style-sheet')
 const button = require('datdot-ui-button')
@@ -4734,9 +4155,709 @@ function i_list (opts = {}, parent_protocol) {
 
     return widget()
 }
-}).call(this)}).call(this,"/src/index.js")
-},{"datdot-ui-button":29,"make-grid":49,"message-maker":44,"support-style-sheet":50}],49:[function(require,module,exports){
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-dropdown@33f8bcb041c9061a14232822825fa7bcf170aebb/node_modules/datdot-ui-list/src/index.js")
+},{"datdot-ui-button":29,"make-grid":46,"message-maker":48,"support-style-sheet":47}],46:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
-},{"dup":27}],50:[function(require,module,exports){
+},{"dup":27}],47:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"dup":28}],48:[function(require,module,exports){
+module.exports = function message_maker (from) {
+  let msg_id = 0
+  return function make ({to, type, data = null, refs = {} }) {
+      const stack = (new Error().stack.split('\n').slice(2).filter(x => x.trim()))
+      return { head: [from, to, msg_id++], refs, type, data, meta: { stack }}
+  }
+}
+},{}],49:[function(require,module,exports){
+module.exports = attributeToProperty
+
+var transform = {
+  'class': 'className',
+  'for': 'htmlFor',
+  'http-equiv': 'httpEquiv'
+}
+
+function attributeToProperty (h) {
+  return function (tagName, attrs, children) {
+    for (var attr in attrs) {
+      if (attr in transform) {
+        attrs[transform[attr]] = attrs[attr]
+        delete attrs[attr]
+      }
+    }
+    return h(tagName, attrs, children)
+  }
+}
+
+},{}],50:[function(require,module,exports){
+var attrToProp = require('hyperscript-attribute-to-property')
+
+var VAR = 0, TEXT = 1, OPEN = 2, CLOSE = 3, ATTR = 4
+var ATTR_KEY = 5, ATTR_KEY_W = 6
+var ATTR_VALUE_W = 7, ATTR_VALUE = 8
+var ATTR_VALUE_SQ = 9, ATTR_VALUE_DQ = 10
+var ATTR_EQ = 11, ATTR_BREAK = 12
+var COMMENT = 13
+
+module.exports = function (h, opts) {
+  if (!opts) opts = {}
+  var concat = opts.concat || function (a, b) {
+    return String(a) + String(b)
+  }
+  if (opts.attrToProp !== false) {
+    h = attrToProp(h)
+  }
+
+  return function (strings) {
+    var state = TEXT, reg = ''
+    var arglen = arguments.length
+    var parts = []
+
+    for (var i = 0; i < strings.length; i++) {
+      if (i < arglen - 1) {
+        var arg = arguments[i+1]
+        var p = parse(strings[i])
+        var xstate = state
+        if (xstate === ATTR_VALUE_DQ) xstate = ATTR_VALUE
+        if (xstate === ATTR_VALUE_SQ) xstate = ATTR_VALUE
+        if (xstate === ATTR_VALUE_W) xstate = ATTR_VALUE
+        if (xstate === ATTR) xstate = ATTR_KEY
+        if (xstate === OPEN) {
+          if (reg === '/') {
+            p.push([ OPEN, '/', arg ])
+            reg = ''
+          } else {
+            p.push([ OPEN, arg ])
+          }
+        } else if (xstate === COMMENT && opts.comments) {
+          reg += String(arg)
+        } else if (xstate !== COMMENT) {
+          p.push([ VAR, xstate, arg ])
+        }
+        parts.push.apply(parts, p)
+      } else parts.push.apply(parts, parse(strings[i]))
+    }
+
+    var tree = [null,{},[]]
+    var stack = [[tree,-1]]
+    for (var i = 0; i < parts.length; i++) {
+      var cur = stack[stack.length-1][0]
+      var p = parts[i], s = p[0]
+      if (s === OPEN && /^\//.test(p[1])) {
+        var ix = stack[stack.length-1][1]
+        if (stack.length > 1) {
+          stack.pop()
+          stack[stack.length-1][0][2][ix] = h(
+            cur[0], cur[1], cur[2].length ? cur[2] : undefined
+          )
+        }
+      } else if (s === OPEN) {
+        var c = [p[1],{},[]]
+        cur[2].push(c)
+        stack.push([c,cur[2].length-1])
+      } else if (s === ATTR_KEY || (s === VAR && p[1] === ATTR_KEY)) {
+        var key = ''
+        var copyKey
+        for (; i < parts.length; i++) {
+          if (parts[i][0] === ATTR_KEY) {
+            key = concat(key, parts[i][1])
+          } else if (parts[i][0] === VAR && parts[i][1] === ATTR_KEY) {
+            if (typeof parts[i][2] === 'object' && !key) {
+              for (copyKey in parts[i][2]) {
+                if (parts[i][2].hasOwnProperty(copyKey) && !cur[1][copyKey]) {
+                  cur[1][copyKey] = parts[i][2][copyKey]
+                }
+              }
+            } else {
+              key = concat(key, parts[i][2])
+            }
+          } else break
+        }
+        if (parts[i][0] === ATTR_EQ) i++
+        var j = i
+        for (; i < parts.length; i++) {
+          if (parts[i][0] === ATTR_VALUE || parts[i][0] === ATTR_KEY) {
+            if (!cur[1][key]) cur[1][key] = strfn(parts[i][1])
+            else parts[i][1]==="" || (cur[1][key] = concat(cur[1][key], parts[i][1]));
+          } else if (parts[i][0] === VAR
+          && (parts[i][1] === ATTR_VALUE || parts[i][1] === ATTR_KEY)) {
+            if (!cur[1][key]) cur[1][key] = strfn(parts[i][2])
+            else parts[i][2]==="" || (cur[1][key] = concat(cur[1][key], parts[i][2]));
+          } else {
+            if (key.length && !cur[1][key] && i === j
+            && (parts[i][0] === CLOSE || parts[i][0] === ATTR_BREAK)) {
+              // https://html.spec.whatwg.org/multipage/infrastructure.html#boolean-attributes
+              // empty string is falsy, not well behaved value in browser
+              cur[1][key] = key.toLowerCase()
+            }
+            if (parts[i][0] === CLOSE) {
+              i--
+            }
+            break
+          }
+        }
+      } else if (s === ATTR_KEY) {
+        cur[1][p[1]] = true
+      } else if (s === VAR && p[1] === ATTR_KEY) {
+        cur[1][p[2]] = true
+      } else if (s === CLOSE) {
+        if (selfClosing(cur[0]) && stack.length) {
+          var ix = stack[stack.length-1][1]
+          stack.pop()
+          stack[stack.length-1][0][2][ix] = h(
+            cur[0], cur[1], cur[2].length ? cur[2] : undefined
+          )
+        }
+      } else if (s === VAR && p[1] === TEXT) {
+        if (p[2] === undefined || p[2] === null) p[2] = ''
+        else if (!p[2]) p[2] = concat('', p[2])
+        if (Array.isArray(p[2][0])) {
+          cur[2].push.apply(cur[2], p[2])
+        } else {
+          cur[2].push(p[2])
+        }
+      } else if (s === TEXT) {
+        cur[2].push(p[1])
+      } else if (s === ATTR_EQ || s === ATTR_BREAK) {
+        // no-op
+      } else {
+        throw new Error('unhandled: ' + s)
+      }
+    }
+
+    if (tree[2].length > 1 && /^\s*$/.test(tree[2][0])) {
+      tree[2].shift()
+    }
+
+    if (tree[2].length > 2
+    || (tree[2].length === 2 && /\S/.test(tree[2][1]))) {
+      if (opts.createFragment) return opts.createFragment(tree[2])
+      throw new Error(
+        'multiple root elements must be wrapped in an enclosing tag'
+      )
+    }
+    if (Array.isArray(tree[2][0]) && typeof tree[2][0][0] === 'string'
+    && Array.isArray(tree[2][0][2])) {
+      tree[2][0] = h(tree[2][0][0], tree[2][0][1], tree[2][0][2])
+    }
+    return tree[2][0]
+
+    function parse (str) {
+      var res = []
+      if (state === ATTR_VALUE_W) state = ATTR
+      for (var i = 0; i < str.length; i++) {
+        var c = str.charAt(i)
+        if (state === TEXT && c === '<') {
+          if (reg.length) res.push([TEXT, reg])
+          reg = ''
+          state = OPEN
+        } else if (c === '>' && !quot(state) && state !== COMMENT) {
+          if (state === OPEN && reg.length) {
+            res.push([OPEN,reg])
+          } else if (state === ATTR_KEY) {
+            res.push([ATTR_KEY,reg])
+          } else if (state === ATTR_VALUE && reg.length) {
+            res.push([ATTR_VALUE,reg])
+          }
+          res.push([CLOSE])
+          reg = ''
+          state = TEXT
+        } else if (state === COMMENT && /-$/.test(reg) && c === '-') {
+          if (opts.comments) {
+            res.push([ATTR_VALUE,reg.substr(0, reg.length - 1)])
+          }
+          reg = ''
+          state = TEXT
+        } else if (state === OPEN && /^!--$/.test(reg)) {
+          if (opts.comments) {
+            res.push([OPEN, reg],[ATTR_KEY,'comment'],[ATTR_EQ])
+          }
+          reg = c
+          state = COMMENT
+        } else if (state === TEXT || state === COMMENT) {
+          reg += c
+        } else if (state === OPEN && c === '/' && reg.length) {
+          // no-op, self closing tag without a space <br/>
+        } else if (state === OPEN && /\s/.test(c)) {
+          if (reg.length) {
+            res.push([OPEN, reg])
+          }
+          reg = ''
+          state = ATTR
+        } else if (state === OPEN) {
+          reg += c
+        } else if (state === ATTR && /[^\s"'=/]/.test(c)) {
+          state = ATTR_KEY
+          reg = c
+        } else if (state === ATTR && /\s/.test(c)) {
+          if (reg.length) res.push([ATTR_KEY,reg])
+          res.push([ATTR_BREAK])
+        } else if (state === ATTR_KEY && /\s/.test(c)) {
+          res.push([ATTR_KEY,reg])
+          reg = ''
+          state = ATTR_KEY_W
+        } else if (state === ATTR_KEY && c === '=') {
+          res.push([ATTR_KEY,reg],[ATTR_EQ])
+          reg = ''
+          state = ATTR_VALUE_W
+        } else if (state === ATTR_KEY) {
+          reg += c
+        } else if ((state === ATTR_KEY_W || state === ATTR) && c === '=') {
+          res.push([ATTR_EQ])
+          state = ATTR_VALUE_W
+        } else if ((state === ATTR_KEY_W || state === ATTR) && !/\s/.test(c)) {
+          res.push([ATTR_BREAK])
+          if (/[\w-]/.test(c)) {
+            reg += c
+            state = ATTR_KEY
+          } else state = ATTR
+        } else if (state === ATTR_VALUE_W && c === '"') {
+          state = ATTR_VALUE_DQ
+        } else if (state === ATTR_VALUE_W && c === "'") {
+          state = ATTR_VALUE_SQ
+        } else if (state === ATTR_VALUE_DQ && c === '"') {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE_SQ && c === "'") {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE_W && !/\s/.test(c)) {
+          state = ATTR_VALUE
+          i--
+        } else if (state === ATTR_VALUE && /\s/.test(c)) {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE || state === ATTR_VALUE_SQ
+        || state === ATTR_VALUE_DQ) {
+          reg += c
+        }
+      }
+      if (state === TEXT && reg.length) {
+        res.push([TEXT,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE_DQ && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE_SQ && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_KEY) {
+        res.push([ATTR_KEY,reg])
+        reg = ''
+      }
+      return res
+    }
+  }
+
+  function strfn (x) {
+    if (typeof x === 'function') return x
+    else if (typeof x === 'string') return x
+    else if (x && typeof x === 'object') return x
+    else if (x === null || x === undefined) return x
+    else return concat('', x)
+  }
+}
+
+function quot (state) {
+  return state === ATTR_VALUE_SQ || state === ATTR_VALUE_DQ
+}
+
+var closeRE = RegExp('^(' + [
+  'area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed',
+  'frame', 'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param',
+  'source', 'track', 'wbr', '!--',
+  // SVG TAGS
+  'animate', 'animateTransform', 'circle', 'cursor', 'desc', 'ellipse',
+  'feBlend', 'feColorMatrix', 'feComposite',
+  'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
+  'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR',
+  'feGaussianBlur', 'feImage', 'feMergeNode', 'feMorphology',
+  'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile',
+  'feTurbulence', 'font-face-format', 'font-face-name', 'font-face-uri',
+  'glyph', 'glyphRef', 'hkern', 'image', 'line', 'missing-glyph', 'mpath',
+  'path', 'polygon', 'polyline', 'rect', 'set', 'stop', 'tref', 'use', 'view',
+  'vkern'
+].join('|') + ')(?:[\.#][a-zA-Z0-9\u007F-\uFFFF_:-]+)*$')
+function selfClosing (tag) { return closeRE.test(tag) }
+
+},{"hyperscript-attribute-to-property":49}],51:[function(require,module,exports){
+var inserted = {};
+
+module.exports = function (css, options) {
+    if (inserted[css]) return;
+    inserted[css] = true;
+    
+    var elem = document.createElement('style');
+    elem.setAttribute('type', 'text/css');
+
+    if ('textContent' in elem) {
+      elem.textContent = css;
+    } else {
+      elem.styleSheet.cssText = css;
+    }
+    
+    var head = document.getElementsByTagName('head')[0];
+    if (options && options.prepend) {
+        head.insertBefore(elem, head.childNodes[0]);
+    } else {
+        head.appendChild(elem);
+    }
+};
+
+},{}],52:[function(require,module,exports){
+(function (__filename){(function (){
+const style_sheet = require('support-style-sheet')
+const button = require('datdot-ui-button')
+const i_link = require('datdot-ui-link')
+const message_maker = require('message-maker')
+const make_grid = require('make-grid')
+module.exports = i_list
+
+var id = 0
+
+function i_list (opts = {}, parent_protocol) {
+// -----------------------------------
+    const myaddress = `${__filename}-${id++}`
+    const inbox = {}
+    const outbox = {}
+    const recipients = {}
+    const names = {}
+    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
+
+    const {notify, address} = parent_protocol(myaddress, listen)
+    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
+    notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
+
+    function make_protocol (name) {
+        return function protocol (address, notify) {
+            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
+            return { notify: listen, address: myaddress }
+        }
+    }
+
+    function listen (msg) {
+        const { head, refs, type, data, meta } = msg // receive msg
+        inbox[head.join('/')] = msg                  // store msg
+        const [from, to] = head
+        // console.log('New message', { from, name: names[from].name, msg, data })
+        // handle
+        console.log({from, name: names[from].name, type, recipients})
+        if (from === 'menuitem') return handle_click_event(msg)
+        if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
+        if (type === 'click') return handle_select_event({from, to, data})
+        // if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
+    }
+// -----------------------------------
+    const {name, body = [], mode = 'listbox-multi', expanded = false, hidden = true, theme = {} } = opts
+    // mode: 'compact', 'listbox-single', 'menubar', 'listbox-multi' (default)
+    // expanded: true/false
+    // hidden: true/false
+
+    const { grid } = theme
+
+    var status // 'is-expanded-hidden', 'is-collapsed-hidden', 'is-expanded-visible', 'is-collapsed-visible'
+
+    const list = document.createElement('i-list')
+    const shadow = list.attachShadow({mode: 'closed'})
+    
+    function widget () {
+        list.ariaHidden = hidden
+        list.ariaLabel = name
+        list.tabIndex = -1
+        list.ariaExpanded = !hidden ? !hidden : expanded
+        list.dataset.mode = mode
+        style_sheet(shadow, style)
+        const { make } = recipients['parent']
+        try {
+            if (body.length === 0) return notify(make({ to: address, type: 'error', data: { text: 'body no items', opts } }))
+            if (mode.match(/listbox/)) list.setAttribute('role', 'listbox') // <i-list role="listbox" data-mode="single"></i-list>  
+            else if (mode.match(/menubar/)) list.setAttribute('role', 'menubar')
+            make_list(body)
+        } catch(e) {
+            notify(make({ to: address, type: 'error', data: {text: 'something went wrong', e, opts }}))
+        }
+        
+        return list
+
+        function make_list (body) {
+            body.forEach( (item, i) => {
+                const { 
+                    list_name, 
+                    address = undefined, 
+                    url = '#', 
+                    target = '_blank', 
+                    text = undefined, 
+                    role = 'option', 
+                    icons = {}, 
+                    cover, current = undefined, 
+                    selected = false, 
+                    disabled = false, 
+                    theme = {}
+                } = item
+                const {style = ``, props = {}} = theme
+                const is_current = mode === 'listbox-single' ? current : false
+                const {
+                    size = 'var(--primary-size)', 
+                    size_hover = 'var(--primary-size)',
+                    weight = '300', 
+                    color = 'var(--primary-color)', 
+                    color_hover = 'var(--primary-color-hover)', 
+                    color_focus = 'var(--color-white)',
+                    bg_color = 'var(--primary-bg-color)', 
+                    bg_color_hover = 'var(--primary-bg-color-hover)', 
+                    bg_color_focus = 'var(--primary-bg-color-focus)',
+                    icon_size = 'var(--primary-icon-size)',
+                    icon_size_hover = 'var(--primary-icon-size_hover)',
+                    icon_fill = 'var(--primary-icon-fill)',
+                    icon_fill_hover = 'var(--primary-icon-fill-hover)',
+                    avatar_width = 'var(--primary-avatar-width)', 
+                    avatar_height = 'var(--primary-avatar-height)', 
+                    avatar_radius = 'var(--primary-avatar-radius)',
+                    current_size = 'var(--current-list-size)',
+                    current_color = 'var(--current-list-color)',
+                    current_weight = 'var(--current-list-weight)',
+                    current_icon_size = 'var(--current-icon-size)',
+                    current_icon_fill = 'var(--current-icon-fill)',
+                    current_list_selected_icon_size = 'var(--current-list-selected-icon-size)',
+                    current_list_selected_icon_fill = 'var(--current-list-selected-icon-fill)',
+                    list_selected_icon_size = 'var(--list-selected-icon-size)',
+                    list_selected_icon_fill = 'var(--list-selected-icon-fill)',
+                    list_selected_icon_fill_hover = 'var(--list-selected-icon-fill-hover)',
+                    disabled_color = 'var(--primary-disabled-color)',
+                    disabled_bg_color = 'var(--primary-disabled-bg-color)',
+                    disabled_icon_fill = 'var(--primary-disabled-fill)',
+                    padding = '',
+                    opacity = '0'
+                } = props
+
+                if (role === 'link' ) {
+                    console.log('It is link, let us make an element')
+                    el = i_link({ name: list_name, body: text, role: 'link', link: { url, target }, icons, cover, disabled, theme: { style, props, grid } }, make_protocol(list_name))
+                    console.log('Got the link, maybe..')
+                }
+
+                else if (role === 'menuitem') {
+                    el = button({ name: list_name, body: text, role, icons, cover, disabled, 
+                        theme: {
+                            style,
+                            props: {
+                                size, size_hover,
+                                color, color_hover,
+                                bg_color, bg_color_hover,
+                                icon_fill, icon_fill_hover,
+                                icon_size, icon_size_hover,
+                                current_icon_size,
+                                avatar_width, avatar_height, avatar_radius,
+                                disabled_color, disabled_bg_color, disabled_icon_fill,
+                                padding
+                            },
+                            grid
+                        }
+                    }, make_protocol(list_name))
+                }
+
+                else {
+                    el = button({ name: list_name, body: text, role, icons, cover, current: is_current, selected, disabled,
+                        theme: {
+                            style,
+                            props: {
+                                size, size_hover, weight, 
+                                color, color_hover, color_focus,
+                                bg_color, bg_color_hover, bg_color_focus,
+                                icon_size, icon_size_hover, icon_fill, icon_fill_hover,
+                                avatar_width, avatar_height, avatar_radius,
+                                current_size, current_color, current_weight,
+                                current_icon_size, current_icon_fill,
+                                current_list_selected_icon_size, current_list_selected_icon_fill,
+                                list_selected_icon_size, list_selected_icon_fill, list_selected_icon_fill_hover,
+                                disabled_color, disabled_bg_color, disabled_icon_fill,
+                                padding,
+                                opacity
+                            },
+                            grid
+                    } }, make_protocol(list_name))
+                }
+
+
+                const li = document.createElement('li')
+                if (address) li.dataset.address = address
+                li.dataset.option = text || list_name
+                li.setAttribute('aria-selected', is_current || selected)
+                if (is_current) li.setAttribute('aria-current', is_current)
+                if (disabled) li.setAttribute('disabled', disabled)
+                li.append(el)
+                shadow.append(li)
+                notify(make({ to: address, type: 'ready' }))
+            })
+        }
+    }
+
+    // ------------------------------------------------------------------
+    
+    function handle_expanded_event (data) {
+        list.setAttribute('aria-hidden', data)
+        list.setAttribute('aria-expanded', !data)
+    }
+    function handle_mutiple_selected ({from, lists, selected}) {
+        const type = selected ? 'selected' : 'unselected'
+        const { notify, address, make } = names[from]
+        notify(make({ to: address, type, data: { selected } }))
+        lists.forEach( list => {
+            const label = list.firstChild.getAttribute('aria-label') 
+            if (label === from) list.setAttribute('aria-selected', selected)
+        })
+        notify(make({type: 'selected', data: {selected: from}}))
+    }
+
+    function handle_single_selected ({from, lists, selected}) {
+        lists.forEach( list => {
+            const label = list.firstChild.getAttribute('aria-label') 
+            const state = label === from
+            const type = state ? 'selected' : 'unselected'
+            const name = state ? from : label
+            const { notify, address, make } = recipients[name]
+            notify(make({ to: address, type, data: { state } }))
+            notify(make({ to: address, type: 'current', data: { state }}))
+            list.setAttribute('aria-current', state)
+            list.setAttribute('aria-selected', state)
+        })
+        const { make } = recipients['parent']
+        notify(make({ to: address, type: 'selected', data: { selected: from } }))
+    }
+    function handle_select_event ({from, to, data}) {
+        const {selected} = data
+        // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
+        const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
+        if (mode === 'listbox-single')  handle_single_selected({from, lists, selected})
+        if (mode === 'listbox-multi') handle_mutiple_selected({from, lists, selected})
+        
+    }
+    function handle_click_event(msg) {
+        const {head, type, data} = msg
+        const [from] = head
+        const { make } = recipients['parent']
+        notify(make({to: address, type, data}))
+    }
+    
+    // insert CSS style
+    const custom_style = theme ? theme.style : ''
+    // set CSS variables
+    if (theme && theme.props) {
+        var {
+            bg_color, bg_color_hover,
+            current_bg_color, current_bg_color_hover, disabled_bg_color,
+            width, height, border_width, border_style, border_opacity, border_color,
+            border_color_hover, border_radius, padding,  opacity,
+            shadow_color, offset_x, offset_y, blur, shadow_opacity,
+            shadow_color_hover, offset_x_hover, offset_y_hover, blur_hover, shadow_opacity_hover
+        } = theme.props
+    }
+
+    const style = `
+    :host(i-list) {
+        ${width && 'width: var(--width);'};
+        ${height && 'height: var(--height);'};
+        display: grid;
+        ${make_grid(grid)}
+        max-width: 100%;
+    }
+    :host(i-list[aria-hidden="true"]) {
+        opacity: 0;
+        animation: close 0.3s;
+        pointer-events: none;
+    }
+    :host([aria-hidden="false"]) {
+        animation: open 0.3s;
+    }
+    li {
+        --bg-color: ${bg_color ? bg_color : 'var(--primary-bg-color)'};
+        --border-radius: ${border_radius ? border_radius : 'var(--primary-radius)'};
+        --border-width: ${border_width ? border_width : 'var(--primary-border-width)'};
+        --border-style: ${border_style ? border_style : 'var(--primary-border-style)'};
+        --border-color: ${border_color ? border_color : 'var(--primary-border-color)'};
+        --border-opacity: ${border_opacity ? border_opacity : 'var(--primary-border-opacity)'};
+        --border: var(--border-width) var(--border-style) hsla(var(--border-color), var(--border-opacity));
+        display: grid;
+        grid-template-columns: 1fr;
+        background-color: hsl(var(--bg-color));
+        border: var(--border);
+        margin-top: -1px;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+    }
+    li:hover {
+        --bg-color: ${bg_color_hover ? bg_color_hover : 'var(--primary-bg-color-hover)'};
+    }
+    :host(i-list) li:nth-of-type(1) {
+        border-top-left-radius: var(--border-radius);
+        border-top-right-radius: var(--border-radius);
+    }
+    li:last-child {
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+    }
+    [role="listitem"] {
+        display: grid;
+        grid-template-rows: 24px;
+        padding: 11px;
+        align-items: center;
+    }
+    [role="listitem"]:hover {
+        cursor: default;
+    }
+    li[disabled="true"], li[disabled="true"]:hover {
+        background-color: ${disabled_bg_color ? disabled_bg_color : 'var(--primary-disabled-bg-color)'};
+        cursor: not-allowed;
+    }
+    [role="none"] {
+        --bg-color: var(--list-bg-color);
+        --opacity: 1;
+        background-color: hsla(var(--bg-color), var(--opacity));
+    }
+    [role="none"]:hover {
+        --bg-color: var(--list-bg-color-hover);
+        --opacity: 1;
+        background-color: hsla(var(--bg-color), var(--opacity));
+    }
+    [role="none"] i-link {
+        padding: 12px;
+    }
+    [role="option"] i-button.icon-right, [role="option"] i-button.text-left {
+        grid-template-columns: auto 1fr auto;
+    }
+    [aria-current="true"] {
+        --bg-color: ${current_bg_color ? current_bg_color : 'var(--current-bg-color)'};
+    }
+    @keyframes close {
+        0% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+        }
+    }
+    @keyframes open {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    ${custom_style}
+    `
+
+    return widget()
+}
+}).call(this)}).call(this,"/src/index.js")
+},{"datdot-ui-button":29,"datdot-ui-link":40,"make-grid":53,"message-maker":48,"support-style-sheet":54}],53:[function(require,module,exports){
+arguments[4][27][0].apply(exports,arguments)
+},{"dup":27}],54:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
 },{"dup":28}]},{},[1]);

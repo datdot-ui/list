@@ -4,7 +4,7 @@
   "description": "datdot ui widget",
   "main": "src/index.js",
   "scripts": {
-    "start": "budo demo/demo.js:bundle.js --open --live",
+    "start": "budo demo/demo.js:bundle.js --open --live --cors",
     "build": "browserify demo/demo.js -o bundle.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -34,6 +34,7 @@
     "csjs-inject": "^1.0.1",
     "datdot-ui-button": "github:datdot-ui/button#v0.0.0-alpha",
     "datdot-ui-icon": "github:datdot-ui/icon#v0.0.0-alpha",
+    "datdot-ui-link": "github:datdot-ui/link#v0.0.0-alpha",
     "message-maker": "github:datdotorg/message-maker"
   }
 }
