@@ -47,12 +47,13 @@ function demo () {
     
     const option0 = [
         { list_name: 'robot', text: 'robot', icons: { icon: {name: 'star'} }, current: true },
-        { list_name: 'edit', text: 'edit', icons: { icon: { name: 'edit' } } }
+        { list_name: 'marine', text: 'marine', icons: { icon: { name: 'edit' } },  disabled: true, },
+        { list_name: 'server', text: 'server', icons: { icon: { name: 'plus' } } },
     ]
     const option1 = [
         { list_name: 'robot', text: 'Robot', icons: { icon: {name: 'star'} }, theme: { props: { option_avatar_width: '50%' } } },
-        { list_name: 'marine', text: 'Marine', icons: { icon: {name: 'edit'} }, list: {name: 'star'}, theme: { props: { option_avatar_width: '50%' } } },
-        { list_name: 'server', text: 'Server', icons: { list: {name: 'plus'}, icon: {name: 'edit'} }, current: true, selected: true, 
+        { list_name: 'marine', text: 'Marine', icons: { icon: {name: 'edit'} }, list: {name: 'plus'}, current: true, selected: true, theme: { props: { option_avatar_width: '50%' } } },
+        { list_name: 'server', text: 'Server', icons: { icon: {name: 'plus'}, list: {name: 'minus'},  },
             theme: {
                 props: {
                     // icon_size: '75px',
@@ -82,33 +83,34 @@ function demo () {
                     // list icon
                     selected_icon_fill: 'var(--color-flame)',
                     selected_icon_fill_hover: 'var(--color-yellow)',
-                    size: 'var(--size30)',
-                    // size_hover: 'var(--size30)',
-                    avatar_width: '1200px'
+                    size: 'var(--size16)',
+                    size_hover: 'var(--size30)',
+                    avatar_width: '120px',
+                    avatar_height: '100px'
                 }
             }
         },
-        { list_name: 'landscape2', text: 'Landscape2', icons: { icon: {name: 'edit'} }, disabled: true,
+        { list_name: 'landscape2', text: 'Landscape2', icons: { icon: {name: 'edit'} },
             cover: 'https://cdn.pixabay.com/photo/2016/02/27/06/43/cherry-blossom-tree-1225186_960_720.jpg',            
             theme: {
                 props: {
-                    avatar_width: '100%'
+                    avatar_width: '120px', avatar_height: '100px', size: 'var(--size16)', size_hover: 'var(--size30)',
                 }
             }
         },
-        { list_name: 'landscape3', text: 'Landscape3', icons: { icon: {name: 'activity'}, list: {name: 'plus'} }, selected: true,
+        { list_name: 'landscape3', text: 'Landscape3', icons: { icon: {name: 'activity'}, list: {name: 'plus'} }, selected: false,
             cover: 'https://cdn.pixabay.com/photo/2015/06/19/20/13/sunset-815270__340.jpg',
-            theme: { props: { avatar_width: '100%' } }
+            theme: { props: { avatar_width: '120px', avatar_height: '100px', size: 'var(--size16)', size_hover: 'var(--size30)' } }
         }
     ]
     const option3 = [
-        { list_name: 'datdot1', text: 'DatDot1', role: 'link', url: 'https://datdot.org/', target: '_blank', icons: { icon: {name: 'star'} },
+        { list_name: 'datdot1', text: 'DatDot1', role: 'link', url: 'https://datdot.org/', target: '_blank', icons: { icon: {name: 'star'}, list: {name: 'plus'} },
             cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
             theme: { props: { avatar_width: '24px', avatar_radius: '50%' } }
         },
         { list_name: 'text', text: 'Twitter',  role: 'link', url: 'https://twitter.com/', icons: { icon: { name: 'transfer', path: 'https://datdotorg.github.io/datdot-ui-icon/svg'} },
             target: '_new',
-            theme: {  props: { color: 'var(--color-blue)', icon_fill: 'var(--color-blue)',  icon_size: '26px' } }
+            theme: {  props: { color: 'var(--color-blue)', icon_fill: 'var(--color-blue)' } }
         },
         { list_name: 'github', text: 'GitHub', role: 'link', url: 'https://github.com/', icons: { icon: {name: 'star'} }, target: '_new',
             cover: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
@@ -255,18 +257,17 @@ function demo () {
             }
         }
     }, make_protocol('dropdown-list'))
-    console.log({menubar, listbox_multi})
 
     const expanded = button({ name: 'expanded', body: 'Expanded', role: 'switch', theme: { props: { width: '120px', } } }, make_protocol('expanded'))
 
     // elements
-    const current_single_selected = option1.filter( option => option.selected).map( ({text, icon, current, selected}) => text).join('')
+    const option1_current = option1.filter( option => option.selected).map(({ text }) => text).join('')
     const current_multiple_selected = option2.filter( option => option.selected)
     const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
     let select_items = bel`<span>${selected_length} ${current_multiple_selected.length > 1 ? `items` : `item`}</span>`
     const total_selected = bel`<span class="${css.total}">Total selected:</span>`
     total_selected.append(select_items)
-    const select = bel`<span class="${css.select}">${current_single_selected}</span>`
+    const select = bel`<span class="${css.select}">${option1_current}</span>`
     const select_result = bel`<div class="${css.result}">Current selected ${select}</div>`
     let selects = current_multiple_selected.map( option => bel`<span class=${css.badge}>${option.text}</span>`)
     let selects_result = bel`<div class="${css['selects-result']}"></div>`
@@ -524,7 +525,7 @@ const css = csjs`
     /* role option settings ---------------------------------------------*/
     --list-bg-color: var(--primary-bg-color);
     --list-bg-color-hover: var(--primary-bg-color-hover);
-    --list-selected-icon-size: var(--size16);
+    --list-selected-icon-size: var(--size6);
     --list-selected-icon-size-hover: var(--list-selected-icon-size);
     --list-selected-icon-fill: var(--primary-icon-fill);
     --list-selected-icon-fill-hover: var(--primary-icon-fill-hover);
@@ -4595,13 +4596,15 @@ function i_list (opts = {}, parent_protocol) {
                     text = undefined, 
                     role = 'option', 
                     icons = {}, 
-                    cover, current = undefined, 
+                    cover, 
+                    current = false, // aria-current values = { page, step, location, date, time, true, false }
                     selected = false, 
                     disabled = false, 
                     theme = {}
                 } = item
                 const {style = ``, props = {}} = theme
-                const is_current = mode === 'listbox-single' ? current : false
+                // const is_current = mode === 'listbox-single' ? current : false
+                const is_current = current 
                 const {
                     size = 'var(--primary-size)', 
                     size_hover = 'var(--primary-size)',
@@ -4613,7 +4616,7 @@ function i_list (opts = {}, parent_protocol) {
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
                     bg_color_focus = 'var(--primary-bg-color-focus)',
                     icon_size = 'var(--primary-icon-size)',
-                    icon_size_hover = 'var(--primary-icon-size_hover)',
+                    icon_size_hover = 'var(--primary-icon-size-hover)',
                     icon_fill = 'var(--primary-icon-fill)',
                     icon_fill_hover = 'var(--primary-icon-fill-hover)',
                     avatar_width = 'var(--primary-avatar-width)', 

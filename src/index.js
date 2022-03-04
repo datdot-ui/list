@@ -81,13 +81,15 @@ function i_list (opts = {}, parent_protocol) {
                     text = undefined, 
                     role = 'option', 
                     icons = {}, 
-                    cover, current = undefined, 
+                    cover, 
+                    current = false, // aria-current values = { page, step, location, date, time, true, false }
                     selected = false, 
                     disabled = false, 
                     theme = {}
                 } = item
                 const {style = ``, props = {}} = theme
-                const is_current = mode === 'listbox-single' ? current : false
+                // const is_current = mode === 'listbox-single' ? current : false
+                const is_current = current 
                 const {
                     size = 'var(--primary-size)', 
                     size_hover = 'var(--primary-size)',
@@ -99,7 +101,7 @@ function i_list (opts = {}, parent_protocol) {
                     bg_color_hover = 'var(--primary-bg-color-hover)', 
                     bg_color_focus = 'var(--primary-bg-color-focus)',
                     icon_size = 'var(--primary-icon-size)',
-                    icon_size_hover = 'var(--primary-icon-size_hover)',
+                    icon_size_hover = 'var(--primary-icon-size-hover)',
                     icon_fill = 'var(--primary-icon-fill)',
                     icon_fill_hover = 'var(--primary-icon-fill-hover)',
                     avatar_width = 'var(--primary-avatar-width)', 
