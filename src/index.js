@@ -33,7 +33,7 @@ function i_list (opts = {}, parent_protocol) {
         const [from, to] = head
         // console.log('New message', { from, name: names[from].name, msg, data })
         // handle
-        console.log({from, name: names[from].name, type, recipients})
+        console.log({type, from, name: names[from].name, recipients})
         if (from === 'menuitem') return handle_click_event(msg)
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
         if (type === 'click') return handle_select_event({from, to, data})
@@ -188,9 +188,13 @@ function i_list (opts = {}, parent_protocol) {
 
     // ------------------------------------------------------------------
     
+    function set_attr ({aria, prop}) {
+        el.setAttribute(`aria-${aria}`, prop)
+    }
+
     function handle_expanded_event (data) {
-        list.setAttribute('aria-hidden', data)
-        list.setAttribute('aria-expanded', !data)
+        set_attr({aria: 'hidden', prop: data})
+        set_attr({aria: 'expanded', prop: !data})
     }
     function handle_mutiple_selected ({from, lists, selected}) {
         const type = selected ? 'selected' : 'unselected'
@@ -198,7 +202,7 @@ function i_list (opts = {}, parent_protocol) {
         notify(make({ to: address, type, data: { selected } }))
         lists.forEach( list => {
             const label = list.firstChild.getAttribute('aria-label') 
-            if (label === from) list.setAttribute('aria-selected', selected)
+            if (label === from) set_attr({aria: 'selected', prop: selected})
         })
         notify(make({type: 'selected', data: {selected: from}}))
     }
@@ -212,8 +216,8 @@ function i_list (opts = {}, parent_protocol) {
             const { notify, address, make } = recipients[name]
             notify(make({ to: address, type, data: { state } }))
             notify(make({ to: address, type: 'current', data: { state }}))
-            list.setAttribute('aria-current', state)
-            list.setAttribute('aria-selected', state)
+            set_attr({aria: 'current', prop: state})
+            set_attr({aria: 'selected', prop: state})
         })
         const { make } = recipients['parent']
         notify(make({ to: address, type: 'selected', data: { selected: from } }))

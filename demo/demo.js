@@ -256,7 +256,7 @@ function demo () {
         }
     }, make_protocol('dropdown-list'))
 
-    const expanded = button({ name: 'expanded', body: 'Expanded', role: 'switch', theme: { props: { width: '120px', } } }, make_protocol('expanded'))
+    const expanded = button({ name: 'switch', body: 'Expanded', theme: { props: { width: '120px', } } }, make_protocol('switch'))
 
     // elements
     const option1_current = option1.filter( option => option.selected).map(({ text }) => text).join('')
@@ -328,18 +328,22 @@ function demo () {
     }
     function switch_event (from, data) {
         const state = !data
+        // notify button
         const { address: from_address, notify: from_notify, make: from_make } = names[from]
         from_notify(from_make({ to: from_address, type: 'switched', data: state}))
-        // const { address, notify, make } = recipients['parent']
-        // notify(make({ to: address, type: 'switched', data }))
+        // notify dropdown list
+        const { address, notify, make } = recipients['dropdown-list']
+        notify(make({ to: address, type: 'expanded', data }))
+        // notify logs
         const { address: logs_address, notify: logs_notify, make: logs_make } = recipients['logs']
         logs_notify(logs_make({to: logs_address, type: 'triggered', data: {checked: state}}) )
-        logs_notify(logs_make({to: logs_address, type: 'layout-mode', data: {expanded: state}}))
+        // logs_notify(logs_make({to: logs_address, type: 'layout-mode', data: {expanded: state}}))
     }
     function click_event (from, data) {
+        const name = names[from].name
         const { address: logs_address, notify: logs_notify, make: logs_make } = recipients['logs']
-        if (from === 'switch') return switch_event(from, data)
-        if (from === 'menuitem') return logs_notify(logs_make({to: logs_address, type: 'triggered', data: {app: 'datdot', install: true}}))
+        if (name === 'switch') return switch_event(from, data)
+        if (name === 'menuitem') return logs_notify(logs_make({to: logs_address, type: 'triggered', data: {app: 'datdot', install: true}}))
     }
 }
 
