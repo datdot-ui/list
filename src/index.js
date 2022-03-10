@@ -6,6 +6,7 @@ const make_grid = require('make-grid')
 module.exports = i_list
 
 var id = 0
+var count = 0
 
 function i_list (opts = {}, parent_protocol) {
 // -----------------------------------
@@ -22,6 +23,7 @@ function i_list (opts = {}, parent_protocol) {
 
     function make_protocol (name) {
         return function protocol (address, notify) {
+            console.log('PROTOCOL INIT', { name, address })
             names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
             return { notify: listen, address: myaddress }
         }
@@ -33,7 +35,6 @@ function i_list (opts = {}, parent_protocol) {
         const [from, to] = head
         // console.log('New message', { from, name: names[from].name, msg, data })
         // handle
-        console.log({type, from, name: names[from].name, recipients})
         if (from === 'menuitem') return handle_click_event(msg)
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
         if (type === 'click') return handle_select_event({from, to, data})
@@ -131,7 +132,8 @@ function i_list (opts = {}, parent_protocol) {
                 }
 
                 else if (role === 'menuitem') {
-                    el = button({ name: list_name, body: text, role, icons, cover, disabled, 
+                    const button_name = `button-${count++}`
+                    el = button({ name: button_name, body: text, role, icons, cover, disabled, 
                         theme: {
                             style,
                             props: {
@@ -147,11 +149,12 @@ function i_list (opts = {}, parent_protocol) {
                             },
                             grid
                         }
-                    }, make_protocol(list_name))
+                    }, make_protocol(button_name))
                 }
 
                 else {
-                    el = button({ name: list_name, body: text, role, icons, cover, current: is_current, selected, disabled,
+                    const button_name = `button-${count++}`
+                    el = button({ name: button_name, body: text, role, icons, cover, current: is_current, selected, disabled,
                         theme: {
                             style,
                             props: {
@@ -169,7 +172,7 @@ function i_list (opts = {}, parent_protocol) {
                                 opacity
                             },
                             grid
-                    } }, make_protocol(list_name))
+                    } }, make_protocol(button_name))
                 }
 
 
