@@ -191,13 +191,15 @@ function i_list (opts = {}, parent_protocol) {
 
     // ------------------------------------------------------------------
     
-    function set_attr ({aria, prop}) {
+    function set_attr ({el, aria, prop}) {
         el.setAttribute(`aria-${aria}`, prop)
+        console.log('LISTSETTING ATTR', {el, aria, prop})
     }
 
     function handle_expanded_event (data) {
-        set_attr({aria: 'hidden', prop: data})
-        set_attr({aria: 'expanded', prop: !data})
+        const is_expanded  = data
+        set_attr({el: list, aria: 'hidden', prop: !is_expanded})
+        set_attr({el: list, aria: 'expanded', prop: is_expanded})
     }
     function handle_mutiple_selected ({from, lists, selected}) {
         const type = selected ? 'selected' : 'unselected'
@@ -205,7 +207,7 @@ function i_list (opts = {}, parent_protocol) {
         from_notify(from_make({ to: from_address, type, data: { selected } }))
         lists.forEach( list => {
             const label = list.firstChild.getAttribute('aria-label') 
-            if (label === from) set_attr({aria: 'selected', prop: selected})
+            if (label === from) set_attr({el: list, aria: 'selected', prop: selected})
         })
         from_notify(from_make({ to: from_address, type: 'selected', data: { selected: from } }))
     }
@@ -219,8 +221,8 @@ function i_list (opts = {}, parent_protocol) {
             const { notify: name_notify, address: name_address, make: name_make } = recipients[name]
             name_notify(name_make({ to: name_address, type, data: { state } }))
             name_notify(name_make({ to: name_address, type: 'current', data: { state }}))
-            set_attr({aria: 'current', prop: state})
-            set_attr({aria: 'selected', prop: state})
+            set_attr({el: list, aria: 'current', prop: state})
+            set_attr({el: list, aria: 'selected', prop: state})
         })
         const { make } = recipients['parent']
         notify(make({ to: address, type: 'selected', data: { selected: from } }))
