@@ -5,9 +5,9 @@
   "1 info pnpm": {
     "err": {
       "name": "Error",
-      "message": "not found: insya",
+      "message": "not found: insall",
       "code": "ENOENT",
-      "stack": "Error: not found: insya\n    at getNotFoundError (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:41555:51)\n    at Function.whichSync [as sync] (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:41632:13)\n    at getCommandAbsolutePathSync (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:43197:44)\n    at default_1 (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:43206:32)\n    at /home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:178093:39"
+      "stack": "Error: not found: insall\n    at getNotFoundError (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:41555:51)\n    at Function.whichSync [as sync] (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:41632:13)\n    at getCommandAbsolutePathSync (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:43197:44)\n    at default_1 (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:43206:32)\n    at /home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:178093:39"
     }
   },
   "2 error pnpm": {
@@ -15,9 +15,9 @@
     "prefix": "/home/ninabreznik/Documents/code/play/datdot/ui/datdot-ui-list",
     "err": {
       "name": "pnpm",
-      "message": "not found: insya",
+      "message": "not found: insall",
       "code": "ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL",
-      "stack": "Error: not found: insya\n    at getNotFoundError (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:41555:51)\n    at Function.whichSync [as sync] (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:41632:13)\n    at getCommandAbsolutePathSync (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:43197:44)\n    at default_1 (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:43206:32)\n    at /home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:178093:39"
+      "stack": "Error: not found: insall\n    at getNotFoundError (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:41555:51)\n    at Function.whichSync [as sync] (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:41632:13)\n    at getCommandAbsolutePathSync (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:43197:44)\n    at default_1 (/home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:43206:32)\n    at /home/ninabreznik/.npm-global/lib/node_modules/pnpm/dist/pnpm.cjs:178093:39"
     }
   }
 }

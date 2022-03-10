@@ -3725,6 +3725,7 @@ const make_grid = require('make-grid')
 module.exports = i_list
 
 var id = 0
+var count = 0
 
 function i_list (opts = {}, parent_protocol) {
 // -----------------------------------
@@ -3741,6 +3742,7 @@ function i_list (opts = {}, parent_protocol) {
 
     function make_protocol (name) {
         return function protocol (address, notify) {
+            console.log('PROTOCOL INIT', { name, address })
             names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
             return { notify: listen, address: myaddress }
         }
@@ -3752,7 +3754,6 @@ function i_list (opts = {}, parent_protocol) {
         const [from, to] = head
         // console.log('New message', { from, name: names[from].name, msg, data })
         // handle
-        console.log({type, from, name: names[from].name, recipients})
         if (from === 'menuitem') return handle_click_event(msg)
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
         if (type === 'click') return handle_select_event({from, to, data})
@@ -3850,7 +3851,8 @@ function i_list (opts = {}, parent_protocol) {
                 }
 
                 else if (role === 'menuitem') {
-                    el = button({ name: list_name, body: text, role, icons, cover, disabled, 
+                    const button_name = `button-${count++}`
+                    el = button({ name: button_name, body: text, role, icons, cover, disabled, 
                         theme: {
                             style,
                             props: {
@@ -3866,11 +3868,12 @@ function i_list (opts = {}, parent_protocol) {
                             },
                             grid
                         }
-                    }, make_protocol(list_name))
+                    }, make_protocol(button_name))
                 }
 
                 else {
-                    el = button({ name: list_name, body: text, role, icons, cover, current: is_current, selected, disabled,
+                    const button_name = `button-${count++}`
+                    el = button({ name: button_name, body: text, role, icons, cover, current: is_current, selected, disabled,
                         theme: {
                             style,
                             props: {
@@ -3888,7 +3891,7 @@ function i_list (opts = {}, parent_protocol) {
                                 opacity
                             },
                             grid
-                    } }, make_protocol(list_name))
+                    } }, make_protocol(button_name))
                 }
 
 
@@ -4458,7 +4461,7 @@ function i_list (opts = {}, parent_protocol) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
         const [from, to] = head
-        // console.log('New message', { from, name: names[from].name, msg, data })
+        console.log('LIST', { from, name: names[from].name, msg, data })
         // handle
         if (from === 'menuitem') return handle_click_event(msg)
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
@@ -4626,13 +4629,13 @@ function i_list (opts = {}, parent_protocol) {
     }
     function handle_mutiple_selected ({from, lists, selected}) {
         const type = selected ? 'selected' : 'unselected'
-        const { notify, address, make } = names[from]
-        notify(make({ to: address, type, data: { selected } }))
+        const { notify: from_notify, address: from_address, make: from_make } = names[from]
+        from_notify(from_make({ to: from_address, type, data: { selected } }))
         lists.forEach( list => {
             const label = list.firstChild.getAttribute('aria-label') 
             if (label === from) set_attr({aria: 'selected', prop: selected})
         })
-        notify(make({type: 'selected', data: {selected: from}}))
+        from_notify(from_make({ to: from_address, type: 'selected', data: { selected: from } }))
     }
 
     function handle_single_selected ({from, lists, selected}) {
@@ -4641,9 +4644,9 @@ function i_list (opts = {}, parent_protocol) {
             const state = label === from
             const type = state ? 'selected' : 'unselected'
             const name = state ? from : label
-            const { notify, address, make } = recipients[name]
-            notify(make({ to: address, type, data: { state } }))
-            notify(make({ to: address, type: 'current', data: { state }}))
+            const { notify: name_notify, address: name_address, make: name_make } = recipients[name]
+            name_notify(name_make({ to: name_address, type, data: { state } }))
+            name_notify(name_make({ to: name_address, type: 'current', data: { state }}))
             set_attr({aria: 'current', prop: state})
             set_attr({aria: 'selected', prop: state})
         })
