@@ -2498,7 +2498,7 @@ function i_button (opts, parent_protocol) {
             is_expanded = !prev_state.expanded
             return notify(make({ to: address, type, data: {name, expanded: is_expanded } }))
         }
-        if (role === 'option') {
+        if (role === 'option' || role === 'menuitem') {
             is_selected = prev_state.selected
             return notify(make({ to: address, type, data: {name, selected: is_selected, content: is_selected ? {text: body, cover, icon} : '' } }) )
         }
@@ -3026,12 +3026,11 @@ function i_dropdown (opts, parent_protocol) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
         const [from, to, msg_id] = head
-        // console.log('New message', { from, msg })
+        console.log('DROPDOWN', { from, name: names[from].name, data })
         // handle
         const { notify, address, make } = recipients['parent']
         notify(make({ to: address, type, data }))
-        console.log({INDEX_RECEIVES_FROM_NAME: names[from].name, type, expanded: data?.expanded })
-        if (type.match(/expanded|collapsed/)) return handle_expand_collapse_event(from, data)
+        if (type.match(/expanded|collapsed/)) return handle_expand_collapse(from, data)
         if (type.match(/selected/)) return handle_select_event(data)
     }
 // -----------------------------------------
@@ -3100,7 +3099,7 @@ function i_dropdown (opts, parent_protocol) {
         dropdown.setAttribute('aria-label', name)
         if (state.is_disabled) dropdown.setAttribute('disabled', state.is_disabled)
         style_sheet(shadow, style)
-        add_collapse_all_listener()
+        add_collapse_all()
         shadow.append(button)
         // need to add this to avoid document.body.addEventListener('click)
         dropdown.onclick = event => event.stopPropagation()
@@ -3136,35 +3135,35 @@ function i_dropdown (opts, parent_protocol) {
         selected_items = new_data
     }
 
-    function handle_expand_collapse_event (from, data) {
+    function handle_expand_collapse (from, data) {
         state.is_expanded = data.expanded
         const type = state.is_expanded ? 'expanded' : 'collapsed'
-        console.log('HANDLING EXPANDED EVENT', {type, from, button_name, list_name, expanded: data.expanded } )
         // check which one dropdown is not using then do collapsed
         const { notify: button_notify, make: button_make, address: button_address } = recipients[button_name]
         const { notify: list_notify, make: list_make, address: list_address } = recipients[list_name]
-        if (!button_name) {
+        if (names[from].name !== button_name) {
             button_notify(button_make({ to: button_address,type: 'collapsed', data: state.is_expanded }))
             list_notify(list_make({ to: list_address, type, data: !state.is_expanded }))
         }
         // check which dropdown is currently using then do expanded
         button_notify(button_make({ to: button_address, type, data: state.is_expanded }))
-        list_notify(list_make({ to: list_address, type, data: !state.is_expanded }))
+        list_notify(list_make({ to: list_address, type, data: state.is_expanded }))
         if (state.is_expanded && names[from].name === button_name) shadow.append(list_el)
     }
 
-    function add_collapse_all_listener () {
+    function add_collapse_all () {
         // trigger expanded event via document.body
         document.body.addEventListener('click', (e) => {
             const type = 'collapsed'
             if (state.is_expanded) {
                 state.is_expanded = false
+
                 // notify button
                 const { notify: name_notify, make: name_make, address: name_address } = recipients[button_name]
                 name_notify(name_make({ to: name_address, type, data: state.is_expanded }))
                 // notify list
                 const { notify: list_notify, make: list_make, address: list_address } = recipients[list_name]
-                list_notify(list_make({ to: list_address, type, data: !state.is_expanded }))
+                list_notify(list_make({ to: list_address, type, data: state.is_expanded }))
                 // notify parent
                 const { notify, make, address } = recipients['parent']
                 notify(make({to: address, type, data: { selected: selected_items }}) )
@@ -3408,7 +3407,7 @@ module.exports = ({name, path, is_shadow = false, theme}, parent_protocol) => {
     return symbol
 }
 
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-button@af2639efa63504a9e9ece4f3e29292f816fb089b/node_modules/datdot-ui-icon/src/index.js")
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-button@a779509c150b7868bc333bc8ac6076d4a4e4fa68/node_modules/datdot-ui-icon/src/index.js")
 },{"message-maker":48,"support-style-sheet":38,"svg":39}],38:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
 },{"dup":28}],39:[function(require,module,exports){
@@ -4076,7 +4075,7 @@ function i_list (opts = {}, parent_protocol) {
 
     return widget()
 }
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-dropdown@fc1382f157bce35324503c67b7a924bdc79b0f8f/node_modules/datdot-ui-list/src/index.js")
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-dropdown@bd54e0fa13a103f6dc453076430ccdea84b66cfd/node_modules/datdot-ui-list/src/index.js")
 },{"datdot-ui-button":29,"datdot-ui-link":40,"make-grid":46,"message-maker":48,"support-style-sheet":47}],46:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
 },{"dup":27}],47:[function(require,module,exports){
@@ -4467,12 +4466,11 @@ function i_list (opts = {}, parent_protocol) {
     function listen (msg) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
-        const [from, to] = head
-        console.log('LIST', { from, name: names[from].name, msg, data })
+        const [from] = head
+        console.log('LIST', { type, from, name: names[from].name, msg, data })
         // handle
-        if (from === 'menuitem') return handle_click_event(msg)
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
-        if (type === 'click') return handle_select_event({from, to, data})
+        if (type === 'click') return handle_select_event(msg)
         // if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
     }
 // -----------------------------------
@@ -4662,7 +4660,11 @@ function i_list (opts = {}, parent_protocol) {
         const { make } = recipients['parent']
         notify(make({ to: address, type: 'selected', data: { selected: from } }))
     }
-    function handle_select_event ({from, to, data}) {
+    function handle_select_event (msg) {
+        const {head, type, data} = msg
+        const [from] = head
+        console.log('LIST: HANDLE SELECT EVENT', { from, mode })
+        if (from === 'menuitem') return handle_click_event(type, data)
         const {selected} = data
         // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
         const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
@@ -4670,9 +4672,7 @@ function i_list (opts = {}, parent_protocol) {
         if (mode === 'listbox-multi') handle_mutiple_selected({from, lists, selected})
         
     }
-    function handle_click_event(msg) {
-        const {head, type, data} = msg
-        const [from] = head
+    function handle_click_event(type, data) {
         const { make } = recipients['parent']
         notify(make({to: address, type, data}))
     }

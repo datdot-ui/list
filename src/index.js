@@ -32,12 +32,11 @@ function i_list (opts = {}, parent_protocol) {
     function listen (msg) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
-        const [from, to] = head
-        console.log('LIST', { from, name: names[from].name, msg, data })
+        const [from] = head
+        console.log('LIST', { type, from, name: names[from].name, msg, data })
         // handle
-        if (from === 'menuitem') return handle_click_event(msg)
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
-        if (type === 'click') return handle_select_event({from, to, data})
+        if (type === 'click') return handle_select_event(msg)
         // if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
     }
 // -----------------------------------
@@ -227,7 +226,11 @@ function i_list (opts = {}, parent_protocol) {
         const { make } = recipients['parent']
         notify(make({ to: address, type: 'selected', data: { selected: from } }))
     }
-    function handle_select_event ({from, to, data}) {
+    function handle_select_event (msg) {
+        const {head, type, data} = msg
+        const [from] = head
+        console.log('LIST: HANDLE SELECT EVENT', { from, mode })
+        if (from === 'menuitem') return handle_click_event(type, data)
         const {selected} = data
         // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
         const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
@@ -235,9 +238,7 @@ function i_list (opts = {}, parent_protocol) {
         if (mode === 'listbox-multi') handle_mutiple_selected({from, lists, selected})
         
     }
-    function handle_click_event(msg) {
-        const {head, type, data} = msg
-        const [from] = head
+    function handle_click_event(type, data) {
         const { make } = recipients['parent']
         notify(make({to: address, type, data}))
     }
