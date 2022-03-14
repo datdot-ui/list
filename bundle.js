@@ -4649,6 +4649,14 @@ function i_list (opts = {}, parent_protocol) {
     }
 
     // ------------------------------------------------------------------
+
+    // function notify_parent (msg) {
+    //     const { head, refs, type, data, meta } = msg // receive msg
+    //     inbox[head.join('/')] = msg                  // store msg
+    //     const [from] = head
+    //     const { make } = recipients['parent']
+    //     notify(make({ to: address, type, data }))
+    // }
     
     function set_attr ({el, aria, prop}) {
         el.setAttribute(`aria-${aria}`, prop)
@@ -4660,12 +4668,20 @@ function i_list (opts = {}, parent_protocol) {
         set_attr({el: list, aria: 'hidden', prop: !is_expanded})
         set_attr({el: list, aria: 'expanded', prop: is_expanded})
     }
-    function handle_selected ({ mode, from, lists, data }) {
+
+    function handle_select_event (msg) {
+        const {head, type, data} = msg
+        const [from] = head
+        const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
         const name = names[from].name
         const { selected: new_state } = data
-        const type = new_state ? 'selected' : 'unselected'
-        
+        const { make } = recipients['parent']
+        const new_type = new_state ? 'selected' : 'unselected'
+
+        // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet   
         lists.forEach( list => {
+            // const role = list.firstChild.getAttribute('role')            
+            // if (role === 'menuitem') { return notify(make({to: address, type: new_type, data})) }
             const label = list.firstChild.getAttribute('aria-label')
             const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
 
@@ -4674,55 +4690,16 @@ function i_list (opts = {}, parent_protocol) {
                 const aria_selected = list.getAttribute('aria-selected')
                 if (aria_selected === 'true')  {
                     set_attr({el: list, aria: 'selected', prop: 'false' })
-                    return label_notify(label_make({ to: label_address, type, data: false }))
+                    return label_notify(label_make({ to: label_address, type: new_type, data: false }))
                 }
             }
            if (label === name) {
                 set_attr({el: list, aria: 'selected', prop: new_state})
-                label_notify(label_make({ to: label_address, type, data: new_state }))
+                label_notify(label_make({ to: label_address, type: new_type, data: new_state }))
+
             }
         })
-        // if (mode === 'listbox-multi') {
-        //     lists.forEach( list => {
-        //         const label = list.firstChild.getAttribute('aria-label')
-        //         if (label === name) {
-        //             const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
-        //             set_attr({el: list, aria: 'selected', prop: new_state})
-        //             label_notify(label_make({ to: label_address, type, data: { new_state } }))
-        //         }
-        //     })
-        // }
-        // else if (mode === 'listbox-single') {
-        //     lists.forEach( list => {
-        //         const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
-        //         const label = list.firstChild.getAttribute('aria-label')
-        //         const aria_selected = list.firstChild.getAttribute('aria-selected')
-        //         if (aria_selected) {
-        //             set_attr({el: list, aria: 'selected', prop: false})
-        //             label_notify(label_make({ to: label_address, type, data: { new_state: false } }))
-        //         }
-        //         if (label === name) {
-        //             set_attr({el: list, aria: 'selected', prop: new_state})
-        //             label_notify(label_make({ to: label_address, type, data: { new_state } }))
-        //             // const { make } = recipients['parent']
-        //             // notify(make({ to: address, type: 'selected', data: { selected: from } }))
-        //         }
-        //     })
-        // }
-    }
-
-    function handle_select_event (msg) {
-        const {head, type, data} = msg
-        const [from] = head
-        if (from === 'menuitem') return handle_click_event(type, data)
-        // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
-        const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
-        handle_selected({ mode, from, lists, data })
         
-    }
-    function handle_click_event(type, data) {
-        const { make } = recipients['parent']
-        notify(make({to: address, type, data}))
     }
     
     // insert CSS style
