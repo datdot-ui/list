@@ -2284,7 +2284,7 @@ function i_button (opts, parent_protocol) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
         const [from, to, msg_id] = head
-        console.log('New message', { from, msg })
+        console.log('BUTTON', { type, name: names[from].name, msg })
         // toggle
         if (type.match(/switched/)) return switched_event(data)
         // dropdown
@@ -2402,8 +2402,8 @@ function i_button (opts, parent_protocol) {
         set_attr({aria: 'selected', prop: is_selected})
         el.setAttribute('tabindex', is_current ? 0 : -1)
     }
-    function list_selected_event (state) {
-        is_selected = state
+    function list_selected_event (data) {
+        is_selected = data
         set_attr({aria: 'selected', prop: is_selected})
         if (mode === 'listbox-single') {
             is_current = is_selected
@@ -2475,7 +2475,8 @@ function i_button (opts, parent_protocol) {
             expanded: is_expanded,
             selected: is_selected
         }
-        if ('current' in opts) {
+        // debugger
+        if (is_current) {
             notify(make({ to: address, type: 'current', data: {name, current: is_current } }) )
         }
         if (expanded !== undefined) {
@@ -2484,11 +2485,11 @@ function i_button (opts, parent_protocol) {
             notify(make({ to: address, type, data: {name, expanded: is_expanded } }))
         }
         if (role === 'button') {
-            return notify( make({type, to: controls} ))
+            return notify( make({ to: address, type } ))
         }
         if (role === 'tab') {
             if (is_current) return
-            is_selected = prev_state.selected
+            is_selected = !prev_state.selected
             return notify(make({ to: address, type, data: {name, selected: is_selected } }) )
         }
         if (role === 'switch') {
@@ -2499,7 +2500,7 @@ function i_button (opts, parent_protocol) {
             return notify(make({ to: address, type, data: {name, expanded: is_expanded } }))
         }
         if (role === 'option' || role === 'menuitem') {
-            is_selected = prev_state.selected
+            is_selected = !prev_state.selected
             return notify(make({ to: address, type, data: {name, selected: is_selected, content: is_selected ? {text: body, cover, icon} : '' } }) )
         }
     }
@@ -3407,7 +3408,7 @@ module.exports = ({name, path, is_shadow = false, theme}, parent_protocol) => {
     return symbol
 }
 
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-button@a779509c150b7868bc333bc8ac6076d4a4e4fa68/node_modules/datdot-ui-icon/src/index.js")
+}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdotorg+datdot-ui-button@a92c17708f27715ecc3ba13b708b541544489655/node_modules/datdot-ui-icon/src/index.js")
 },{"message-maker":48,"support-style-sheet":38,"svg":39}],38:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
 },{"dup":28}],39:[function(require,module,exports){
@@ -3755,12 +3756,11 @@ function i_list (opts = {}, parent_protocol) {
     function listen (msg) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
-        const [from, to] = head
-        console.log('LIST', { from, name: names[from].name, msg, data })
+        const [from] = head
+        console.log('LIST LISTENING', { type, from, name: names[from].name, msg, data })
         // handle
-        if (from === 'menuitem') return handle_click_event(msg)
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
-        if (type === 'click') return handle_select_event({from, to, data})
+        if (type === 'click') return handle_select_event(msg)
         // if (type === 'click' && role === 'option') return handle_select_event({from, to, data})
     }
 // -----------------------------------
@@ -3797,6 +3797,7 @@ function i_list (opts = {}, parent_protocol) {
 
         function make_list (body) {
             body.forEach( (item, i) => {
+                console.log('NEW LIST CREATED', { item })
                 const { 
                     list_name, 
                     address = undefined, 
@@ -3924,43 +3925,67 @@ function i_list (opts = {}, parent_protocol) {
         set_attr({el: list, aria: 'hidden', prop: !is_expanded})
         set_attr({el: list, aria: 'expanded', prop: is_expanded})
     }
-    function handle_mutiple_selected ({from, lists, selected}) {
-        const type = selected ? 'selected' : 'unselected'
-        const { notify: from_notify, address: from_address, make: from_make } = names[from]
-        from_notify(from_make({ to: from_address, type, data: { selected } }))
+    function handle_selected ({ mode, from, lists, data }) {
+        const name = names[from].name
+        const { selected: new_state } = data
+        const type = new_state ? 'selected' : 'unselected'
+        
         lists.forEach( list => {
-            const label = list.firstChild.getAttribute('aria-label') 
-            if (label === from) set_attr({el: list, aria: 'selected', prop: selected})
+            const label = list.firstChild.getAttribute('aria-label')
+            const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
+
+            if (mode === 'listbox-single') {
+                // unselect currently selected item if listbox single
+                const aria_selected = list.getAttribute('aria-selected')
+                if (aria_selected === 'true')  {
+                    set_attr({el: list, aria: 'selected', prop: 'false' })
+                    return label_notify(label_make({ to: label_address, type, data: false }))
+                }
+            }
+           if (label === name) {
+                set_attr({el: list, aria: 'selected', prop: new_state})
+                label_notify(label_make({ to: label_address, type, data: new_state }))
+            }
         })
-        from_notify(from_make({ to: from_address, type: 'selected', data: { selected: from } }))
+        // if (mode === 'listbox-multi') {
+        //     lists.forEach( list => {
+        //         const label = list.firstChild.getAttribute('aria-label')
+        //         if (label === name) {
+        //             const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
+        //             set_attr({el: list, aria: 'selected', prop: new_state})
+        //             label_notify(label_make({ to: label_address, type, data: { new_state } }))
+        //         }
+        //     })
+        // }
+        // else if (mode === 'listbox-single') {
+        //     lists.forEach( list => {
+        //         const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
+        //         const label = list.firstChild.getAttribute('aria-label')
+        //         const aria_selected = list.firstChild.getAttribute('aria-selected')
+        //         if (aria_selected) {
+        //             set_attr({el: list, aria: 'selected', prop: false})
+        //             label_notify(label_make({ to: label_address, type, data: { new_state: false } }))
+        //         }
+        //         if (label === name) {
+        //             set_attr({el: list, aria: 'selected', prop: new_state})
+        //             label_notify(label_make({ to: label_address, type, data: { new_state } }))
+        //             // const { make } = recipients['parent']
+        //             // notify(make({ to: address, type: 'selected', data: { selected: from } }))
+        //         }
+        //     })
+        // }
     }
 
-    function handle_single_selected ({from, lists, selected}) {
-        lists.forEach( list => {
-            const label = list.firstChild.getAttribute('aria-label') 
-            const state = label === from
-            const type = state ? 'selected' : 'unselected'
-            const name = state ? from : label
-            const { notify: name_notify, address: name_address, make: name_make } = recipients[name]
-            name_notify(name_make({ to: name_address, type, data: { state } }))
-            name_notify(name_make({ to: name_address, type: 'current', data: { state }}))
-            set_attr({el: list, aria: 'current', prop: state})
-            set_attr({el: list, aria: 'selected', prop: state})
-        })
-        const { make } = recipients['parent']
-        notify(make({ to: address, type: 'selected', data: { selected: from } }))
-    }
-    function handle_select_event ({from, to, data}) {
-        const {selected} = data
-        // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
-        const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
-        if (mode === 'listbox-single')  handle_single_selected({from, lists, selected})
-        if (mode === 'listbox-multi') handle_mutiple_selected({from, lists, selected})
-        
-    }
-    function handle_click_event(msg) {
+    function handle_select_event (msg) {
         const {head, type, data} = msg
         const [from] = head
+        if (from === 'menuitem') return handle_click_event(type, data)
+        // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
+        const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
+        handle_selected({ mode, from, lists, data })
+        
+    }
+    function handle_click_event(type, data) {
         const { make } = recipients['parent']
         notify(make({to: address, type, data}))
     }
@@ -4467,7 +4492,7 @@ function i_list (opts = {}, parent_protocol) {
         const { head, refs, type, data, meta } = msg // receive msg
         inbox[head.join('/')] = msg                  // store msg
         const [from] = head
-        console.log('LIST', { type, from, name: names[from].name, msg, data })
+        console.log('LIST LISTENING', { type, from, name: names[from].name, msg, data })
         // handle
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
         if (type === 'click') return handle_select_event(msg)
@@ -4507,6 +4532,7 @@ function i_list (opts = {}, parent_protocol) {
 
         function make_list (body) {
             body.forEach( (item, i) => {
+                console.log('NEW LIST CREATED', { item })
                 const { 
                     list_name, 
                     address = undefined, 
@@ -4634,42 +4660,64 @@ function i_list (opts = {}, parent_protocol) {
         set_attr({el: list, aria: 'hidden', prop: !is_expanded})
         set_attr({el: list, aria: 'expanded', prop: is_expanded})
     }
-    function handle_mutiple_selected ({from, lists, selected}) {
-        const type = selected ? 'selected' : 'unselected'
-        const { notify: from_notify, address: from_address, make: from_make } = names[from]
-        from_notify(from_make({ to: from_address, type, data: { selected } }))
+    function handle_selected ({ mode, from, lists, data }) {
+        const name = names[from].name
+        const { selected: new_state } = data
+        const type = new_state ? 'selected' : 'unselected'
+        
         lists.forEach( list => {
-            const label = list.firstChild.getAttribute('aria-label') 
-            if (label === from) set_attr({el: list, aria: 'selected', prop: selected})
+            const label = list.firstChild.getAttribute('aria-label')
+            const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
+
+            if (mode === 'listbox-single') {
+                // unselect currently selected item if listbox single
+                const aria_selected = list.getAttribute('aria-selected')
+                if (aria_selected === 'true')  {
+                    set_attr({el: list, aria: 'selected', prop: 'false' })
+                    return label_notify(label_make({ to: label_address, type, data: false }))
+                }
+            }
+           if (label === name) {
+                set_attr({el: list, aria: 'selected', prop: new_state})
+                label_notify(label_make({ to: label_address, type, data: new_state }))
+            }
         })
-        from_notify(from_make({ to: from_address, type: 'selected', data: { selected: from } }))
+        // if (mode === 'listbox-multi') {
+        //     lists.forEach( list => {
+        //         const label = list.firstChild.getAttribute('aria-label')
+        //         if (label === name) {
+        //             const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
+        //             set_attr({el: list, aria: 'selected', prop: new_state})
+        //             label_notify(label_make({ to: label_address, type, data: { new_state } }))
+        //         }
+        //     })
+        // }
+        // else if (mode === 'listbox-single') {
+        //     lists.forEach( list => {
+        //         const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
+        //         const label = list.firstChild.getAttribute('aria-label')
+        //         const aria_selected = list.firstChild.getAttribute('aria-selected')
+        //         if (aria_selected) {
+        //             set_attr({el: list, aria: 'selected', prop: false})
+        //             label_notify(label_make({ to: label_address, type, data: { new_state: false } }))
+        //         }
+        //         if (label === name) {
+        //             set_attr({el: list, aria: 'selected', prop: new_state})
+        //             label_notify(label_make({ to: label_address, type, data: { new_state } }))
+        //             // const { make } = recipients['parent']
+        //             // notify(make({ to: address, type: 'selected', data: { selected: from } }))
+        //         }
+        //     })
+        // }
     }
 
-    function handle_single_selected ({from, lists, selected}) {
-        lists.forEach( list => {
-            const label = list.firstChild.getAttribute('aria-label') 
-            const state = label === from
-            const type = state ? 'selected' : 'unselected'
-            const name = state ? from : label
-            const { notify: name_notify, address: name_address, make: name_make } = recipients[name]
-            name_notify(name_make({ to: name_address, type, data: { state } }))
-            name_notify(name_make({ to: name_address, type: 'current', data: { state }}))
-            set_attr({el: list, aria: 'current', prop: state})
-            set_attr({el: list, aria: 'selected', prop: state})
-        })
-        const { make } = recipients['parent']
-        notify(make({ to: address, type: 'selected', data: { selected: from } }))
-    }
     function handle_select_event (msg) {
         const {head, type, data} = msg
         const [from] = head
-        console.log('LIST: HANDLE SELECT EVENT', { from, mode })
         if (from === 'menuitem') return handle_click_event(type, data)
-        const {selected} = data
         // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet
         const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
-        if (mode === 'listbox-single')  handle_single_selected({from, lists, selected})
-        if (mode === 'listbox-multi') handle_mutiple_selected({from, lists, selected})
+        handle_selected({ mode, from, lists, data })
         
     }
     function handle_click_event(type, data) {
