@@ -1,6 +1,6 @@
 {
   "name": "datdot-ui-list",
-  "version": "0.0.0-alpha",
+  "version": "0.0.1-alpha",
   "description": "datdot ui widget",
   "main": "src/index.js",
   "scripts": {
@@ -27,14 +27,14 @@
   "devDependencies": {
     "budo": "^11.6.4",
     "browserify": "^17.0.0",
-    "datdot-terminal": "github:datdot-ui/terminal#v0.0.0-alpha"
+    "datdot-terminal": "git+https://github.com/datdot-ui/terminal.git#v0.0.1-alpha"
   },
   "dependencies": {
     "bel": "^6.0.0",
     "csjs-inject": "^1.0.1",
-    "datdot-ui-button": "github:datdot-ui/button#v0.0.0-alpha",
-    "datdot-ui-icon": "github:datdot-ui/icon#v0.0.0-alpha",
-    "datdot-ui-link": "github:datdot-ui/link#v0.0.0-alpha",
+    "datdot-ui-button": "git+https://github.com/datdot-ui/button.git#v0.0.1-alpha",
+    "datdot-ui-link": "git+https://github.com/datdot-ui/link.git#v0.0.1-alpha",
+    "datdot-ui-icon": "git+https://github.com/datdot-ui/icon.git#v0.0.1-alpha",
     "message-maker": "github:datdotorg/message-maker"
   }
 }
