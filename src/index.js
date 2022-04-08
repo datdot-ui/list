@@ -41,7 +41,7 @@ function i_list (opts = {}, parent_protocol) {
     }
 // -----------------------------------
     const {name, body = [], mode = 'listbox-multi', expanded = false, hidden = true, theme = {} } = opts
-    // mode: 'compact', 'listbox-single', 'menubar', 'listbox-multi' (default)
+    // mode: 'listbox-single', 'menubar', 'listbox-multi' (default)
     // expanded: true/false
     // hidden: true/false
 
