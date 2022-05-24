@@ -1,39 +1,21 @@
 const style_sheet = require('support-style-sheet')
 const button = require('datdot-ui-button')
 const i_link = require('datdot-ui-link')
-const message_maker = require('message-maker')
+const protocol_maker = require('protocol-maker')
 const make_grid = require('make-grid')
 module.exports = i_list
 
 var id = 0
 var count = 0
 
-function i_list (opts = {}, parent_protocol) {
+function i_list (opts = {}, parent_wire) {
 // -----------------------------------
-    const myaddress = `${__filename}-${id++}`
-    const inbox = {}
-    const outbox = {}
-    const recipients = {}
-    const names = {}
-    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
-
-    const {notify, address} = parent_protocol(myaddress, listen)
-    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
-    notify(recipients['parent'].make({ to: address, type: 'ready', refs: {} }))
-
-    function make_protocol (name) {
-        return function protocol (address, notify) {
-            console.log('PROTOCOL INIT', { name, address })
-            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
-            return { notify: listen, address: myaddress }
-        }
-    }
-
+    const initial_contacts = { 'parent': parent_wire }
+    const contacts = protocol_maker('input-number', listen, initial_contacts)
     function listen (msg) {
         const { head, refs, type, data, meta } = msg // receive msg
-        inbox[head.join('/')] = msg                  // store msg
         const [from] = head
-        console.log('LIST LISTENING', { type, from, name: names[from].name, msg, data })
+        console.log('LIST LISTENING', { type, from, name: contacts.by_address[from].name, msg, data })
         // handle
         if (type.match(/expanded|collapsed/)) return handle_expanded_event(data)
         if (type === 'click') return handle_select_event(msg)
@@ -59,14 +41,14 @@ function i_list (opts = {}, parent_protocol) {
         list.ariaExpanded = !hidden ? !hidden : expanded
         list.dataset.mode = mode
         style_sheet(shadow, style)
-        const { make } = recipients['parent']
+        const $parent = contacts.by_name['parent']
         try {
-            if (body.length === 0) return notify(make({ to: address, type: 'error', data: { text: 'body no items', opts } }))
+            if (body.length === 0) return $parent.notify($parent.make({ to: $parent.address, type: 'error', data: { text: 'body no items', opts } }))
             if (mode.match(/listbox/)) list.setAttribute('role', 'listbox') // <i-list role="listbox" data-mode="single"></i-list>  
             else if (mode.match(/menubar/)) list.setAttribute('role', 'menubar')
             make_list(body)
         } catch(e) {
-            notify(make({ to: address, type: 'error', data: {text: 'something went wrong', e, opts }}))
+            $parent.notify($parent.make({ to: $parent.address, type: 'error', data: {text: 'something went wrong', e, opts }}))
         }
         
         return list
@@ -127,7 +109,7 @@ function i_list (opts = {}, parent_protocol) {
 
                 if (role === 'link' ) {
                     console.log('It is link, let us make an element')
-                    el = i_link({ name: list_name, body: text, role: 'link', link: { url, target }, icons, cover, disabled, theme: { style, props, grid } }, make_protocol(list_name))
+                    el = i_link({ name: list_name, body: text, role: 'link', link: { url, target }, icons, cover, disabled, theme: { style, props, grid } }, contacts.add(list_name))
                     console.log('Got the link, maybe..')
                 }
 
@@ -149,7 +131,7 @@ function i_list (opts = {}, parent_protocol) {
                             },
                             grid
                         }
-                    }, make_protocol(button_name))
+                    }, contacts.add(button_name))
                 }
 
                 else {
@@ -172,7 +154,7 @@ function i_list (opts = {}, parent_protocol) {
                                 opacity
                             },
                             grid
-                    } }, make_protocol(button_name))
+                    } }, contacts.add(button_name))
                 }
 
 
@@ -184,7 +166,7 @@ function i_list (opts = {}, parent_protocol) {
                 if (disabled) li.setAttribute('disabled', disabled)
                 li.append(el)
                 shadow.append(li)
-                notify(make({ to: address, type: 'ready' }))
+                $parent.notify($parent.make({ to: $parent.address, type: 'ready' }))
             })
         }
     }
@@ -195,7 +177,7 @@ function i_list (opts = {}, parent_protocol) {
     //     const { head, refs, type, data, meta } = msg // receive msg
     //     inbox[head.join('/')] = msg                  // store msg
     //     const [from] = head
-    //     const { make } = recipients['parent']
+    //     const { make } = contacts.by_name['parent']
     //     notify(make({ to: address, type, data }))
     // }
     
@@ -214,9 +196,9 @@ function i_list (opts = {}, parent_protocol) {
         const {head, type, data} = msg
         const [from] = head
         const lists = shadow.firstChild.tagName !== 'STYLE' ? shadow.childNodes : [...shadow.childNodes].filter( (child, index) => index !== 0)
-        const name = names[from].name
+        const name = contacts.by_address[from].name
         const { selected: new_state } = data
-        const { make } = recipients['parent']
+        const { make } = contacts.by_name['parent']
         const new_type = new_state ? 'selected' : 'unselected'
 
         // !important  <style> as a child into inject shadowDOM, only Safari and Firefox did, Chrome, Brave, Opera and Edge are not count <style> as a childElemenet   
@@ -224,19 +206,19 @@ function i_list (opts = {}, parent_protocol) {
             // const role = list.firstChild.getAttribute('role')            
             // if (role === 'menuitem') { return notify(make({to: address, type: new_type, data})) }
             const label = list.firstChild.getAttribute('aria-label')
-            const { notify: label_notify, address: label_address, make: label_make } = recipients[label]
+            const $label = contacts.by_name[label]
 
             if (mode === 'listbox-single') {
                 // unselect currently selected item if listbox single
                 const aria_selected = list.getAttribute('aria-selected')
                 if (aria_selected === 'true')  {
                     set_attr({el: list, aria: 'selected', prop: 'false' })
-                    return label_notify(label_make({ to: label_address, type: new_type, data: false }))
+                    return $label.notify($label.make({ to: $label.address, type: new_type, data: false }))
                 }
             }
            if (label === name) {
                 set_attr({el: list, aria: 'selected', prop: new_state})
-                label_notify(label_make({ to: label_address, type: new_type, data: new_state }))
+                $label.notify($label.make({ to: $label.address, type: new_type, data: new_state }))
 
             }
         })

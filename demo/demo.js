@@ -1,7 +1,7 @@
 const head = require('head')()
 const bel = require('bel')
 const csjs = require('csjs-inject')
-const message_maker = require('message-maker')
+const protocol_maker = require('protocol-maker')
 const make_grid = require('../src/node_modules/make-grid')
 
 // datdot-ui dependences
@@ -13,36 +13,19 @@ var id = 0
 
 function demo () {
 // ------------------------------------
-    const myaddress = `${__filename}-${id++}`
-    const inbox = {}
-    const outbox = {}
-    const recipients = {}
-    const names = {}
-    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
-
-    function make_protocol (name) {
-        return function protocol (address, notify) {
-            names[address] = recipients[name] = { name, address, notify, make: message_maker(myaddress) }
-            return { notify: listen, address: myaddress }
-        }
-    }
+    const contacts = protocol_maker('demo', listen)
     function listen (msg) {
         console.log('New message', { msg })
         const { head, refs, type, data, meta } = msg // receive msg
-        inbox[head.join('/')] = msg                  // store msg
         const [from] = head
         // send back ack
-        const { notify: from_notify, make: from_make, address: from_address } = names[from]
-        from_notify(from_make({ to: from_address, type: 'ack', refs: { 'cause': head } }))
+        const $from = contacts.by_address[from]
+        $from.notify($from.make({ to: $from.address, type: 'ack', refs: { 'cause': head } }))
         // handle
-        const { notify: logs_notify, make: logs_make, address: logs_address } = recipients['logs']
-        logs_notify(logs_make({ to: logs_address, type, data }))
         if (type === 'click') return click_event (from, data)
         if (type.match(/selected/)) return change_event(data)
     }
-// ------------------------------------
-    const logs = terminal({mode: 'compact'}, make_protocol('logs'))
-    
+// ------------------------------------    
     const option0 = [
         { list_name: 'robot', text: 'robot', icons: { icon: {name: 'star'} }, current: true },
         { list_name: 'marine', text: 'marine', icons: { icon: { name: 'edit' } },  disabled: true, },
@@ -106,8 +89,7 @@ function demo () {
             cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
             theme: { props: { avatar_width: '24px', avatar_radius: '50%' } }
         },
-        { list_name: 'text', text: 'Twitter',  role: 'link', url: 'https://twitter.com/', icons: { icon: { name: 'transfer', path: 'https://datdotorg.github.io/datdot-ui-icon/svg'} },
-            target: '_new',
+        { list_name: 'text', text: 'Twitter',  role: 'link', url: 'https://twitter.com/', icons: { icon: { name: 'star'} }, target: '_new',
             theme: {  props: { color: 'var(--color-blue)', icon_fill: 'var(--color-blue)' } }
         },
         { list_name: 'github', text: 'GitHub', role: 'link', url: 'https://github.com/', icons: { icon: {name: 'star'} }, target: '_new',
@@ -139,7 +121,7 @@ function demo () {
                 }
             }
         }
-    }, make_protocol('terminal-select-list'))
+    }, contacts.add('terminal-select-list'))
 
     const listbox_single = list({ name: 'listbox-single', body: option0, mode: 'listbox-single', hidden: false,
         theme: {
@@ -187,7 +169,7 @@ function demo () {
                 }
             }
         }
-    }, make_protocol('listbox-single'))
+    }, contacts.add('listbox-single'))
 
     const listbox_multi = list({ name: 'listbox-multi', body: option2, hidden: false, 
         theme: {
@@ -223,7 +205,7 @@ function demo () {
                 }
             }
         }
-    }, make_protocol('listbox-multi'))
+    }, contacts.add('listbox-multi'))
 
     const menubar = list({ name: 'menubar', body: option3, mode: 'menubar', hidden: false, 
         theme: {
@@ -254,9 +236,9 @@ function demo () {
                 // }
             }
         }
-    }, make_protocol('dropdown-list'))
+    }, contacts.add('dropdown-list'))
 
-    const expanded = button({ name: 'switch', body: 'Expanded', theme: { props: { width: '120px', } } }, make_protocol('switch'))
+    const expanded = button({ name: 'switch', body: 'Expanded', theme: { props: { width: '120px', } } }, contacts.add('switch'))
 
     // elements
     const option1_current = option1.filter( option => option.selected).map(({ text }) => text).join('')
@@ -297,14 +279,9 @@ function demo () {
         </section>
     </div>`
     const container = bel`<div class="${css.container}">${content}</div>`
-    const app = bel`<div class="${css.wrap}">${container}${logs}</div>`
+    const app = bel`<div class="${css.wrap}">${container}</div>`
 
     return app
-
-    function terminal_change_event (selected) {
-        const mode = selected.split(' ')[0]
-        recipients['logs'](make({type: 'layout-mode', data: {mode}}))
-    }
 
     function change_event (data) {
         const { mode, selected } = data
@@ -329,21 +306,16 @@ function demo () {
     function switch_event (from, data) {
         const state = !data
         // notify button
-        const { address: from_address, notify: from_notify, make: from_make } = names[from]
-        from_notify(from_make({ to: from_address, type: 'switched', data: state}))
+        const $from = contacts.by_address[from]
+        $from.notify($from.make({ to: $from.address, type: 'switched', data: state}))
         // notify dropdown list
-        const { address, notify, make } = recipients['dropdown-list']
-        notify(make({ to: address, type: 'expanded', data }))
-        // notify logs
-        const { address: logs_address, notify: logs_notify, make: logs_make } = recipients['logs']
-        logs_notify(logs_make({to: logs_address, type: 'triggered', data: {checked: state}}) )
-        // logs_notify(logs_make({to: logs_address, type: 'layout-mode', data: {expanded: state}}))
+        const $list = contacts.by_name['dropdown-list']
+        $list.notify($list.make({ to: $list.address, type: 'expanded', data }))
     }
     function click_event (from, data) {
-        const name = names[from].name
-        const { address: logs_address, notify: logs_notify, make: logs_make } = recipients['logs']
+        const name = contacts.by_address[from].name
         if (name === 'switch') return switch_event(from, data)
-        if (name === 'menuitem') return logs_notify(logs_make({to: logs_address, type: 'triggered', data: {app: 'datdot', install: true}}))
+        if (name === 'menuitem') {}
     }
 }
 
