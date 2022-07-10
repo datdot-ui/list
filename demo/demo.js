@@ -1,13 +1,9 @@
-const head = require('head')()
 const bel = require('bel')
 const csjs = require('csjs-inject')
 const protocol_maker = require('protocol-maker')
-const make_grid = require('../src/node_modules/make-grid')
 
 // datdot-ui dependences
 const list = require('..')
-const terminal = require('datdot-terminal')
-const button = require('datdot-ui-button')
 
 var id = 0
 
@@ -22,301 +18,60 @@ function demo () {
         const $from = contacts.by_address[from]
         $from.notify($from.make({ to: $from.address, type: 'ack', refs: { 'cause': head } }))
         // handle
-        if (type === 'click') return click_event (from, data)
-        if (type.match(/selected/)) return change_event(data)
+        if (type === 'click') return handle_click (from, data)
+        if (type === 'selected') {
+            console.log('selected')
+        }
     }
 // ------------------------------------    
-    const option0 = [
-        { list_name: 'robot', text: 'robot', icons: { icon: {name: 'star'} }, current: true },
-        { list_name: 'marine', text: 'marine', icons: { icon: { name: 'edit' } },  disabled: true, },
-        { list_name: 'server', text: 'server', icons: { icon: { name: 'plus' } } },
-    ]
-    const option1 = [
-        { list_name: 'robot', text: 'Robot', icons: { icon: {name: 'star'} }, theme: { props: { option_avatar_width: '50%' } } },
-        { list_name: 'marine', text: 'Marine', icons: { icon: {name: 'edit'} }, list: {name: 'plus'}, current: true, selected: true, theme: { props: { option_avatar_width: '50%' } } },
-        { list_name: 'server', text: 'Server', icons: { icon: {name: 'plus'}, list: {name: 'minus'},  },
-            theme: {
-                props: {
-                    // icon_size: '75px',
-                    // list_selected_icon_size: '50px',
-                    current_list_selected_icon_size: '30px',
-                    current_list_selected_icon_fill: 'var(--color-blue)',
-                    avatar_width: '2000px',
-                    current_icon_size: '30px',
-                    current_icon_fill: 'var(--color-light-green)',
-                    current_size: '50px',
-                    current_color: 'var(--color-light-green)',
-                    current_weight: 'var(--weight800)'
-                }
-            }
-        }
-    ]
-    const option2 = [
-        { list_name: 'landscape1', text: `Landscape1`, icons: { icon: {name: 'star'}, list: {name: 'plus'} }, selected: true,
-            cover: 'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_960_720.jpg',
-            theme: {
-                props: {
-                    // inside icon
-                    // icon_size: '36px',
-                    // icon_size_hover: '16px',
-                    icon_fill: 'var(--color-chrome-yellow)',
-                    icon_fill_hover: 'var(--color-light-green)',
-                    // list icon
-                    selected_icon_fill: 'var(--color-flame)',
-                    selected_icon_fill_hover: 'var(--color-yellow)',
-                    size: 'var(--size16)',
-                    size_hover: 'var(--size30)',
-                    avatar_width: '120px',
-                    avatar_height: '100px'
-                }
-            }
-        },
-        { list_name: 'landscape2', text: 'Landscape2', icons: { icon: {name: 'edit'} },
-            cover: 'https://cdn.pixabay.com/photo/2016/02/27/06/43/cherry-blossom-tree-1225186_960_720.jpg',            
-            theme: {
-                props: {
-                    avatar_width: '120px', avatar_height: '100px', size: 'var(--size16)', size_hover: 'var(--size30)',
-                }
-            }
-        },
-        { list_name: 'landscape3', text: 'Landscape3', icons: { icon: {name: 'activity'}, list: {name: 'plus'} }, selected: false,
-            cover: 'https://cdn.pixabay.com/photo/2015/06/19/20/13/sunset-815270__340.jpg',
-            theme: { props: { avatar_width: '120px', avatar_height: '100px', size: 'var(--size16)', size_hover: 'var(--size30)' } }
-        }
-    ]
-    const option3 = [
-        { list_name: 'datdot1', text: 'DatDot1', role: 'link', url: 'https://datdot.org/', target: '_blank', icons: { icon: {name: 'star'}, list: {name: 'plus'} },
-            cover: 'https://raw.githubusercontent.com/playproject-io/datdot/master/packages/datdot/logo-datdot.png',
-            theme: { props: { avatar_width: '24px', avatar_radius: '50%' } }
-        },
-        { list_name: 'text', text: 'Twitter',  role: 'link', url: 'https://twitter.com/', icons: { icon: { name: 'star'} }, target: '_new',
-            theme: {  props: { color: 'var(--color-blue)', icon_fill: 'var(--color-blue)' } }
-        },
-        { list_name: 'github', text: 'GitHub', role: 'link', url: 'https://github.com/', icons: { icon: {name: 'star'} }, target: '_new',
-            cover: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-            theme: { props: { avatar_width: '26px', avatar_radius: '50%' } }
-        },
-        { list_name: 'datdot-app', text: 'DatDot app', role: 'menuitem', icons: { icon: {name: 'datdot-black'} }, 
-            theme: {
-                props: {
-                    color: 'var(--color-purple)',
-                    icon_fill: 'var(--color-purple)'
-                }
-            }
-        }
-    ]
+    // LISTS
 
-    // required module instances
-    
-    const terminal_list = list({ name: 'terminal-select-list', mode: 'listbox-single', hidden: false,
-        body: [ { list_name: 'compact', text: 'Compact messages', }, { list_name: 'comfortable', text: 'Comfortable messages', current: true }],
-        theme: {
-            grid: {
-                button: {
-                    auto: {
-                        auto_flow: 'column'
-                    },
-                    justify: 'content-left',
-                    gap: '5px'
-                }
-            }
-        }
-    }, contacts.add('terminal-select-list'))
+	const list_1 = list({ 
+		name: 'list-1', 
+		body: [
+				{ text: 'robot', icons: [ {name: 'star'} ] },
+				{ text: 'marine', icons: [{ name: 'edit' }],  status: { disabled: true } },
+				{ text: 'server', icons: [{ name: 'plus' }] },
+		], 
+	}, contacts.add('list-1'))
+	
+	const list_2 = list({ 
+		name: 'list-2', 
+		body: [ { text: 'Compact messages', }, { text: 'Comfortable messages' }],
+	}, contacts.add('list-2'))
 
-    const listbox_single = list({ name: 'listbox-single', body: option0, mode: 'listbox-single', hidden: false,
-        theme: {
-            grid: {
-                list: {
-                },
-                button: {
-                    areas: 'option icon',
-                    // first step for responsive
-                    columns: 'minmax(0, 100%) 1fr',
-                    // 50% 50%
-                    // columns: 'minmax(0, 1fr) 1fr',
-                    align: 'items-center'
-                },
-                option: {
-                    // rows: 'repeat(auto-fill, minmax(100px, 1fr))',
-                    // responsive for large image
-                    // second step for responsive
-                    columns: 'repeat(auto-fill, minmax(0, auto))',
-                    area: 'option',
-                    // areas: ['option-text option-icon', 'option-avatar option-avatar'],
-                    justify: 'content-left',
-                    align: 'items-center',
-                },
-                icon: {
-                    area: 'icon',
-                    justify: 'self-right'
-                },
-                option_icon: {
-                    // area: 'option-icon',
-                    row: '2',
-                    column: 'col-3'
-                },
-                option_text: {
-                    // area: 'option-text',
-                    row: '2',
-                    column: '1 / span 2',
-                    justify: 'self-center'
-                },
-                option_avatar: {
-                    // area: 'option-avatar',
-                    row: '1',
-                    column: 'span 2',
-                    justify: 'self-center'
-                }
-            }
-        }
-    }, contacts.add('listbox-single'))
+	const list_3 = list({ 
+		name: 'list-3', 
+		body: [
+			{ text: `Landscape1`, icons: [{ name: 'star' }], status: { selected: true }},
+			{ text: 'Landscape2', icons: [{ name: 'edit' }],},
+			{ text: 'Landscape3', icons: [{ name: 'activity' }], status: { selected: false }}
+		], 
+	}, contacts.add('list-3'))
 
-    const listbox_multi = list({ name: 'listbox-multi', body: option2, hidden: false, 
-        theme: {
-            grid: {
-                button: {
-                    // rows: 'repeat(auto-fill, minmax(100px, 1fr))',
-                    // columns: 'auto repeat(auto-fill, minmax(0, 100%))',
-                    auto: {
-                        auto_flow: 'column'
-                    },
-                    align: 'items-center',
-                    justify: 'content-left',
-                    gap: '20px'
-                },
-                option: {
-                    // content auto stretch
-                    columns: 'repeat(auto-fill, minmax(0, 100%))',
-                    // columns: 'repeat(auto-fill, 1fr)',
-                    auto: {
-                        auto_flow: 'column'
-                    },
-                    align: 'items-center',
-                    justify: 'content-center',
-                    gap: '20px'
-                },
-                icon: {
-                },
-                option_icon: {
-                    column: '3'
-                },
-                option_text: {
-                    column: '2'
-                }
-            }
-        }
-    }, contacts.add('listbox-multi'))
+	const list_4 = list({ 
+		name: 'list-4', 
+		body: [ { text: 'DatDot1'}, { text: 'Twitter',  icons: [{ name: 'star' }] }, { text: 'GitHub' }, { text: 'DatDot app', icons: [{ name: 'check' }] } ], 
+	}, contacts.add('list-4'))
 
-    const menubar = list({ name: 'menubar', body: option3, mode: 'menubar', hidden: false, 
-        theme: {
-            grid: {
-                link: {
-                    justify: 'content-left',
-                    align: 'items-center',
-                    auto: {
-                        auto_flow: 'column'
-                    },
-                    gap: '5px'
-                },
-                button: {
-                    auto: {
-                        auto_flow: 'column'
-                    },
-                    gap: '5px',
-                    justify: 'content-left'
-                },
-                // icon: {
-                //     column: '1'
-                // },
-                // text: {
-                //     column: '3'
-                // },
-                // avatar: {
-                //     column: '2'
-                // }
-            }
-        }
-    }, contacts.add('dropdown-list'))
+	// elements
+	const content = bel`
+	<div class="${css.content}">
+			<section> <h1>List 1</h1> ${list_1} </section>
+			<section> <h1>List 2</h1> ${list_2} </section>
+			<section> <h1>List 3</h1> ${list_3} </section>
+			<section> <h1>List 4</h1> ${list_4} </section>
+	</div>`
+	const container = bel`<div class="${css.container}">${content}</div>`
+	const app = bel`<div class="${css.wrap}">${container}</div>`
 
-    const expanded = button({ name: 'switch', body: 'Expanded', theme: { props: { width: '120px', } } }, contacts.add('switch'))
+	return app
 
-    // elements
-    const option1_current = option1.filter( option => option.selected).map(({ text }) => text).join('')
-    const current_multiple_selected = option2.filter( option => option.selected)
-    const selected_length = bel`<span class="${css.count}">${current_multiple_selected.length}</span>`
-    let select_items = bel`<span>${selected_length} ${current_multiple_selected.length > 1 ? `items` : `item`}</span>`
-    const total_selected = bel`<span class="${css.total}">Total selected:</span>`
-    total_selected.append(select_items)
-    const select = bel`<span class="${css.select}">${option1_current}</span>`
-    const select_result = bel`<div class="${css.result}">Current selected ${select}</div>`
-    let selects = current_multiple_selected.map( option => bel`<span class=${css.badge}>${option.text}</span>`)
-    let selects_result = bel`<div class="${css['selects-result']}"></div>`
-    selects.map( select => selects_result.append(select))
-    const content = bel`
-    <div class="${css.content}">
-        <section>
-            <h1>Single select</h1>
-            ${select_result}
-            ${listbox_single}
-        </section>
-        <section>
-            <h1>Terminal messages selector</h1>
-            ${expanded}
-            ${terminal_list}
-        </section>
-        <section>
-            <h1>Multple select</h1>
-            <div>
-                ${total_selected}
-                ${selects_result}
-            </div>
-            ${listbox_multi}
-        </section>
-        
-        <section>
-            <h1>Dropdown</h1>
-            ${menubar}
-        </section>
-    </div>`
-    const container = bel`<div class="${css.container}">${content}</div>`
-    const app = bel`<div class="${css.wrap}">${container}</div>`
-
-    return app
-
-    function change_event (data) {
-        const { mode, selected } = data
-        if (mode === 'listbox-single') {
-            selected.forEach( item => {
-                if (item.current && item.text.match(/Compact|Comfortable/)) return terminal_change_event(item.text.toLowerCase())
-                if (item.current) return select.textContent = item.text 
-            })
-        }
-        if (mode === 'listbox-multi') {
-            const items = selected.filter( item => item.selected)
-            const total = items.length
-            const selected_length = bel`<span class="${css.count}">${total}</span>`
-            select_items = bel`<span>${selected_length} ${selected.length > 1 ? `items` : `item`}</span>`
-            selects = items.map( item => bel`<span class=${css.badge}>${item.text}</span>`)
-            selects_result.innerHTML = ''
-            selects.map( element => selects_result.append(element))
-            total_selected.lastChild.remove()
-            total_selected.append(select_items)
-        }
-    }
-    function switch_event (from, data) {
-        const state = !data
-        // notify button
-        const $from = contacts.by_address[from]
-        $from.notify($from.make({ to: $from.address, type: 'switched', data: state}))
-        // notify dropdown list
-        const $list = contacts.by_name['dropdown-list']
-        $list.notify($list.make({ to: $list.address, type: 'expanded', data }))
-    }
-    function click_event (from, data) {
+	function handle_click (from, data) {
         const name = contacts.by_address[from].name
-        if (name === 'switch') return switch_event(from, data)
-        if (name === 'menuitem') {}
-    }
+        const $parent = contacts.by_name['parent']
+        $parent.notify($parent.make({ to: $parent.address, type: 'click' }))
+	}
 }
 
 const css = csjs`
@@ -421,7 +176,7 @@ const css = csjs`
     --primary-color-focus: var(--color-orange);
     --primary-bg-color: var(--color-white);
     --primary-bg-color-hover: var(--color-black);
-    --primary-bg-color-focus: var(--color-greyA2), 1;
+    --primary-bg-color-focus: var(--color-greyA2), 0.5;
     --primary-border-width: 1px;
     --primary-border-style: solid;
     --primary-border-color: var(--color-black);
@@ -449,73 +204,20 @@ const css = csjs`
     --primary-icon-size-hover: var(--size16);
     --primary-icon-fill: var(--primary-color);
     --primary-icon-fill-hover: var(--primary-color-hover);
-    /* define current ---------------------------------------------*/
-    --current-size: var(--primary-size);
-    --current-weight: var(--primary-weight);
-    --current-color: var(--color-white);
-    --current-bg-color: var(--color-black);
-    --current-icon-size: var(--primary-icon-size);
-    --current-icon-fill: var(--color-white);
-    --current-list-selected-icon-size: var(--list-selected-icon-size);
-    --current-list-selected-icon-fill: var(--color-white);
-    --current-list-selected-icon-fill-hover: var(--color-white);
-    --current-list-size: var(--current-size);
-    --current-list-color: var(--current-color);
-    --current-list-bg-color: var(--current-bg-color);
-    --current-list-avatar-width: var(--primary-list-avatar-width);
-    --current-list-avatar-height: var(--primary-list-avatar-height);
-    /* role listbox settings ---------------------------------------------*/
-    /*-- collapsed --*/
-    --listbox-collapsed-bg-color: var(--primary-bg-color);
-    --listbox-collapsed-bg-color-hover: var(--primary-bg-color-hover);
-    --listbox-collapsed-icon-size: var(--size20);
-    --listbox-collapsed-icon-size-hover: var(--size20);
-    --listbox-collapsed-icon-fill: var(--primary-icon-fill);
-    --listbox-collapsed-icon-fill-hover: var(--primary-icon-fill-hover);
-    --listbox-collapsed-listbox-size: var(--primary-size);
-    --listbox-collapsed-listbox-size-hover: var(--primary-size-hover);
-    --listbox-collapsed-listbox-weight: var(--primary-weight);
-    --listbox-collapsed-listbox-weight-hover: var(--primary-weight);
-    --listbox-collapsed-listbox-color: var(--primary-color);
-    --listbox-collapsed-listbox-color-hover: var(--primary-color-hover);
-    --listbox-collapsed-listbox-avatar-width: var(--primary-listbox-option-avatar-width);
-    --listbox-collapsed-listbox-avatar-height: var(--primary-listbox-option-avatar-height);
-    --listbox-collapsed-listbox-icon-size: var(--primary-listbox-option-icon-size);
-    --listbox-collapsed-listbox-icon-size-hover: var(--primary-listbox-option-icon-size);
-    --listbox-collapsed-listbox-icon-fill: var(--color-blue);
-    --listbox-collapsed-listbox-icon-fill-hover: var(--color-yellow);
-    /*-- expanded ---*/
-    --listbox-expanded-bg-color: var(--current-bg-color);
-    --listbox-expanded-icon-size: var(--size20);
-    --listbox-expanded-icon-size-hover: var(--size20);
-    --listbox-expanded-icon-fill: var(--color-light-green);
-    --listbox-expanded-listbox-size: var(--size20);
-    --listbox-expanded-listbox-weight: var(--primary-weight);
-    --listbox-expanded-listbox-color: var(--current-color);
-    --listbox-expanded-listbox-avatar-width: var(--primary-listbox-option-avatar-width);
-    --listbox-expanded-listbox-avatar-height: var(--primary-listbox-option-avatar-height);
-    --listbox-expanded-listbox-icon-size: var(--primary-listbox-option-icon-size);
-    --listbox-expanded-listbox-icon-fill: var(--color-light-green);
-    /* role option settings ---------------------------------------------*/
-    --list-bg-color: var(--primary-bg-color);
-    --list-bg-color-hover: var(--primary-bg-color-hover);
-    --list-selected-icon-size: var(--size6);
-    --list-selected-icon-size-hover: var(--list-selected-icon-size);
-    --list-selected-icon-fill: var(--primary-icon-fill);
-    --list-selected-icon-fill-hover: var(--primary-icon-fill-hover);
     /* role link settings ---------------------------------------------*/
     --link-size: var(--size14);
     --link-size-hover: var(--primary-link-size);
     --link-color: var(--color-heavy-blue);
     --link-color-hover: var(--color-dodger-blue);
+    --link-color-focus: var(--color-flame);
     --link-bg-color: transparent;
     --link-icon-size: var(--size30);
     --link-icon-fill: var(--primary-link-color);
     --link-icon-fill-hover: var(--primary-link-color-hover);
-    --link-avatar-width: 24px;
+    --link-avatar-width: 60px;
     --link-avatar-width-hover: var(--link-avatar-width);
     --link-avatar-height: auto;
-    --link-avatar-height-hover: var(--link-avatar-height);
+    --link-avatar-height-hover: auto;
     --link-avatar-radius: 0;
     --link-disabled-size: var(--primary-link-size);
     --link-disabled-color: var(--color-greyA2);
@@ -566,8 +268,6 @@ h2 {
     font-size: var(--size20);
 }
 .wrap {
-    display: grid;
-    ${make_grid({rows: 'minmax(0, 1fr) 200px', areas: ["container", "terminal"]})}
     height: 100%;
 }
 .container {
@@ -596,6 +296,7 @@ section {
     grid-template-rows: min-content;
     grid-template-columns: 90%;
     justify-content: center;
+    grid-area: container;
     align-items: start;
     background-color: var(--color-white);
     height: 100%;

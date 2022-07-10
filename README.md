@@ -3,25 +3,19 @@ DatDot UI component
 
 Opts
 ---
-`{name, body = [], mode = 'listbox-multi', expanded = false, hidden = true, theme = {} }`
+`{ name, body = [], status: { disabled, selected }, theme = {} }`
 
-Roles/Modes
+Incoming message types
 ---
 
-- `listbox-single`
-- `listbox-multi`
-- `menubar`
-
-Incomming message types
----
-
-- `expanded/collapsed`
+- `help`
 - `click`
 
 Outgoing message types
 ---
 
 **parent**
-- `ready`
-- `error`
-- `selected/unselected`
+- `click`
+
+**any**
+- `help`
