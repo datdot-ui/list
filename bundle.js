@@ -69,9 +69,10 @@ function demo () {
 	return app
 
 	function handle_click (from, data) {
+        console.log(`${data.name} -  pressed: ${data.pressed}`)
         const name = contacts.by_address[from].name
         const $parent = contacts.by_name['parent']
-        $parent.notify($parent.make({ to: $parent.address, type: 'click' }))
+        $parent.notify($parent.make({ to: $parent.address, type: 'click', data }))
 	}
 }
 
@@ -339,7 +340,7 @@ section {
 `
 
 document.body.append(demo())
-},{"..":32,"bel":3,"csjs-inject":6,"protocol-maker":28}],2:[function(require,module,exports){
+},{"..":30,"bel":3,"csjs-inject":6,"protocol-maker":26}],2:[function(require,module,exports){
 var trailingNewlineRegex = /\n[\s]+$/
 var leadingNewlineRegex = /^\n[\s]+/
 var trailingSpaceRegex = /[\s]+$/
@@ -573,7 +574,7 @@ module.exports = hyperx(belCreateElement, {comments: true})
 module.exports.default = module.exports
 module.exports.createElement = belCreateElement
 
-},{"./appendChild":2,"hyperx":30}],4:[function(require,module,exports){
+},{"./appendChild":2,"hyperx":28}],4:[function(require,module,exports){
 (function (global){(function (){
 'use strict';
 
@@ -592,7 +593,7 @@ function csjsInserter() {
 module.exports = csjsInserter;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"csjs":9,"insert-css":31}],5:[function(require,module,exports){
+},{"csjs":9,"insert-css":29}],5:[function(require,module,exports){
 'use strict';
 
 module.exports = require('csjs/get-css');
@@ -1071,40 +1072,43 @@ function scopify(css, ignores) {
 
 },{"./regex":19,"./replace-animations":20,"./scoped-name":21}],23:[function(require,module,exports){
 const protocol_maker = require('protocol-maker')
-const i_icon = require('datdot-ui-icon')
+const get_svg = require('get_svg')
 
 var id = 0
 var icon_count = 0
 const sheet = new CSSStyleSheet()
 const default_opts = { 
-	name: 'i-button',
+	name: 'toggle',
 	text: '',
 	icons: [],
 	status: {
-		current: false, 
 		disabled: false,
+		pressed: false,
 	},
 	theme: get_theme()
 }
 sheet.replaceSync(default_opts.theme)
 
-module.exports = button
+module.exports = toggle
 
-button.help = () => { return { opts: default_opts } }
+toggle.help = () => { return { opts: default_opts } }
 
-function button (opts, parent_wire) {
+function toggle (opts, parent_wire) {
 	const {
 		name = default_opts.name, 
 		text = default_opts.text, 
 		icons = default_opts.icons, 
-		status = default_opts.status, 
+		status: {
+			disabled = default_opts.status.disabled,
+			pressed = default_opts.status.pressed,
+		} = {},
 		theme = `` } = opts		
 	
-	const current_state =  { opts: { name, text,	icons, status, sheets: [default_opts.theme, theme] } }
+	const current_state =  { opts: { name, text,	icons, status: { disabled, pressed }, sheets: [default_opts.theme, theme] } }
 
 	// protocol
 	const initial_contacts = { 'parent': parent_wire }
-	const contacts = protocol_maker('input-number', listen, initial_contacts)
+	const contacts = protocol_maker('button', listen, initial_contacts)
 
 	function listen (msg) {
 			const { head, refs, type, data, meta } = msg // receive msg
@@ -1117,25 +1121,28 @@ function button (opts, parent_wire) {
 	}
 
 	// make button
-	const el = document.createElement('i-button')
+	const el = document.createElement('toggle-button')
 	const shadow = el.attachShadow({mode: 'closed'})
 
 	let text_field = document.createElement('span')
 	text_field.className = 'text'
 
-	let i_icons = icons.map(icon => i_icon({ name: icon.name, path: icon.path}, contacts.add(`${icon.name}-${icon_count++}`)) )
-	i_icons.forEach(i_icon => { shadow.append(i_icon) })
+	var svgs = icons.map(icon => get_svg(`./src/svg/${icon.name}.svg`))
+	svgs.forEach(svg => shadow.append(svg))
 	
 	if (text) {
-			text_field.innerText = text
-			shadow.append(text_field)
+		text_field.innerText = text
+		shadow.append(text_field)
 	}
 
-	if (status.disabled) el.setAttribute(`aria-disabled`, true)
-	if (status.current) el.setAttribute(`aria-current`, true)
+	if (disabled) el.setAttribute(`aria-disabled`, true)
 
-	if (!status.disabled) el.onclick = handle_click
+	if (!disabled) el.onclick = handle_click
+
+	el.classList.add('foo')
+	el.classList.add('solid')
 	el.setAttribute('aria-label', name)
+	el.setAttribute('aria-pressed', current_state.opts.status.pressed )
 	el.setAttribute('tabindex', 0) // indicates that its element can be focused, and where it participates in sequential keyboard navigation 
 
 	const custom_theme = new CSSStyleSheet()
@@ -1144,14 +1151,29 @@ function button (opts, parent_wire) {
 
 	return el
 
+	// button click
+	function handle_click () {
+		current_state.opts.status.pressed = !current_state.opts.status.pressed
+		el.setAttribute('aria-pressed', current_state.opts.status.pressed )
+		const $parent = contacts.by_name['parent'] // { notify, make, address }
+		$parent.notify($parent.make({ to: $parent.address, type: 'click', data: { pressed: current_state.opts.status.pressed } }))
+	}
+	// get current state
+	function get_current_state () {
+		return  {
+			opts: current_state.opts,
+			contacts
+		}
+	}
+
 	// helpers
 	function handle_update (data) {
 		const { text, icons = [], sheets } = data
 		if (icons.length) {
 			current_state.opts.icons = icons
-			i_icons.forEach(icon => { shadow.removeChild(icon) })
-			i_icons = icons.map(icon => i_icon({ name: icon.name, path: icon.path}, contacts.add(`${icon.name}-${icon_count++}`)) )
-			i_icons.forEach(i_icon => { shadow.append(i_icon) })
+			svgs.forEach(icon => { shadow.removeChild(icon) })
+			svgs = icons.map(icon => get_svg(`./src/svg/${icon.name}.svg`))
+			svgs.forEach(svg => shadow.append(svg))
 		}
 		if (text && typeof text !== 'string') {
 			current_state.opts.text = text
@@ -1172,35 +1194,25 @@ function button (opts, parent_wire) {
 			shadow.adoptedStyleSheets = new_sheets
 		}
 	}
-	// button click
-	function handle_click () {
-			const $parent = contacts.by_name['parent']
-			$parent.notify($parent.make({ to: $parent.address, type: 'click' }))
-	}
-	// get current state
-	function get_current_state () {
-		return  {
-			opts: current_state.opts,
-			contacts
-		}
-	}
 
 }
 
 function get_theme () {
 	return `
-	:root {
+		:root {
 			--b: 0, 0%;
 			--r: 100%, 50%;
 			--color-black: var(--b), 0%;
 			--color-greyF2: var(--b), 95%;
+			--color-orange: 32, var(--r);
 			--size16: 1.6rem;
 			--weight300: 300;
 			--primary-color: var(--color-black);
+			--primary-color-focus: var(--color-orange);
 			--primary-bg-color: var(--color-greyF2);
 			--primary-size: var(--size16);
 	}
-	:host(i-button) {
+	:host(toggle-button) {
 			--size: var(--primary-size);
 			--weight: var(--weight300);
 			--color: var(--primary-color);
@@ -1242,7 +1254,7 @@ function get_theme () {
 			cursor: pointer;
 			-webkit-mask-image: -webkit-radial-gradient(white, black);
 	}
-	:host(i-button:hover) {
+	:host(toggle-button:hover) {
 			--size: var(--primary-size-hover);
 			--weight: var(--primary-weight-hover);
 			--color: var(--primary-color-hover);
@@ -1254,170 +1266,38 @@ function get_theme () {
 			--shadow-color: var(--primary-color-hover);
 			--shadow-opacity: 0;
 	}
-	:host(i-button:hover:focus:active) {
-			--bg-color: var(--primary-bg-color);
-	}
-	:host(i-button:focus) {
-			--color: var(--color-focus);
+	:host(toggle-button[aria-pressed="true"]) {
+			--color: var(--primary-color-focus);
 			--bg-color: var(--bg-color-focus);
 			background-color: hsla(var(--bg-color));
 	}
-	:host(i-button) g {
+	:host(toggle-button) g {
 			--icon-fill: var(--primary-icon-fill);
 			fill: hsl(var(--icon-fill));
 			transition: fill 0.05s ease-in-out;
 	}
-	:host(i-button:hover) g {
+	:host(toggle-button:hover) g {
 		--icon-fill: var(--primary-icon-fill-hover);
 	}
-	:host(i-button[aria-disabled="true"]) .icon, 
-	:host(i-button[aria-disabled="true"]:hover) .icon,
-	:host(i-button[aria-current="true"]), :host(i-button[aria-current="true"]:hover) {
-			--size: var(--current-size);
-			--weight: var(--current-weight);
-			--color: var(--current-color);
-			--bg-color: var(--current-bg-color);
+	:host(toggle-button[aria-pressed="true"]:hover) g {
+		--icon-fill: var(--primary-color-hover);
 	}
-	:host(i-button[aria-current="true"]) .icon,  
-	:host(i-button[aria-current="true"]:hover) .icon {
-			--icon-size: var(--current-icon-size);
-	}
-	:host(i-button[aria-current="true"]) g {
-			--icon-fill: var(--current-icon-fill);
-	}
-	:host(i-button[aria-current="true"]:focus) {
-			--color: var(--color-focus);
-			--bg-color: var(--bg-color-focus);
-	}
-	:host(i-button[aria-disabled="true"]), :host(i-button[aria-disabled="true"]:hover) {
+	:host(toggle-button[aria-disabled="true"]), 
+	:host(toggle-button[aria-disabled="true"]:hover) {
 			--size: var(--primary-disabled-size);
 			--color: var(--primary-disabled-color);
 			--bg-color: var(--primary-disabled-bg-color);
 			cursor: not-allowed;
 	}
-	:host(i-button[disabled]) g, 
-	:host(i-button[disabled]:hover) g, 
-	:host(i-button) .text {
-			
-	}
-	:host(i-button) .icon {
-			--icon-size: var(--primary-icon-size);
-			display: block;
-			width: var(--icon-size);
-			transition: width 0.25s ease-in-out;
-	}
-	:host(i-button:hover) .icon {
-			--icon-size: var(--primary-icon-size-hover);
+	:host(toggle-button[disabled]) g, 
+	:host(toggle-button[disabled]:hover) g, 
+	:host(toggle-button) .text {
 	}
 	`
 }
-},{"datdot-ui-icon":24,"protocol-maker":28}],24:[function(require,module,exports){
-(function (__filename){(function (){
-const style_sheet = require('support-style-sheet')
-const svg = require('svg')
-const message_maker = require('message-maker')
-
-var id = 0
-
-module.exports = ({name, path, is_shadow = false, theme}, parent_protocol) => {
-// ---------------------------------------------------------------
-    const myaddress = `${__filename}-${id++}`
-    const inbox = {}
-    const outbox = {}
-    const recipients = {}
-    const names = {}
-    const message_id = to => (outbox[to] = 1 + (outbox[to]||0))
-
-    const {notify, address} = parent_protocol(myaddress, listen)
-    names[address] = recipients['parent'] = { name: 'parent', notify, address, make: message_maker(myaddress) }
-    notify(recipients['parent'].make({ to: address, type: 'ready', refs: ['old_logs', 'new_logs'] }))
-
-    function listen (msg) {
-        const {head, refs, type, data, meta } = msg
-        inbox[head.join('/')] = msg                  // store msg
-        const [from, to, msg_id] = head    
-        console.log('New message', { msg })
-    }
- // ---------------------------------------------------------------   
-    const url = path ? path : './src/svg'
-    const symbol = svg(`${url}/${name}.svg`)
-    if (is_shadow) {
-        function layout (style) {
-            const icon = document.createElement('i-icon')
-            const shadow = icon.attachShadow({mode: 'closed'})
-            const slot = document.createElement('slot')
-            slot.name = 'icon'
-            style_sheet(shadow, style)
-            slot.append(symbol)
-            shadow.append(slot)
-            shadow.addEventListener('click', handleOnClick)
-            return icon
-        }
-
-        function handleOnClick (e) {
-            console.log('Click', e)
-            const { notify, address, make } = recipients['parent']
-            notify(make({ to: address, type: 'click', data: { event: e }, refs: {} }))
-        }
-
-        // insert CSS style
-        const custom_style = theme ? theme.style : ''
-        // set CSS variables
-        if (theme && theme.props) {
-            var { fill, size } = theme.props
-        }
-        const style = `
-        :host(i-icon) {
-            --size: ${size ? size : '24px'};
-            --fill: ${fill ? fill : 'var(--primary-color)'};
-            display: block;
-        }
-        slot[name='icon'] {
-            display: grid;
-            justify-content: center;
-            align-items: center;
-        }
-        slot[name='icon'] span {
-            display: block;
-            width: var(--size);
-            height: var(--size);
-        }
-        slot[name='icon'] svg {
-            width: 100%;
-            height: auto;
-        }
-        slot[name='icon'] g {
-            fill: hsl(var(--fill));
-            transition: fill .3s ease-in-out;
-        }
-        ${custom_style}
-        `
-        return layout(style)
-    }
-
-    return symbol
-}
-
-}).call(this)}).call(this,"/node_modules/.pnpm/github.com+datdot-ui+button@e84ed8b9703d1b6f6b5307987e60be23a9faf75a/node_modules/datdot-ui-icon/src/index.js")
-},{"message-maker":27,"support-style-sheet":25,"svg":26}],25:[function(require,module,exports){
-module.exports = support_style_sheet
-function support_style_sheet (root, style) {
-    return (() => {
-        try {
-            const sheet = new CSSStyleSheet()
-            sheet.replaceSync(style)
-            root.adoptedStyleSheets = [sheet]
-            return true 
-        } catch (error) { 
-            const inject_style = `<style>${style}</style>`
-            root.innerHTML = `${inject_style}`
-            return false
-        }
-    })()
-}
-},{}],26:[function(require,module,exports){
-module.exports = svg
-function svg (path) {
+},{"get_svg":24,"protocol-maker":26}],24:[function(require,module,exports){
+module.exports = get_svg
+function get_svg (path) {
     const span = document.createElement('span')
     span.classList.add('icon')
     get_svg()
@@ -1429,7 +1309,7 @@ function svg (path) {
     }
     return span
 }   
-},{}],27:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 module.exports = function message_maker (from) {
   let msg_id = 0
   return function make ({to, type, data = null, refs = {} }) {
@@ -1437,7 +1317,7 @@ module.exports = function message_maker (from) {
       return { head: [from, to, msg_id++], refs, type, data, meta: { stack }}
   }
 }
-},{}],28:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 // const path = require('path')
 // const filename = path.basename(__filename)
 const message_maker = require('message-maker')
@@ -1570,7 +1450,7 @@ const name_routes = {
     },
 }
 */
-},{"message-maker":27}],29:[function(require,module,exports){
+},{"message-maker":25}],27:[function(require,module,exports){
 module.exports = attributeToProperty
 
 var transform = {
@@ -1591,7 +1471,7 @@ function attributeToProperty (h) {
   }
 }
 
-},{}],30:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 var attrToProp = require('hyperscript-attribute-to-property')
 
 var VAR = 0, TEXT = 1, OPEN = 2, CLOSE = 3, ATTR = 4
@@ -1888,7 +1768,7 @@ var closeRE = RegExp('^(' + [
 ].join('|') + ')(?:[\.#][a-zA-Z0-9\u007F-\uFFFF_:-]+)*$')
 function selfClosing (tag) { return closeRE.test(tag) }
 
-},{"hyperscript-attribute-to-property":29}],31:[function(require,module,exports){
+},{"hyperscript-attribute-to-property":27}],29:[function(require,module,exports){
 var inserted = {};
 
 module.exports = function (css, options) {
@@ -1912,8 +1792,8 @@ module.exports = function (css, options) {
     }
 };
 
-},{}],32:[function(require,module,exports){
-const button = require('datdot-ui-button')
+},{}],30:[function(require,module,exports){
+const toggle = require('datdot-ui-toggle')
 const protocol_maker = require('protocol-maker')
 
 var id = 0
@@ -1967,8 +1847,8 @@ function list (opts, parent_wire) {
 		li.setAttribute('aria-selected', status.selected)
 		if (status.disabled) li.setAttribute('disabled', status.disabled)
 		let el 
-		const button_name = `button-${count++}`
-		el = button({ name: button_name, text, icons, status, theme }, contacts.add(button_name))
+		const toggle_name = `toggle-${count++}`
+		el = toggle({ name: toggle_name, text, icons, status, theme }, contacts.add(toggle_name))
 		shadow.append(li)
 		li.append(el)
 	})
@@ -1984,7 +1864,7 @@ function list (opts, parent_wire) {
 			const {head, type, data} = msg
 			const [from] = head
 			const $parent = contacts.by_name['parent']
-			$parent.notify($parent.make({ to: $parent.address, type: 'click', data: contacts.by_address[from].name }))        
+			$parent.notify($parent.make({ to: $parent.address, type: 'click', data: { name: contacts.by_address[from].name, pressed: data.pressed }}))        
 	}
 }
 
@@ -2073,4 +1953,4 @@ function get_theme () {
 	}
 	`
 }
-},{"datdot-ui-button":23,"protocol-maker":28}]},{},[1]);
+},{"datdot-ui-toggle":23,"protocol-maker":26}]},{},[1]);

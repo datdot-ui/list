@@ -68,9 +68,10 @@ function demo () {
 	return app
 
 	function handle_click (from, data) {
+        console.log(`${data.name} -  pressed: ${data.pressed}`)
         const name = contacts.by_address[from].name
         const $parent = contacts.by_name['parent']
-        $parent.notify($parent.make({ to: $parent.address, type: 'click' }))
+        $parent.notify($parent.make({ to: $parent.address, type: 'click', data }))
 	}
 }
 

@@ -1,4 +1,4 @@
-const button = require('datdot-ui-button')
+const toggle = require('datdot-ui-toggle')
 const protocol_maker = require('protocol-maker')
 
 var id = 0
@@ -52,8 +52,8 @@ function list (opts, parent_wire) {
 		li.setAttribute('aria-selected', status.selected)
 		if (status.disabled) li.setAttribute('disabled', status.disabled)
 		let el 
-		const button_name = `button-${count++}`
-		el = button({ name: button_name, text, icons, status, theme }, contacts.add(button_name))
+		const toggle_name = `toggle-${count++}`
+		el = toggle({ name: toggle_name, text, icons, status, theme }, contacts.add(toggle_name))
 		shadow.append(li)
 		li.append(el)
 	})
@@ -69,7 +69,7 @@ function list (opts, parent_wire) {
 			const {head, type, data} = msg
 			const [from] = head
 			const $parent = contacts.by_name['parent']
-			$parent.notify($parent.make({ to: $parent.address, type: 'click', data: contacts.by_address[from].name }))        
+			$parent.notify($parent.make({ to: $parent.address, type: 'click', data: { name: contacts.by_address[from].name, pressed: data.pressed }}))        
 	}
 }
 
