@@ -10,6 +10,7 @@ Incoming message types
 
 - `help`
 - `click`
+- `update`
 
 Outgoing message types
 ---

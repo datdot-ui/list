@@ -14,14 +14,9 @@ function demo () {
         console.log('New message', { msg })
         const { head, refs, type, data, meta } = msg // receive msg
         const [from] = head
-        // send back ack
-        const $from = contacts.by_address[from]
-        $from.notify($from.make({ to: $from.address, type: 'ack', refs: { 'cause': head } }))
+				const $from = contacts.by_address[from]
         // handle
-        if (type === 'click') return handle_click (from, data)
-        if (type === 'selected') {
-            console.log('selected')
-        }
+        if (type === 'click') return handle_click ($from, data)
     }
 // ------------------------------------    
     // LISTS
@@ -67,11 +62,18 @@ function demo () {
 
 	return app
 
-	function handle_click (from, data) {
-        console.log(`${data.name} -  pressed: ${data.pressed}`)
-        const name = contacts.by_address[from].name
-        const $parent = contacts.by_name['parent']
-        $parent.notify($parent.make({ to: $parent.address, type: 'click', data }))
+	function handle_click ($from, data) {
+		console.log(`${data.name} -  pressed: ${data.pressed}`)
+		if ($from.name === 'list-1') { // demo 'update' functionality
+			const $list1 = contacts.by_name['list-1']
+			const body = [
+				{},
+				{ text: 'new_marine', icons: [{ name: 'star' }] },
+				{ text: 'server', icons: [{ name: 'plus' }] },
+			] 
+			$list1.notify($list1.make({ to: $list1.address, type: 'update', data: { body } }))                         		
+		}
+
 	}
 }
 

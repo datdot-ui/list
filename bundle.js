@@ -15,14 +15,9 @@ function demo () {
         console.log('New message', { msg })
         const { head, refs, type, data, meta } = msg // receive msg
         const [from] = head
-        // send back ack
-        const $from = contacts.by_address[from]
-        $from.notify($from.make({ to: $from.address, type: 'ack', refs: { 'cause': head } }))
+				const $from = contacts.by_address[from]
         // handle
-        if (type === 'click') return handle_click (from, data)
-        if (type === 'selected') {
-            console.log('selected')
-        }
+        if (type === 'click') return handle_click ($from, data)
     }
 // ------------------------------------    
     // LISTS
@@ -68,11 +63,18 @@ function demo () {
 
 	return app
 
-	function handle_click (from, data) {
-        console.log(`${data.name} -  pressed: ${data.pressed}`)
-        const name = contacts.by_address[from].name
-        const $parent = contacts.by_name['parent']
-        $parent.notify($parent.make({ to: $parent.address, type: 'click', data }))
+	function handle_click ($from, data) {
+		console.log(`${data.name} -  pressed: ${data.pressed}`)
+		if ($from.name === 'list-1') { // demo 'update' functionality
+			const $list1 = contacts.by_name['list-1']
+			const body = [
+				{},
+				{ text: 'new_marine', icons: [{ name: 'star' }] },
+				{ text: 'server', icons: [{ name: 'plus' }] },
+			] 
+			$list1.notify($list1.make({ to: $list1.address, type: 'update', data: { body } }))                         		
+		}
+
 	}
 }
 
@@ -1824,6 +1826,7 @@ function list (opts, parent_wire) {
 			const $from = contacts.by_address[from]
 			$from.notify($from.make({ to: $from.address, type: 'help', data: { state: get_current_state() }, refs: { cause: head }}))                         
 		}
+		if (type === 'update') handle_update(data)
 	}
 // -----------------------------------
 	const {
@@ -1839,18 +1842,8 @@ function list (opts, parent_wire) {
 	list.tabIndex = -1
 	
 	body.forEach( (item, i) => {
-		const { text = undefined, icons = [], status = {}, theme = {}} = item
-		status.selected = status.selected || false
-		status.disabled = status.disabled || false
-		const { style = ``, props = {} } = theme
-		const li = document.createElement('li')
-		li.setAttribute('aria-selected', status.selected)
-		if (status.disabled) li.setAttribute('disabled', status.disabled)
-		let el 
-		const toggle_name = `toggle-${count++}`
-		el = toggle({ name: toggle_name, text, icons, status, theme }, contacts.add(toggle_name))
-		shadow.append(li)
-		li.append(el)
+		const li_el = make_li(item, i)
+		shadow.append(li_el)
 	})
 
 	const custom_theme = new CSSStyleSheet()
@@ -1865,6 +1858,46 @@ function list (opts, parent_wire) {
 			const [from] = head
 			const $parent = contacts.by_name['parent']
 			$parent.notify($parent.make({ to: $parent.address, type: 'click', data: { name: contacts.by_address[from].name, pressed: data.pressed }}))        
+	}
+	function handle_update (data) {
+		const { body, sheets } = data
+		if (body) {
+			const len = body.length
+			for (var i = 0; i < len; i++) {
+				const new_item = body[i]
+				const old_item = current_state.opts.body[i]
+				if (JSON.stringify(old_item) === JSON.stringify(new_item) || Object.keys(new_item).length === 0) continue
+				const new_li = make_li(new_item, i)
+				shadow.querySelectorAll('li')[i].replaceWith(new_li)
+			}
+		}
+		if (sheets) {
+			const new_sheets = sheets.map(sheet => {
+				if (typeof sheet === 'string') {
+					current_state.opts.sheets.push(sheet)
+					const new_sheet = new CSSStyleSheet()
+					new_sheet.replaceSync(sheet)
+					return new_sheet
+					} 
+					if (typeof sheet === 'number') return shadow.adoptedStyleSheets[sheet]
+			})
+			shadow.adoptedStyleSheets = new_sheets
+		}
+	}
+
+	// helpers
+	function make_li (item, i) {
+		const { text = undefined, icons = [], status = {}, theme = {}} = item
+		status.selected = status.selected || false
+		status.disabled = status.disabled || false
+		const { style = ``, props = {} } = theme
+		const li = document.createElement('li')
+		li.setAttribute('aria-selected', status.selected)
+		if (status.disabled) li.setAttribute('disabled', status.disabled)
+		const toggle_name = `toggle-${count++}`
+		const el = toggle({ name: toggle_name, text, icons, status, theme }, contacts.add(toggle_name))
+		li.append(el)
+		return li
 	}
 }
 
