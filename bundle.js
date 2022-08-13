@@ -1862,10 +1862,11 @@ function list (opts, parent_wire) {
 	function handle_update (data) {
 		const { body, sheets } = data
 		if (body) {
-			const len = current_state.opts.body.length
+			const len = body.length
 			for (var i = 0; i < len; i++) {
 				const new_item = body[i]
 				const old_item = current_state.opts.body[i]
+				if (!old_item) return
 				if (JSON.stringify(old_item) === JSON.stringify(new_item) || Object.keys(new_item).length === 0) continue
 				const new_li = make_li(new_item, i)
 				shadow.querySelectorAll('li')[i].replaceWith(new_li)
