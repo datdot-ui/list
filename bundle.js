@@ -1862,7 +1862,7 @@ function list (opts, parent_wire) {
 	function handle_update (data) {
 		const { body, sheets } = data
 		if (body) {
-			const len = body.length
+			const len = current_state.opts.length
 			for (var i = 0; i < len; i++) {
 				const new_item = body[i]
 				const old_item = current_state.opts.body[i]
