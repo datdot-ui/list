@@ -69,6 +69,10 @@ function demo () {
 			const body = [
 				{},
 				{ text: 'new_marine', icons: [{ name: 'star' }] },
+				{ text: 'new_marine', icons: [{ name: 'star' }] },
+				{ text: 'new_marine', icons: [{ name: 'star' }] },
+				{ text: 'server', icons: [{ name: 'plus' }] },
+				{ text: 'server', icons: [{ name: 'plus' }] },
 				{ text: 'server', icons: [{ name: 'plus' }] },
 			] 
 			$list1.notify($list1.make({ to: $list1.address, type: 'update', data: { body } }))                         		

@@ -70,6 +70,10 @@ function demo () {
 			const body = [
 				{},
 				{ text: 'new_marine', icons: [{ name: 'star' }] },
+				{ text: 'new_marine', icons: [{ name: 'star' }] },
+				{ text: 'new_marine', icons: [{ name: 'star' }] },
+				{ text: 'server', icons: [{ name: 'plus' }] },
+				{ text: 'server', icons: [{ name: 'plus' }] },
 				{ text: 'server', icons: [{ name: 'plus' }] },
 			] 
 			$list1.notify($list1.make({ to: $list1.address, type: 'update', data: { body } }))                         		
@@ -1866,7 +1870,11 @@ function list (opts, parent_wire) {
 			for (var i = 0; i < len; i++) {
 				const new_item = body[i]
 				const old_item = current_state.opts.body[i]
-				if (!old_item) return
+				if (!old_item) {
+					const li = make_li(new_item, i)
+					shadow.append(li)
+					continue
+				}
 				if (JSON.stringify(old_item) === JSON.stringify(new_item) || Object.keys(new_item).length === 0) continue
 				const new_li = make_li(new_item, i)
 				shadow.querySelectorAll('li')[i].replaceWith(new_li)
